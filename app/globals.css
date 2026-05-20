@@ -1,53 +1,88 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --dark: #0F0F0D;
-  --dark-2: #161613;
-  --cream: #F7F4EE;
-  --cream-2: #F0EDE6;
-  --cream-3: #E8E4DC;
-  --amber: #C8A96E;
-  --amber-light: #D4B87A;
-  --amber-dim: rgba(200, 169, 110, 0.15);
-  --text-primary: #1A1814;
-  --text-secondary: #5A5550;
-  --text-muted: #9A9185;
-  --text-light: #F5F0E8;
-  --text-light-muted: #6B6560;
-  --border-dark: #2A2A26;
-  --border-light: #DDD9D0;
-  --font-serif: 'Playfair Display', Georgia, serif;
+  --bg: #0e0e0e;
+  --dark: #0e0e0e;
+  --dark-2: #161616;
+  --surface: #161616;
+  --surface2: #1e1e1e;
+  --border: #2a2a2a;
+  --border-dark: #2a2a2a;
+  --border-light: #2a2a2a;
+  --accent: #b8f03c;
+  --accent-dim: #8ab82c;
+  --amber: #b8f03c;
+  --amber-light: #c8f55a;
+  --amber-dim: rgba(184,240,60,0.12);
+  --text: #e8e4dc;
+  --text-light: #e8e4dc;
+  --text-light-muted: #6b6560;
+  --text-primary: #e8e4dc;
+  --text-secondary: #9a9690;
+  --text-muted: #5a5550;
+  --white: #f5f2ec;
+  --cream: #0e0e0e;
+  --cream-2: #161616;
+  --cream-3: #1e1e1e;
+  --font-serif: 'DM Serif Display', Georgia, serif;
   --font-sans: 'DM Sans', sans-serif;
+  --font-display: 'Bebas Neue', sans-serif;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { font-family: var(--font-sans); background: var(--cream); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
 h1, h2, h3, h4 { font-family: var(--font-serif); }
 
-.ProseMirror { outline: none; min-height: 400px; padding: 1rem; font-family: var(--font-sans); font-size: 16px; line-height: 1.8; color: var(--text-primary); }
-.ProseMirror h1 { font-family: var(--font-serif); font-size: 2rem; margin: 1.5rem 0 1rem; }
-.ProseMirror h2 { font-family: var(--font-serif); font-size: 1.6rem; margin: 1.5rem 0 0.75rem; }
-.ProseMirror h3 { font-family: var(--font-serif); font-size: 1.3rem; margin: 1.25rem 0 0.5rem; }
+/* Grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Rich editor */
+.ProseMirror { outline: none; min-height: 400px; padding: 1rem; font-family: var(--font-sans); font-size: 16px; line-height: 1.8; color: #1a1814; background: #fff; }
+.ProseMirror h1 { font-family: var(--font-serif); font-size: 2rem; margin: 1.5rem 0 1rem; color: #1a1814; }
+.ProseMirror h2 { font-family: var(--font-serif); font-size: 1.6rem; margin: 1.5rem 0 0.75rem; color: #1a1814; }
+.ProseMirror h3 { font-family: var(--font-serif); font-size: 1.3rem; margin: 1.25rem 0 0.5rem; color: #1a1814; }
 .ProseMirror p { margin-bottom: 1rem; }
 .ProseMirror ul, .ProseMirror ol { padding-left: 1.5rem; margin-bottom: 1rem; }
-.ProseMirror blockquote { border-left: 3px solid var(--amber); padding-left: 1rem; margin: 1.5rem 0; color: var(--text-secondary); font-style: italic; }
+.ProseMirror blockquote { border-left: 3px solid var(--accent); padding-left: 1rem; margin: 1.5rem 0; color: #5a5550; font-style: italic; }
 .ProseMirror img { max-width: 100%; border-radius: 4px; margin: 1rem 0; }
-.ProseMirror a { color: var(--amber); text-decoration: underline; }
+.ProseMirror a { color: var(--accent); text-decoration: underline; }
 .ProseMirror code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-.ProseMirror .is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: var(--text-muted); pointer-events: none; height: 0; }
+.ProseMirror .is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: #9a9185; pointer-events: none; height: 0; }
 
-.blog-content h1 { font-family: var(--font-serif); font-size: 2rem; margin: 2rem 0 1rem; }
-.blog-content h2 { font-family: var(--font-serif); font-size: 1.6rem; margin: 2rem 0 0.75rem; }
-.blog-content h3 { font-family: var(--font-serif); font-size: 1.3rem; margin: 1.5rem 0 0.5rem; }
+/* Blog content */
+.blog-content h1 { font-family: var(--font-serif); font-size: 2rem; margin: 2rem 0 1rem; color: var(--text); }
+.blog-content h2 { font-family: var(--font-serif); font-size: 1.6rem; margin: 2rem 0 0.75rem; color: var(--text); }
+.blog-content h3 { font-family: var(--font-serif); font-size: 1.3rem; margin: 1.5rem 0 0.5rem; color: var(--text); }
 .blog-content p { margin-bottom: 1.25rem; line-height: 1.85; color: var(--text-secondary); font-size: 17px; }
 .blog-content ul, .blog-content ol { padding-left: 1.5rem; margin-bottom: 1.25rem; }
 .blog-content li { margin-bottom: 0.5rem; color: var(--text-secondary); line-height: 1.7; }
-.blog-content blockquote { border-left: 3px solid var(--amber); padding-left: 1.5rem; margin: 2rem 0; font-style: italic; font-family: var(--font-serif); font-size: 1.1rem; }
+.blog-content blockquote { border-left: 3px solid var(--accent); padding-left: 1.5rem; margin: 2rem 0; font-style: italic; font-family: var(--font-serif); font-size: 1.1rem; color: var(--text); }
 .blog-content img { max-width: 100%; border-radius: 4px; margin: 1.5rem 0; }
-.blog-content a { color: var(--amber); text-decoration: underline; }
-.blog-content strong { color: var(--text-primary); font-weight: 500; }
+.blog-content a { color: var(--accent); text-decoration: underline; }
+.blog-content strong { color: var(--text); font-weight: 500; }
+
+/* PathInfographic override for dark theme */
+.path-infographic-panel {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}

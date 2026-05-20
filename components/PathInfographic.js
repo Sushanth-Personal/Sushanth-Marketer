@@ -1,8 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 
-// ─── data ────────────────────────────────────────────────────────────────────
-
 const TAB_LABELS = {
   searching: "Looking for the right marketer",
   delegated: "Handed it to an agency",
@@ -140,8 +138,6 @@ function getCheckResult(count) {
   return "They can answer all of these clearly? That's rare. Either you have an unusually good agency — or it's worth verifying the answers are real and not rehearsed.";
 }
 
-// ─── sub-panels ──────────────────────────────────────────────────────────────
-
 function SearchingPanel() {
   return (
     <>
@@ -178,16 +174,13 @@ function SearchingPanel() {
 
 function DelegatedPanel() {
   const [checked, setChecked] = useState([]);
-
   function toggle(i) {
     setChecked((prev) =>
       prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i],
     );
   }
-
   const count = checked.length;
   const result = getCheckResult(count);
-
   return (
     <>
       <p style={s.eyebrow}>Agency audit</p>
@@ -202,7 +195,9 @@ function DelegatedPanel() {
         }}
       >
         Tick the ones they can actually answer.{" "}
-        <span style={{ color: "#C8A96E", fontWeight: 500 }}>{count} / 7</span>{" "}
+        <span style={{ color: "var(--accent)", fontWeight: 500 }}>
+          {count} / 7
+        </span>{" "}
         means they've done the groundwork.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -240,11 +235,9 @@ function DelegatedPanel() {
 
 function SalesPanel() {
   const [openIdx, setOpenIdx] = useState(null);
-
   function toggle(i) {
     setOpenIdx((prev) => (prev === i ? null : i));
   }
-
   return (
     <>
       <p style={s.eyebrow}>Find the leak</p>
@@ -301,14 +294,12 @@ function SalesPanel() {
   );
 }
 
-// ─── styles ──────────────────────────────────────────────────────────────────
-
 const s = {
   eyebrow: {
     fontSize: 11,
     letterSpacing: 3,
     textTransform: "uppercase",
-    color: "#C8A96E",
+    color: "var(--accent)",
     marginBottom: 12,
     fontFamily: "var(--font-sans)",
   },
@@ -316,7 +307,7 @@ const s = {
     fontSize: "clamp(18px, 2.5vw, 24px)",
     fontFamily: "var(--font-serif)",
     fontWeight: 400,
-    color: "var(--text-primary)",
+    color: "var(--text)",
     lineHeight: 1.3,
     marginBottom: 28,
   },
@@ -328,19 +319,17 @@ const s = {
     fontStyle: "italic",
     fontFamily: "var(--font-serif)",
   },
-
-  // searching
   mechStep: {
     display: "flex",
     gap: 20,
     alignItems: "flex-start",
     padding: "20px 8px",
-    borderBottom: "0.5px solid var(--border-light)",
+    borderBottom: "0.5px solid var(--border)",
   },
   mechNum: {
     fontSize: 11,
     letterSpacing: 2,
-    color: "#C8A96E",
+    color: "var(--accent)",
     minWidth: 28,
     paddingTop: 2,
     flexShrink: 0,
@@ -348,7 +337,7 @@ const s = {
   },
   mechTitle: {
     fontSize: 15,
-    color: "var(--text-primary)",
+    color: "var(--text)",
     fontWeight: 500,
     marginBottom: 4,
     fontFamily: "var(--font-serif)",
@@ -367,34 +356,25 @@ const s = {
     border: "0.5px solid",
     borderRadius: 2,
   },
-  signalGood: {
-    borderColor: "#C8A96E",
-    color: "#C8A96E",
-  },
-  signalBad: {
-    borderColor: "var(--border-light)",
-    color: "var(--text-secondary)",
-  },
-
-  // delegated
+  signalGood: { borderColor: "var(--accent)", color: "var(--accent)" },
+  signalBad: { borderColor: "var(--border)", color: "var(--text-secondary)" },
   checkItem: {
     display: "flex",
     gap: 14,
     alignItems: "flex-start",
     padding: 16,
-    border: "0.5px solid var(--border-light)",
-    borderRadius: 6,
+    border: "0.5px solid var(--border)",
+    borderRadius: 4,
     cursor: "pointer",
-    transition: "border-color .2s, background .2s",
   },
   checkItemChecked: {
-    borderColor: "#C8A96E",
-    background: "rgba(200,169,110,0.04)",
+    borderColor: "var(--accent)",
+    background: "rgba(184,240,60,0.04)",
   },
   checkBox: {
     width: 18,
     height: 18,
-    border: "1.5px solid var(--border-light)",
+    border: "1.5px solid var(--border)",
     borderRadius: 3,
     flexShrink: 0,
     marginTop: 1,
@@ -402,18 +382,13 @@ const s = {
     alignItems: "center",
     justifyContent: "center",
     fontSize: 11,
-    color: "#fff",
-    transition: "background .2s, border-color .2s",
+    color: "#0e0e0e",
   },
   checkBoxChecked: {
-    background: "#C8A96E",
-    borderColor: "#C8A96E",
+    background: "var(--accent)",
+    borderColor: "var(--accent)",
   },
-  checkQ: {
-    fontSize: 14,
-    color: "var(--text-primary)",
-    lineHeight: 1.5,
-  },
+  checkQ: { fontSize: 14, color: "var(--text)", lineHeight: 1.5 },
   checkNote: {
     fontSize: 12,
     color: "var(--text-secondary)",
@@ -423,55 +398,48 @@ const s = {
   checkResult: {
     marginTop: 20,
     padding: "14px 16px",
-    borderLeft: "2px solid #C8A96E",
+    borderLeft: "2px solid var(--accent)",
     fontSize: 13,
     color: "var(--text-secondary)",
     lineHeight: 1.6,
   },
-
-  // sales / funnel
   funnelStage: {
     display: "flex",
     gap: 16,
     alignItems: "center",
     padding: "14px 16px",
-    border: "0.5px solid var(--border-light)",
+    border: "0.5px solid var(--border)",
     borderRadius: 4,
     cursor: "pointer",
-    transition: "all .2s",
   },
   funnelLeak: {
-    borderColor: "rgba(200,169,110,0.5)",
-    background: "rgba(200,169,110,0.04)",
+    borderColor: "rgba(184,240,60,0.3)",
+    background: "rgba(184,240,60,0.03)",
   },
   funnelHighlight: {
-    borderColor: "rgba(200,169,110,0.8)",
-    background: "rgba(200,169,110,0.06)",
+    borderColor: "rgba(184,240,60,0.6)",
+    background: "rgba(184,240,60,0.05)",
   },
   funnelBarBg: {
     height: 6,
-    background: "var(--border-light)",
+    background: "var(--border)",
     borderRadius: 3,
     overflow: "hidden",
   },
   funnelBarFill: {
     height: "100%",
     borderRadius: 3,
-    background: "#C8A96E",
+    background: "var(--accent)",
     transition: "width .6s ease",
   },
   funnelPct: {
     fontSize: 11,
-    color: "#C8A96E",
+    color: "var(--accent)",
     marginTop: 3,
     letterSpacing: 0.5,
     fontFamily: "var(--font-sans)",
   },
-  funnelLabel: {
-    fontSize: 14,
-    color: "var(--text-primary)",
-    fontWeight: 500,
-  },
+  funnelLabel: { fontSize: 14, color: "var(--text)", fontWeight: 500 },
   funnelSub: {
     fontSize: 12,
     color: "var(--text-secondary)",
@@ -489,45 +457,39 @@ const s = {
     letterSpacing: 1,
     textTransform: "uppercase",
     color: "var(--text-secondary)",
-    border: "0.5px solid rgba(200,169,110,0.4)",
+    border: "0.5px solid rgba(184,240,60,0.3)",
     padding: "3px 8px",
     borderRadius: 2,
     flexShrink: 0,
     fontFamily: "var(--font-sans)",
   },
   funnelBadgeHighlight: {
-    color: "#C8A96E",
-    borderColor: "#C8A96E",
+    color: "var(--accent)",
+    borderColor: "var(--accent)",
   },
   funnelConnector: {
     width: 1,
     height: 8,
-    background: "var(--border-light)",
+    background: "var(--border)",
     margin: "0 auto",
   },
 };
 
-// ─── main component ───────────────────────────────────────────────────────────
-
 export default function PathInfographic({ activePath }) {
-  // Default to whichever tab matches the active path; fall back to "searching"
   const defaultTab =
     activePath && TAB_LABELS[activePath] ? activePath : "searching";
   const [activeTab, setActiveTab] = useState(defaultTab);
 
-  // Keep tab in sync when parent changes activePath
   useEffect(() => {
-    if (activePath && TAB_LABELS[activePath]) {
-      setActiveTab(activePath);
-    }
+    if (activePath && TAB_LABELS[activePath]) setActiveTab(activePath);
   }, [activePath]);
 
   return (
     <section
       style={{
-        background: "var(--cream)",
-        padding: "96px 32px",
-        borderTop: "1px solid var(--border-light)",
+        background: "var(--surface2, #1e1e1e)",
+        padding: "6rem 2.5rem",
+        borderTop: "1px solid var(--border)",
       }}
     >
       <div style={{ maxWidth: 760, margin: "0 auto" }}>
@@ -536,7 +498,7 @@ export default function PathInfographic({ activePath }) {
           style={{
             display: "flex",
             gap: 0,
-            borderBottom: "0.5px solid var(--border-light)",
+            borderBottom: "0.5px solid var(--border)",
             marginBottom: 32,
             overflowX: "auto",
           }}
@@ -548,14 +510,14 @@ export default function PathInfographic({ activePath }) {
                 key={key}
                 onClick={() => setActiveTab(key)}
                 style={{
-                  fontSize: 12,
+                  fontSize: 11,
                   letterSpacing: 1.5,
                   textTransform: "uppercase",
-                  color: isActive ? "#C8A96E" : "var(--text-secondary)",
+                  color: isActive ? "var(--accent)" : "var(--text-muted)",
                   padding: "10px 20px",
                   border: "none",
                   borderBottom: isActive
-                    ? "2px solid #C8A96E"
+                    ? "2px solid var(--accent)"
                     : "2px solid transparent",
                   background: "none",
                   cursor: "pointer",
@@ -570,7 +532,6 @@ export default function PathInfographic({ activePath }) {
           })}
         </div>
 
-        {/* Panel */}
         {activeTab === "searching" && <SearchingPanel />}
         {activeTab === "delegated" && <DelegatedPanel />}
         {activeTab === "sales" && <SalesPanel />}
