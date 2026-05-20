@@ -7,7 +7,11 @@ import Footer from "@/components/Footer";
 import PathInfographic from "@/components/PathInfographic";
 import { supabase } from "@/lib/supabase";
 
-/* ─── DATA ──────────────────────────────────────────────────────────── */
+/* ================================================================
+   SECTION 0 — DATA & CONSTANTS
+   (paths, stats, blogTeasers, services, defaultHp)
+================================================================ */
+
 const paths = {
   searching: {
     label:
@@ -148,7 +152,11 @@ const defaultHp = {
     "The founders who reach out to me aren't looking for another vendor. They're looking for someone who will tell them the truth about why their marketing isn't working — and actually fix it.",
 };
 
-/* ─── COMPONENT ─────────────────────────────────────────────────────── */
+/* ================================================================
+   SECTION 1 — ROOT COMPONENT & STATE
+   (component setup, supabase fetch, scroll trigger logic)
+================================================================ */
+
 export default function Home() {
   const [activePath, setActivePath] = useState(null);
   const [showOverlay, setShowOverlay] = useState(false);
@@ -191,7 +199,10 @@ export default function Home() {
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Navbar />
 
-      {/* ── PATH SELECTION OVERLAY ─────────────────────────────── */}
+      {/* ============================================================
+          SECTION 2 — PATH SELECTION OVERLAY
+          (full-screen modal triggered on scroll, 3 path buttons)
+      ============================================================ */}
       {showOverlay && (
         <div
           style={{
@@ -303,8 +314,10 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      {/* ── HERO ──────────────────────────────────────────────── */}
+      {/* ============================================================
+          SECTION 3 — HERO
+          (full-height, photo right, headline left, skill pills, stats row)
+      ============================================================ */}
       <section
         style={{
           position: "relative",
@@ -313,10 +326,10 @@ export default function Home() {
           overflow: "hidden",
           display: "flex",
           alignItems: "flex-end",
-          paddingTop: 68,
+          paddingTop: 120,
         }}
       >
-        {/* Ghost name */}
+        {/* Ghost watermark name */}
         <div
           style={{
             position: "absolute",
@@ -324,7 +337,7 @@ export default function Home() {
             left: "50%",
             transform: "translate(-50%, -50%)",
             fontFamily: "var(--font-display)",
-            fontSize: "clamp(8rem, 22vw, 20rem)",
+            fontSize: "clamp(6rem, 14vw, 13rem)",
             color: "rgba(255,255,255,0.02)",
             whiteSpace: "nowrap",
             pointerEvents: "none",
@@ -401,14 +414,14 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Hero content */}
+        {/* Hero text content */}
         <div
           style={{
             position: "relative",
             zIndex: 5,
             maxWidth: 1100,
             margin: "0 auto",
-            padding: "0 2.5rem 5rem",
+            padding: "6rem 2.5rem 5rem",
             width: "100%",
           }}
         >
@@ -419,12 +432,12 @@ export default function Home() {
           <h1
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "clamp(3rem, 8vw, 7rem)",
-              lineHeight: 0.95,
+              fontSize: "clamp(2rem, 5vw, 4.5rem)",
+              lineHeight: 1.05,
               letterSpacing: "-0.01em",
               color: "var(--white)",
-              marginBottom: "2rem",
-              maxWidth: 900,
+              marginBottom: "1.5rem",
+              maxWidth: 700,
             }}
           >
             You've seen enough average.{" "}
@@ -433,24 +446,63 @@ export default function Home() {
             </span>
           </h1>
 
+          {/* ── SKILL PILLS — what I do, unmissable ── */}
+          <div
+            style={{
+              display: "flex",
+              gap: "0.6rem",
+              flexWrap: "wrap",
+              marginBottom: "2rem",
+            }}
+          >
+            {[
+              { label: "Brand Messaging", icon: "◈" },
+              { label: "Ad Strategy & Copy", icon: "◎" },
+              { label: "SEO & Web", icon: "⬡" },
+            ].map((skill) => (
+              <div
+                key={skill.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  background: "rgba(184,240,60,0.06)",
+                  border: "1px solid rgba(184,240,60,0.2)",
+                  padding: "0.45rem 1rem",
+                  borderRadius: "2px",
+                  fontSize: "0.78rem",
+                  color: "var(--accent)",
+                  fontFamily: "var(--font-sans)",
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                }}
+              >
+                <span style={{ fontSize: "0.65rem", opacity: 0.7 }}>
+                  {skill.icon}
+                </span>
+                {skill.label}
+              </div>
+            ))}
+          </div>
+
           <p
             style={{
               fontSize: "1.05rem",
               lineHeight: 1.65,
               color: "#b5b0a8",
-              maxWidth: 520,
-              marginBottom: "3rem",
+              maxWidth: 480,
+              marginBottom: "2.5rem",
               fontWeight: 300,
             }}
           >
-            I build sites that rank, write copy that converts, and run ads that
-            bring the right people.{" "}
+            One person. All of it connected.{" "}
             <strong style={{ color: "var(--text)", fontWeight: 400 }}>
-              Everything your business needs to grow — from one person who
-              actually cares.
+              Strategy, copy, and execution that works as a system — not a stack
+              of separate deliverables.
             </strong>
           </p>
 
+          {/* CTA buttons */}
           <div
             style={{
               display: "flex",
@@ -468,7 +520,7 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Stats */}
+          {/* Mini stats row */}
           <div
             style={{
               display: "flex",
@@ -541,7 +593,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PROBLEM SECTION ──────────────────────────────────── */}
+      {/* ============================================================
+          SECTION 4 — PROBLEM
+          Three StoryBrand layers:
+          LEFT  — External problem (the world is broken)
+          RIGHT — Internal problem (what it makes you feel)
+                  + Philosophical problem (the injustice)
+          BOTTOM — Research stats + hook line
+      ============================================================ */}
       <section
         style={{
           background: "var(--surface)",
@@ -559,8 +618,9 @@ export default function Home() {
             alignItems: "start",
           }}
         >
+          {/* LEFT — External problem */}
           <div>
-            <p style={eyebrow({})}>The honest problem</p>
+            <p style={eyebrow({})}>The external problem</p>
             <h2 style={sectionTitle}>
               You're putting time and money
               <br />
@@ -576,104 +636,128 @@ export default function Home() {
                 lineHeight: 1.8,
               }}
             >
-              <p style={{ marginBottom: "1.2rem" }}>
+              <p style={{ marginBottom: "1.5rem" }}>
                 Some of it is working. Enough to keep going. Not enough to stop
                 wondering.
               </p>
-              <div
-                style={{
-                  borderLeft: "2px solid var(--accent)",
-                  paddingLeft: "2rem",
-                  margin: "2rem 0",
-                }}
+              <p style={{ marginBottom: "1.5rem" }}>
+                The agency is producing. The content is going out. The ads are
+                running. But nobody owns the whole picture — and that gap is
+                where your budget disappears.
+              </p>
+              <p
+                style={{ color: "rgba(232,228,220,0.7)", fontSize: "0.92rem" }}
               >
-                {[
-                  "Is this really the best my marketing can do?",
-                  "How much am I leaving on the table?",
-                  "Should I spend more — or is the problem somewhere else entirely?",
-                ].map((q, i) => (
-                  <p
-                    key={i}
-                    style={{
-                      fontFamily: "var(--font-serif)",
-                      fontSize: "1.1rem",
-                      fontStyle: "italic",
-                      color: "rgba(232,228,220,0.7)",
-                      lineHeight: 1.5,
-                      padding: "1rem 0",
-                      borderBottom:
-                        i < 2 ? "1px solid rgba(255,255,255,0.06)" : "none",
-                    }}
-                  >
-                    {q}
-                  </p>
-                ))}
-              </div>
-              <p>
-                Nobody around you has a straight answer. And that's the problem.
+                Marketing today is sold in pieces. Strategy from one person.
+                Copy from another. Ads from a third. Each doing their part.
+                Nobody responsible for whether it actually works together.
               </p>
             </div>
           </div>
 
+          {/* RIGHT — Internal + Philosophical problem */}
           <div
             style={{
               background: "var(--bg)",
               border: "1px solid var(--border)",
               borderLeft: "3px solid var(--accent)",
-              padding: "2rem",
+              padding: "2.5rem",
               borderRadius: "4px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "2rem",
             }}
           >
-            <p
-              style={{
-                fontFamily: "var(--font-serif)",
-                fontSize: "1.4rem",
-                lineHeight: 1.4,
-                color: "var(--white)",
-                marginBottom: "1rem",
-                fontStyle: "italic",
-              }}
-            >
-              "The best marketing doesn't feel like marketing. It feels like a
-              conversation you were already having in your head."
-            </p>
-            <p
-              style={{
-                fontSize: "0.75rem",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--text-muted)",
-                marginBottom: "2rem",
-              }}
-            >
-              — Something I genuinely believe
-            </p>
-            <div
-              style={{
-                borderTop: "1px solid var(--border)",
-                paddingTop: "1.5rem",
-              }}
-            >
+            {/* Internal problem */}
+            <div>
               <p
                 style={{
-                  fontSize: "0.88rem",
-                  color: "var(--text-muted)",
-                  lineHeight: 1.75,
+                  fontSize: "0.68rem",
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  color: "var(--accent)",
+                  fontFamily: "var(--font-sans)",
+                  marginBottom: "1rem",
+                  opacity: 0.7,
                 }}
               >
-                I've read Breakthrough Advertising cover to cover. I've built
-                landing pages, run SEO campaigns, managed paid ads, designed the
-                UI and written every word on the site.{" "}
-                <span style={{ color: "var(--text)" }}>
-                  Not as separate deliverables — as one connected system.
-                </span>{" "}
-                That's the difference.
+                What it makes you feel
+              </p>
+              <p
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "1.15rem",
+                  lineHeight: 1.65,
+                  color: "var(--white)",
+                  marginBottom: "0.75rem",
+                }}
+              >
+                You built something real. You're smart enough to run a business.
+                So why can't you figure out why the marketing isn't working?
+              </p>
+              <p
+                style={{
+                  fontSize: "0.92rem",
+                  color: "rgba(232,228,220,0.75)",
+                  lineHeight: 1.75,
+                  fontWeight: 300,
+                }}
+              >
+                That question sits quietly. In the review meeting. In the
+                monthly report. In the gap between what you're spending and what
+                you're seeing. Most founders I talk to aren't failing — they're
+                succeeding just enough to keep second-guessing everything.
+              </p>
+            </div>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: "var(--border)" }} />
+
+            {/* Philosophical problem */}
+            <div>
+              <p
+                style={{
+                  fontSize: "0.68rem",
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  color: "var(--accent)",
+                  fontFamily: "var(--font-sans)",
+                  marginBottom: "1rem",
+                  opacity: 0.7,
+                }}
+              >
+                Why it's wrong
+              </p>
+              <p
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "1.15rem",
+                  lineHeight: 1.65,
+                  color: "var(--white)",
+                  marginBottom: "0.75rem",
+                }}
+              >
+                The best product shouldn't lose because someone else told a
+                better story.
+              </p>
+              <p
+                style={{
+                  fontSize: "0.92rem",
+                  color: "rgba(232,228,220,0.75)",
+                  lineHeight: 1.75,
+                  fontWeight: 300,
+                }}
+              >
+                But right now, it does. Every day. Founders who built something
+                genuinely better are being out-marketed by people who simply
+                understood their customer more clearly. That's not a marketing
+                problem. That's an injustice. And it's fixable.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Research stats row */}
         <div
           style={{
             maxWidth: 1100,
@@ -708,7 +792,7 @@ export default function Home() {
               <p
                 style={{
                   fontSize: "0.85rem",
-                  color: "var(--text-muted)",
+                  color: "var(--text-secondary)",
                   lineHeight: 1.75,
                   marginBottom: "0.75rem",
                   fontWeight: 300,
@@ -722,7 +806,7 @@ export default function Home() {
                 rel="noopener noreferrer"
                 style={{
                   fontSize: "0.7rem",
-                  color: "rgba(255,255,255,0.12)",
+                  color: "rgba(255,255,255,0.35)",
                   fontFamily: "var(--font-sans)",
                   textDecoration: "none",
                   letterSpacing: "0.5px",
@@ -741,10 +825,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SCROLL TRIGGER ──────────────────────────────────── */}
+      {/* ============================================================
+          SECTION 5 — SCROLL TRIGGER + PATH INDICATOR
+          (invisible div that fires overlay; active-path banner)
+      ============================================================ */}
       <div id="path-trigger" />
 
-      {/* ── PATH INDICATOR ──────────────────────────────────── */}
       {activePath && (
         <section
           style={{
@@ -809,7 +895,10 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── INOCULATION / PATH-AWARE ─────────────────────────── */}
+      {/* ============================================================
+          SECTION 6 — INOCULATION / PATH-AWARE CONTENT
+          (shows personalised copy if path selected, else generic 2-card grid)
+      ============================================================ */}
       <section
         style={{
           background: "var(--bg)",
@@ -957,10 +1046,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PATH INFOGRAPHIC ─────────────────────────────────── */}
+      {/* ============================================================
+          SECTION 7 — PATH INFOGRAPHIC
+          (tabbed interactive component — see components/PathInfographic.js)
+      ============================================================ */}
       <PathInfographic activePath={activePath} />
 
-      {/* ── WHAT I DO ────────────────────────────────────────── */}
+      {/* ============================================================
+          SECTION 8 — WHAT I DO / SERVICES
+          (3-card services grid)
+      ============================================================ */}
       <section
         style={{
           background: "var(--surface)",
@@ -1078,7 +1173,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CASE STUDIES ─────────────────────────────────────── */}
+      {/* ============================================================
+          SECTION 9 — CASE STUDIES
+          (2-col cards: TMCI and Ever Sweet)
+      ============================================================ */}
       <section
         style={{
           background: "var(--bg)",
@@ -1103,7 +1201,7 @@ export default function Home() {
               marginTop: "3rem",
             }}
           >
-            {/* TMCI */}
+            {/* TMCI card */}
             <div
               style={{
                 background: "var(--surface)",
@@ -1225,7 +1323,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* EVER SWEET */}
+            {/* Ever Sweet card */}
             <div
               style={{
                 background: "var(--surface)",
@@ -1354,7 +1452,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── BACKGROUND ────────────────────────────────────────── */}
+      {/* ============================================================
+          SECTION 10 — BACKGROUND / ABOUT
+          (2-col: timeline left, statement paragraphs + books right)
+      ============================================================ */}
       <section
         style={{
           background: "var(--surface)",
@@ -1485,7 +1586,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Statement */}
+          {/* Statement paragraphs + books */}
           <div>
             <div
               style={{
@@ -1562,7 +1663,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── BLOG GATEWAY ────────────────────────────────────── */}
+      {/* ============================================================
+          SECTION 11 — BLOG GATEWAY
+          (5-card blog teaser grid + see all link)
+      ============================================================ */}
       <section
         style={{
           background: "var(--bg)",
@@ -1665,7 +1769,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── FINAL CTA ─────────────────────────────────────────── */}
+      {/* ============================================================
+          SECTION 12 — FINAL CTA
+          (centred headline, email link)
+      ============================================================ */}
       <section
         style={{
           background: "var(--surface)",
@@ -1726,7 +1833,11 @@ export default function Home() {
   );
 }
 
-/* ─── SHARED STYLE HELPERS ──────────────────────────────────────────── */
+/* ================================================================
+   SECTION 13 — SHARED STYLE HELPERS
+   (eyebrow, sectionTitle, hookLine, btnPrimary, btnGhost)
+================================================================ */
+
 function eyebrow({ center } = {}) {
   return {
     fontSize: "0.72rem",
