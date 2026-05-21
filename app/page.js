@@ -27,9 +27,9 @@ function useIsMobile() {
 const stats = [
   {
     stat: "95%",
-    desc: "of buying decisions are emotionally driven",
-    source: "Harvard Business Review",
-    url: "https://hbr.org/2015/11/the-new-science-of-customer-emotions",
+    desc: "of buying decisions are made in the subconscious mind",
+    source: "Harvard Business School",
+    url: "https://www.library.hbs.edu/working-knowledge/the-subconscious-mind-of-the-consumer-and-how-to-reach-it",
   },
   {
     stat: "64%",
@@ -597,8 +597,8 @@ export default function Home() {
       )}
 
       {/* ============================================================
-          SECTION 3 — PROBLEM
-      ============================================================ */}
+    SECTION 3 — THE PROBLEM
+============================================================ */}
       <section
         style={{
           background: "var(--surface)",
@@ -616,12 +616,10 @@ export default function Home() {
             alignItems: "start",
           }}
         >
-          {/* LEFT */}
           <div>
-            <p style={eyebrow({})}>The external problem</p>
+            <p style={eyebrow({})}>The problem</p>
             <h2 style={sectionTitle(isMobile)}>
-              You're putting time and money
-              <br />
+              You're putting time and money{" "}
               <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
                 into marketing.
               </em>
@@ -653,7 +651,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* RIGHT */}
           <div
             style={{
               background: "var(--bg)",
@@ -706,9 +703,7 @@ export default function Home() {
                 succeeding just enough to keep second-guessing everything.
               </p>
             </div>
-
             <div style={{ height: 1, background: "var(--border)" }} />
-
             <div>
               <p
                 style={{
@@ -751,82 +746,11 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        {/* Stats row */}
-        <div
-          style={{
-            maxWidth: 1100,
-            margin: "4rem auto 0",
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
-            borderTop: "1px solid var(--border)",
-          }}
-        >
-          {stats.map((s, i) => (
-            <div
-              key={i}
-              style={{
-                padding: "1.75rem",
-                paddingLeft: !isMobile && i > 0 ? "2rem" : isMobile ? 0 : 0,
-                borderRight:
-                  !isMobile && i < 2 ? "1px solid var(--border)" : "none",
-                borderBottom:
-                  isMobile && i < 2 ? "1px solid var(--border)" : "none",
-                paddingTop: isMobile && i > 0 ? "1.75rem" : "1.75rem",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: isMobile ? "2.5rem" : "3rem",
-                  color: "var(--accent)",
-                  fontWeight: 400,
-                  lineHeight: 1,
-                  marginBottom: "0.75rem",
-                  letterSpacing: "0.02em",
-                }}
-              >
-                {s.stat}
-              </p>
-              <p
-                style={{
-                  fontSize: "0.85rem",
-                  color: "var(--text-secondary)",
-                  lineHeight: 1.75,
-                  marginBottom: "0.75rem",
-                  fontWeight: 300,
-                }}
-              >
-                {s.desc}
-              </p>
-              <a
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontSize: "0.7rem",
-                  color: "rgba(255,255,255,0.35)",
-                  fontFamily: "var(--font-sans)",
-                  textDecoration: "none",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                {s.source} ↗
-              </a>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ maxWidth: 1100, margin: "3rem auto 0" }}>
-          <p style={hookLine}>
-            Here's what working with me actually looks like
-          </p>
-        </div>
       </section>
 
       {/* ============================================================
-          SECTION 4 — WHY MARKETING FAILS
-      ============================================================ */}
+    SECTION 4A — WHY IT HAPPENS (PSYCHOLOGY)
+============================================================ */}
       <section
         style={{
           background: "var(--bg)",
@@ -835,77 +759,810 @@ export default function Home() {
         }}
       >
         <div style={{ maxWidth: 760, margin: "0 auto" }}>
-          <p style={eyebrow({})}>The real reason</p>
+          <p style={eyebrow({})}>Why it happens</p>
           <h2 style={sectionTitle(isMobile)}>
-            Most marketing fails for one reason.
+            Your customer doesn't buy with their brain.
           </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "3rem",
+              maxWidth: 620,
+            }}
+          >
+            Most marketing is built for the logical mind — features,
+            comparisons, price points. But buying decisions don't happen there.
+            They happen faster, deeper, and mostly without the customer
+            realising it. The marketing that wins isn't the most informative.
+            It's the most felt.
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+              borderTop: "1px solid var(--border)",
+              marginBottom: "3rem",
+            }}
+          >
+            {[
+              {
+                stat: "95%",
+                desc: "of purchase decisions are made in the subconscious mind",
+                source: "Harvard Business School",
+                url: "https://www.library.hbs.edu/working-knowledge/the-subconscious-mind-of-the-consumer-and-how-to-reach-it",
+              },
+              {
+                stat: "64%",
+                desc: "of consumers say shared values are the main reason they stay loyal to a brand",
+                source: "Harvard Business Review",
+                url: "https://hbr.org/2012/05/three-myths-about-what-customers-want",
+              },
+              {
+                stat: "57%",
+                desc: "of consumers spend more with brands they feel emotionally connected to",
+                source: "Sprout Social",
+                url: "https://sproutsocial.com/insights/data/social-media-connection/",
+              },
+            ].map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: "1.75rem",
+                  paddingLeft: !isMobile && i > 0 ? "2rem" : 0,
+                  borderRight:
+                    !isMobile && i < 2 ? "1px solid var(--border)" : "none",
+                  borderBottom:
+                    isMobile && i < 2 ? "1px solid var(--border)" : "none",
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: isMobile ? "2.5rem" : "3rem",
+                    color: "var(--accent)",
+                    fontWeight: 400,
+                    lineHeight: 1,
+                    marginBottom: "0.75rem",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {s.stat}
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.85rem",
+                    color: "var(--text-secondary)",
+                    lineHeight: 1.75,
+                    marginBottom: "0.75rem",
+                    fontWeight: 300,
+                  }}
+                >
+                  {s.desc}
+                </p>
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: "0.7rem",
+                    color: "rgba(255,255,255,0.35)",
+                    fontFamily: "var(--font-sans)",
+                    textDecoration: "none",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  {s.source} ↗
+                </a>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ ...hookLine }}>
+            So the fix is a great copywriter, right?
+          </p>
+        </div>
+      </section>
+
+      {/* ============================================================
+    SECTION 4B — PARTIAL SOLUTION 1: COPYWRITER
+============================================================ */}
+      <section
+        style={{
+          background: "var(--surface)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <p style={eyebrow({})}>Partial solution — and why it's partial</p>
+          <h2 style={sectionTitle(isMobile)}>
+            A great copywriter changes everything.{" "}
+            <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+              For the people already on your site.
+            </em>
+          </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "2rem",
+              maxWidth: 620,
+            }}
+          >
+            A copywriter who truly understands consumer psychology — awareness
+            levels, emotional state, what the customer was thinking before they
+            landed — can turn a page that gets ignored into one that converts.
+            That's real. That matters.
+          </p>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "3rem",
+              maxWidth: 620,
+            }}
+          >
+            But here's the problem nobody says out loud: a copywriter optimises
+            for the person who's already there. They don't get people there in
+            the first place. If nobody is finding your website, the best copy in
+            the world converts zero visitors into zero customers. Beautifully.
+          </p>
+
+          <div
+            style={{
+              background: "var(--bg)",
+              border: "1px solid var(--border)",
+              borderLeft: "3px solid var(--accent)",
+              padding: isMobile ? "1.75rem" : "2.5rem",
+              borderRadius: "4px",
+              marginBottom: "3rem",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "0.68rem",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "var(--accent)",
+                fontFamily: "var(--font-sans)",
+                marginBottom: "1rem",
+                opacity: 0.7,
+              }}
+            >
+              The real question
+            </p>
+            <p
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "1.1rem",
+                lineHeight: 1.65,
+                color: "var(--white)",
+                marginBottom: "0.75rem",
+              }}
+            >
+              How does your customer find you in the first place?
+            </p>
+            <p
+              style={{
+                fontSize: "0.92rem",
+                color: "rgba(232,228,220,0.65)",
+                lineHeight: 1.75,
+                fontWeight: 300,
+              }}
+            >
+              They either stumble on you through social media — a post, a share,
+              a recommendation. Or they go looking for something on Google and
+              you show up. Or you don't. One of those two paths brought every
+              customer you've ever had. And only one of them scales without you
+              personally posting every day.
+            </p>
+          </div>
+
+          <p style={{ ...hookLine }}>That's where SEO comes in</p>
+        </div>
+      </section>
+
+      {/* ============================================================
+    SECTION 4C — THE SEO PROBLEM
+============================================================ */}
+      <section
+        style={{
+          background: "var(--bg)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <p style={eyebrow({})}>The traffic problem</p>
+          <h2 style={sectionTitle(isMobile)}>
+            SEO gets people to your site.{" "}
+            <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+              It doesn't make them stay.
+            </em>
+          </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "2rem",
+              maxWidth: 620,
+            }}
+          >
+            An SEO specialist knows how to make Google understand your website.
+            Keywords, structure, backlinks, technical signals — the language of
+            algorithms. Get this right and you show up when your customer is
+            searching. That's not nothing. That's actually everything for
+            sustainable growth.
+          </p>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "3rem",
+              maxWidth: 620,
+            }}
+          >
+            But an SEO specialist speaks the language of Google. Not the
+            language of your customer. They'll optimise your page for search
+            terms that rank. They won't optimise it for the person who just
+            arrived carrying a specific frustration, a specific hope, and about
+            eight seconds of patience. That's a copywriter's job. And most SEO
+            people will tell you that themselves.
+          </p>
+
           <div
             style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
               gap: 1,
               background: "rgba(255,255,255,0.04)",
-              marginTop: "3rem",
+              marginBottom: "3rem",
             }}
           >
             {[
               {
-                icon: "◉",
-                title: "It talks to everyone",
-                body: "When you write for everyone, you resonate with no one. A message built for a 28-year-old SaaS founder and a 52-year-old operations director lands with neither.",
+                label: "What SEO optimises for",
+                who: "Google",
+                points: [
+                  "Search volume and keyword intent",
+                  "Page structure and technical signals",
+                  "Backlinks and domain authority",
+                  "Rankings on terms people search",
+                  "Crawlability and site speed",
+                ],
               },
               {
-                icon: "◈",
-                title: "Humans don't buy logically",
-                body: "Your customer doesn't compare features in a spreadsheet. They feel something — or they don't. The brand that wins is rarely the best product. It's the one that made the right person feel understood.",
+                label: "What copywriting optimises for",
+                who: "Your customer",
+                points: [
+                  "The emotion the visitor arrives with",
+                  "Their awareness of the problem",
+                  "The exact words that make them feel seen",
+                  "Trust built sentence by sentence",
+                  "The moment they decide to act",
+                ],
               },
-            ].map((item, i) => (
+            ].map((col, i) => (
               <div
                 key={i}
                 style={{
                   background: "var(--surface)",
-                  padding: isMobile ? "2rem 1.5rem" : "2.5rem 2rem",
+                  padding: isMobile ? "1.75rem 1.5rem" : "2rem",
+                  borderTop: `2px solid ${i === 0 ? "rgba(184,240,60,0.4)" : "rgba(184,240,60,0.15)"}`,
                 }}
               >
                 <p
                   style={{
-                    fontSize: "1.2rem",
+                    fontSize: "0.68rem",
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
                     color: "var(--accent)",
-                    marginBottom: "1rem",
+                    fontFamily: "var(--font-sans)",
+                    marginBottom: "0.4rem",
+                    opacity: 0.8,
                   }}
                 >
-                  {item.icon}
+                  {col.label}
                 </p>
                 <p
                   style={{
-                    fontFamily: "var(--font-serif)",
-                    fontSize: "1.1rem",
-                    color: "var(--text-light)",
-                    marginBottom: "0.75rem",
+                    fontSize: "0.78rem",
+                    color: "var(--text-muted)",
+                    fontFamily: "var(--font-sans)",
+                    marginBottom: "1.25rem",
+                    letterSpacing: "0.05em",
                   }}
                 >
-                  {item.title}
+                  Speaks to:{" "}
+                  <span style={{ color: "var(--accent)", opacity: 0.9 }}>
+                    {col.who}
+                  </span>
                 </p>
-                <p
+                <div
                   style={{
-                    fontSize: "0.88rem",
-                    color: "rgba(232,228,220,0.5)",
-                    lineHeight: 1.85,
-                    fontWeight: 300,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.75rem",
                   }}
                 >
-                  {item.body}
-                </p>
+                  {col.points.map((point, j) => (
+                    <div
+                      key={j}
+                      style={{
+                        display: "flex",
+                        gap: "0.75rem",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: "var(--accent)",
+                          fontSize: "0.65rem",
+                          marginTop: "0.25rem",
+                          opacity: 0.5,
+                          flexShrink: 0,
+                        }}
+                      >
+                        ◆
+                      </span>
+                      <p
+                        style={{
+                          fontSize: "0.88rem",
+                          color: "var(--text-muted)",
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        {point}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
+
+          <p style={{ ...hookLine }}>So just hire both, right?</p>
         </div>
       </section>
 
       {/* ============================================================
+    SECTION 4D — WHY HIRING ALL THREE IS YES AND NO
+============================================================ */}
+      <section
+        style={{
+          background: "var(--surface)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <p style={eyebrow({})}>The obvious answer</p>
+          <h2 style={sectionTitle(isMobile)}>
+            Hire a strategist, a copywriter, and an SEO.{" "}
+            <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+              Yes. And no.
+            </em>
+          </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "3rem",
+              maxWidth: 620,
+            }}
+          >
+            Yes — because you do need all three things to happen. Strategy,
+            copy, and search visibility are not optional. A business that has
+            all three working well is genuinely hard to compete with. So hiring
+            for all three is the right instinct.
+          </p>
+
+          {/* Stats */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+              borderTop: "1px solid var(--border)",
+              borderBottom: "1px solid var(--border)",
+              marginBottom: "3rem",
+            }}
+          >
+            {[
+              {
+                stat: "85%",
+                desc: "of marketing teams report frequently working toward different goals from each other",
+                source: "Mural / The Martec Group, 2025",
+                url: "https://www.carriermanagement.com/news/2025/05/28/275682.htm",
+              },
+              {
+                stat: "65%",
+                desc: "of marketers say working in silos directly reduces the clarity of their campaigns",
+                source: "Forbes",
+                url: "https://www.slashexperts.com/post/why-cross-functional-marketing-collaboration-fails-and-how-to-fix-it",
+              },
+              {
+                stat: "63%",
+                desc: "of businesses say sales and marketing are not working well together",
+                source: "The Marketing Centre",
+                url: "https://www.themarketingcentre.com/blog/sm-alignment-interview",
+              },
+            ].map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: "1.75rem",
+                  paddingLeft: !isMobile && i > 0 ? "2rem" : 0,
+                  borderRight:
+                    !isMobile && i < 2 ? "1px solid var(--border)" : "none",
+                  borderBottom:
+                    isMobile && i < 2 ? "1px solid var(--border)" : "none",
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: isMobile ? "2.5rem" : "3rem",
+                    color: "var(--accent)",
+                    fontWeight: 400,
+                    lineHeight: 1,
+                    marginBottom: "0.75rem",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {s.stat}
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.85rem",
+                    color: "var(--text-secondary)",
+                    lineHeight: 1.75,
+                    marginBottom: "0.75rem",
+                    fontWeight: 300,
+                  }}
+                >
+                  {s.desc}
+                </p>
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: "0.7rem",
+                    color: "rgba(255,255,255,0.35)",
+                    fontFamily: "var(--font-sans)",
+                    textDecoration: "none",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  {s.source} ↗
+                </a>
+              </div>
+            ))}
+          </div>
+
+          <p
+            style={{
+              fontSize: "0.72rem",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "var(--accent)",
+              fontFamily: "var(--font-sans)",
+              marginBottom: "1.5rem",
+              opacity: 0.8,
+            }}
+          >
+            But here's what actually happens
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "1px",
+              background: "rgba(255,255,255,0.04)",
+              marginBottom: "3rem",
+            }}
+          >
+            {[
+  {
+    problem: "Nobody owns the outcome",
+    detail: "When results don't come, the SEO says the copy isn't converting. The copywriter says the traffic is unqualified. Everyone is doing their job. Nobody is responsible for whether it works together.",
+  },
+  {
+    problem: "SEO and copy pulling in opposite directions",
+    detail: "The SEO wants the headline to contain the keyword. The copywriter wants the headline to land emotionally. Without someone who understands both deeply, you compromise both. You rank adequately and convert poorly.",
+  },
+].map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "var(--bg)",
+                  padding: isMobile ? "1.75rem 1.5rem" : "2rem 2.5rem",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "0.92rem",
+                    fontWeight: 500,
+                    color: "var(--white)",
+                    marginBottom: "0.6rem",
+                    fontFamily: "var(--font-sans)",
+                  }}
+                >
+                  {item.problem}
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.88rem",
+                    color: "rgba(232,228,220,0.55)",
+                    lineHeight: 1.75,
+                    fontWeight: 300,
+                  }}
+                >
+                  {item.detail}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ ...hookLine }}>There is a better way</p>
+        </div>
+      </section>
+
+      {/* ============================================================
+    SECTION 4E — THE FOURTH WALL / PROOF CALLOUT
+============================================================ */}
+      <section
+        style={{
+          background: "var(--bg)",
+          padding: isMobile ? "4rem 1.25rem" : "6rem 2.5rem",
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 680,
+            margin: "0 auto",
+            textAlign: "center",
+          }}
+        >
+          <p
+            style={{
+              fontSize: "0.72rem",
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              color: "var(--accent)",
+              fontFamily: "var(--font-sans)",
+              marginBottom: "2rem",
+              opacity: 0.7,
+            }}
+          >
+            A small observation
+          </p>
+          <p
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: isMobile ? "1.3rem" : "1.7rem",
+              lineHeight: 1.55,
+              color: "var(--white)",
+              marginBottom: "1.5rem",
+            }}
+          >
+            If you've read this far, you didn't stumble here by accident.
+          </p>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "rgba(232,228,220,0.55)",
+              lineHeight: 1.8,
+              fontWeight: 300,
+              marginBottom: "1.5rem",
+            }}
+          >
+            The copy on this page made you keep reading. That's not an accident
+            — that's consumer psychology applied deliberately. Every section was
+            written to speak to a specific feeling you already had before you
+            arrived.
+          </p>
+
+          <div
+            style={{
+              display: "inline-block",
+              border: "1px solid rgba(184,240,60,0.25)",
+              borderLeft: "3px solid var(--accent)",
+              padding: "1.25rem 2rem",
+              borderRadius: "4px",
+              textAlign: "left",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "0.88rem",
+                color: "rgba(232,228,220,0.6)",
+                lineHeight: 1.75,
+                fontWeight: 300,
+              }}
+            >
+              The balance between SEO and copywriting — writing for Google and
+              writing for humans at the same time — is something very few people
+              know how to do well. I may not be the best in the world at it yet.{" "}
+              <span style={{ color: "var(--text)", fontWeight: 400 }}>
+                But I'm working towards it. And this page is the current
+                evidence.
+              </span>
+            </p>
+          </div>
+        </div>
+      </section>
+      {/* ============================================================
           SECTION 5 — SERVICES
       ============================================================ */}
+
       <section
+        style={{
+          background: "var(--surface)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <p style={eyebrow({})}>The solution</p>
+          <h2 style={{ ...sectionTitle(isMobile), marginBottom: "0.75rem" }}>
+            Stop buying pieces.{" "}
+            <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+              Own the whole system.
+            </em>
+          </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "rgba(232,228,220,0.5)",
+              lineHeight: 1.85,
+              marginBottom: "1.5rem",
+              fontWeight: 300,
+              maxWidth: 600,
+            }}
+          >
+            The reason your marketing feels disconnected is because it is. You
+            hired separate people for strategy, copy, and ads — and nobody is
+            responsible for how it all fits together.
+          </p>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "rgba(232,228,220,0.6)",
+              lineHeight: 1.85,
+              marginBottom: "3rem",
+              fontWeight: 300,
+              maxWidth: 600,
+            }}
+          >
+            The fix isn't another vendor. It's one person who starts with who
+            your customer actually is, what they feel, and what they need to
+            hear — then builds everything from that foundation.
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+              gap: "1.5rem",
+            }}
+          >
+            {[
+              {
+                num: "01",
+                title: "Brand Messaging",
+                desc: 'The words that make your right customer say "this is exactly for me."',
+                detail:
+                  "2–3 week engagement. Positioning, tone, and a messaging doc your whole team can use.",
+              },
+              {
+                num: "02",
+                title: "Ad Strategy & Copy",
+                desc: "Campaigns built on psychology, not best practices from 2019.",
+                detail:
+                  "Starts with audience research. Ends with ad copy you can run the same week.",
+              },
+              {
+                num: "03",
+                title: "Marketing Audit",
+                desc: "Find exactly where your marketing is leaking before spending another dollar.",
+                detail:
+                  "One focused session. You leave with a ranked list of what to fix first.",
+              },
+            ].map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "var(--bg)",
+                  border: "1px solid var(--border)",
+                  padding: "2rem",
+                  borderRadius: "4px",
+                  borderTop:
+                    i === 0
+                      ? "2px solid var(--accent)"
+                      : "2px solid rgba(184,240,60,0.2)",
+                  transition: "transform 0.2s, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-3px)";
+                  e.currentTarget.style.borderTopColor = "var(--accent)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.borderTopColor =
+                    i === 0 ? "var(--accent)" : "rgba(184,240,60,0.2)";
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "3.5rem",
+                    color: "rgba(184,240,60,0.08)",
+                    lineHeight: 1,
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  {s.num}
+                </div>
+                <p
+                  style={{
+                    fontSize: "0.95rem",
+                    fontWeight: 500,
+                    color: "var(--white)",
+                    marginBottom: "0.8rem",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {s.title}
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.88rem",
+                    color: "var(--text-muted)",
+                    lineHeight: 1.65,
+                    marginBottom: "1.2rem",
+                  }}
+                >
+                  {s.desc}
+                </p>
+                <div
+                  style={{
+                    marginTop: "1.2rem",
+                    paddingTop: "1.2rem",
+                    borderTop: "1px solid var(--border)",
+                    fontSize: "0.75rem",
+                    color: "var(--accent)",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  → {s.detail}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ ...hookLine, marginTop: "4rem" }}>
+            But why should you trust me to do this?
+          </p>
+        </div>
+      </section>
+      {/* <section
         style={{
           background: "var(--surface)",
           padding: `${sectionPy} ${px}`,
@@ -1020,7 +1677,7 @@ export default function Home() {
             The work isn't theory
           </p>
         </div>
-      </section>
+      </section> */}
 
       {/* ============================================================
           SECTION 6 — CASE STUDIES
