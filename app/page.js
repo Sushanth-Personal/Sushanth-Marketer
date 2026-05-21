@@ -4,72 +4,25 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PathInfographic from "@/components/PathInfographic";
 import { supabase } from "@/lib/supabase";
 
 /* ================================================================
-   SECTION 0 — DATA & CONSTANTS
-   (paths, stats, blogTeasers, services, defaultHp)
+   MOBILE HOOK — SSR-safe, re-checks on resize
 ================================================================ */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
 
-const paths = {
-  searching: {
-    label:
-      "I know marketing matters — I am looking for the right person to handle it",
-    sublabel: "You understand the value. You just need to know who to trust.",
-    inocTitle:
-      "The hardest part isn't finding a marketer. It's knowing if they're actually good.",
-    inocBody:
-      "Most marketers show you a portfolio, talk strategy, and sound convincing. But one thing separates someone who gets results from someone who just gets busy:",
-    inocQuestion:
-      '"Do they start by asking who your customer is — or by talking about what they can do?"',
-    inocClose:
-      "Anyone who jumps to execution before understanding your customer is guessing. Confidently. Expensively. The right person asks uncomfortable questions before touching anything.",
-    inocEnd: "Has anyone asked you those questions yet?",
-    inocBlog: {
-      text: "How to evaluate a marketer before you hire them →",
-      slug: "how-to-evaluate-a-marketer",
-    },
-  },
-  delegated: {
-    label:
-      "I have handed it to an agency or marketer — sitting back waiting for results",
-    sublabel:
-      "Things are running. But you are not entirely sure you picked the right one.",
-    inocTitle:
-      "Your agency might be doing everything they promised. That might be the problem.",
-    inocBody:
-      "Agencies deliver what they agreed to — content, ads, reports, reach. But there is one question most were never asked before they started:",
-    inocQuestion:
-      '"Who exactly is the one person we are talking to — and what are they feeling before they see this ad?"',
-    inocClose:
-      "If that question was never asked, everything that followed — however professional it looks — was built on a guess. And you are paying for that guess every month.",
-    inocEnd: "When was the last time your agency asked you that?",
-    inocBlog: {
-      text: "What to ask your agency in the next review meeting →",
-      slug: "what-to-ask-your-marketing-team",
-    },
-  },
-  sales: {
-    label:
-      "My sales are not where I want them — I am not sure what the problem is",
-    sublabel:
-      "You know the number is wrong. You just haven't found the leak yet.",
-    inocTitle: "Most sales problems are not sales problems.",
-    inocBody:
-      "When revenue is flat, the instinct is to look at pricing, the product, the sales team. Rarely does anyone look at what happens before all of that:",
-    inocQuestion:
-      '"Does the right person even feel like this was made for them — before they ever talk to you?"',
-    inocClose:
-      "If your marketing is talking to everyone, it is resonating with no one. Your sales team is working hard to close people who were never properly warmed up. The leak is upstream.",
-    inocEnd:
-      "What if the problem isn't your product or your sales — but who you're speaking to and what you're saying?",
-    inocBlog: {
-      text: "Why your sales problem might actually be a marketing problem →",
-      slug: "why-sales-problem-is-marketing-problem",
-    },
-  },
-};
+/* ================================================================
+   SECTION 0 — DATA & CONSTANTS
+================================================================ */
 
 const stats = [
   {
@@ -153,15 +106,12 @@ const defaultHp = {
 };
 
 /* ================================================================
-   SECTION 1 — ROOT COMPONENT & STATE
-   (component setup, supabase fetch, scroll trigger logic)
+   SECTION 1 — ROOT COMPONENT
 ================================================================ */
 
 export default function Home() {
-  const [activePath, setActivePath] = useState(null);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [overlayTriggered, setOverlayTriggered] = useState(false);
   const [hp, setHpState] = useState(defaultHp);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     async function fetchHp() {
@@ -178,382 +128,116 @@ export default function Home() {
     fetchHp();
   }, []);
 
-  useEffect(() => {
-    function handleScroll() {
-      if (overlayTriggered) return;
-      const trigger = document.getElementById("path-trigger");
-      if (!trigger) return;
-      const rect = trigger.getBoundingClientRect();
-      if (rect.top <= window.innerHeight * 0.6) {
-        setShowOverlay(true);
-        setOverlayTriggered(true);
-      }
-    }
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [overlayTriggered]);
-
-  const path = activePath ? paths[activePath] : null;
+  const px = isMobile ? "1.25rem" : "2.5rem";
+  const sectionPy = isMobile ? "3.5rem" : "6rem";
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Navbar />
 
       {/* ============================================================
-          SECTION 2 — PATH SELECTION OVERLAY
-          (full-screen modal triggered on scroll, 3 path buttons)
+          SECTION 2 — HERO
+          Mobile: photo as top banner, text stacked below
+          Desktop: photo absolute right-half, text left
       ============================================================ */}
-      {showOverlay && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 999,
-            background: "rgba(10,10,8,0.97)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "24px",
-            backdropFilter: "blur(4px)",
-          }}
-        >
-          <div style={{ maxWidth: 560, width: "100%" }}>
-            <p style={eyebrow({ center: true })}>Before you read further</p>
-            <h2
-              style={{
-                fontFamily: "var(--font-serif)",
-                fontSize: "clamp(24px, 3.5vw, 36px)",
-                fontWeight: 400,
-                color: "var(--text-light)",
-                lineHeight: 1.25,
-                marginBottom: 12,
-                textAlign: "center",
-              }}
-            >
-              This matters. Tell me where you are.
-            </h2>
+      {isMobile ? (
+        <section style={{ background: "var(--bg)" }}>
+          {/* ZONE 1 — Headline */}
+          <div
+            style={{
+              padding: "86px 18px 24px",
+              borderBottom: "1px solid #1a1a1a",
+            }}
+          >
             <p
               style={{
-                fontSize: 15,
-                color: "rgba(232,228,220,0.5)",
+                fontSize: "0.6rem",
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
+                color: "var(--accent)",
+                marginBottom: "1rem",
                 fontFamily: "var(--font-sans)",
-                lineHeight: 1.7,
-                textAlign: "center",
-                marginBottom: 40,
-                fontWeight: 300,
               }}
             >
-              What you read next will be different depending on your situation.
-              <br />
-              Pick the one that is closest to where you are right now.
+              {hp.heroEyebrow || "Marketing Strategist — For Founders"}
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {Object.entries(paths).map(([key, p]) => (
-                <button
-                  key={key}
-                  onClick={() => {
-                    setActivePath(key);
-                    setShowOverlay(false);
-                  }}
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    color: "var(--text-light)",
-                    padding: "20px 24px",
-                    textAlign: "left",
-                    cursor: "pointer",
-                    fontFamily: "var(--font-sans)",
-                    borderRadius: 0,
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(184,240,60,0.05)";
-                    e.currentTarget.style.borderColor = "var(--accent)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                    e.currentTarget.style.borderColor =
-                      "rgba(255,255,255,0.08)";
-                  }}
-                >
-                  <p
-                    style={{
-                      fontSize: 15,
-                      color: "var(--text-light)",
-                      marginBottom: 4,
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {p.label}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: 12,
-                      color: "rgba(232,228,220,0.4)",
-                      fontWeight: 300,
-                    }}
-                  >
-                    {p.sublabel}
-                  </p>
-                </button>
-              ))}
-            </div>
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(2.8rem, 13vw, 4rem)",
+                lineHeight: 1.0,
+                letterSpacing: "-0.01em",
+                color: "var(--white)",
+                marginBottom: "1.25rem",
+              }}
+            >
+              You've seen
+              <br />
+              enough average.{" "}
+              <span style={{ color: "var(--accent)" }}>
+                Welcome to
+                <br />
+                the other side.
+              </span>
+            </h1>
             <p
               style={{
-                fontSize: 12,
-                color: "#2a2a2a",
-                textAlign: "center",
-                marginTop: 24,
-                cursor: "pointer",
+                fontSize: "0.88rem",
+                lineHeight: 1.65,
+                color: "#b5b0a8",
+                fontWeight: 300,
                 fontFamily: "var(--font-sans)",
               }}
-              onClick={() => setShowOverlay(false)}
             >
-              Skip for now →
+              One person. All of it connected.{" "}
+              <strong style={{ color: "var(--text)", fontWeight: 400 }}>
+                Strategy, copy, and execution that works as a system — not a
+                stack of separate deliverables.
+              </strong>
             </p>
           </div>
-        </div>
-      )}
-      {/* ============================================================
-          SECTION 3 — HERO
-          (full-height, photo right, headline left, skill pills, stats row)
-      ============================================================ */}
-      <section
-        style={{
-          position: "relative",
-          minHeight: "100vh",
-          background: "var(--bg)",
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "flex-end",
-          paddingTop: 120,
-        }}
-      >
-        {/* Ghost watermark name */}
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(6rem, 14vw, 13rem)",
-            color: "rgba(255,255,255,0.02)",
-            whiteSpace: "nowrap",
-            pointerEvents: "none",
-            letterSpacing: "-0.02em",
-            userSelect: "none",
-            zIndex: 1,
-          }}
-        >
-          SUSHANTH
-        </div>
 
-        {/* Photo — right half */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: "55%",
-            zIndex: 2,
-          }}
-        >
-          <Image
-            src="/photos/sushanth.png"
-            alt="Sushanth P"
-            fill
-            style={{ objectFit: "cover", objectPosition: "top center" }}
-            priority
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(to right, #0e0e0e 0%, rgba(14,14,14,0.65) 40%, rgba(14,14,14,0.05) 100%)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 240,
-              background: "linear-gradient(to top, #0e0e0e, transparent)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 2,
-              background: "var(--accent)",
-            }}
-          />
-          <p
-            style={{
-              position: "absolute",
-              right: 20,
-              top: "50%",
-              transform: "translateY(-50%) rotate(90deg)",
-              fontSize: 9,
-              letterSpacing: "4px",
-              color: "rgba(232,228,220,0.1)",
-              textTransform: "uppercase",
-              fontFamily: "var(--font-sans)",
-              zIndex: 3,
-              whiteSpace: "nowrap",
-            }}
-          >
-            Marketing Strategist
-          </p>
-        </div>
-
-        {/* Hero text content */}
-        <div
-          style={{
-            position: "relative",
-            zIndex: 5,
-            maxWidth: 1100,
-            margin: "0 auto",
-            padding: "6rem 2.5rem 5rem",
-            width: "100%",
-          }}
-        >
-          <p style={eyebrow({})}>
-            {hp.heroEyebrow || "Sushanth P — Marketing Strategist, Bangalore"}
-          </p>
-
-          <h1
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(2rem, 5vw, 4.5rem)",
-              lineHeight: 1.05,
-              letterSpacing: "-0.01em",
-              color: "var(--white)",
-              marginBottom: "1.5rem",
-              maxWidth: 700,
-            }}
-          >
-            You've seen enough average.{" "}
-            <span style={{ color: "var(--accent)" }}>
-              Welcome to the other side of it.
-            </span>
-          </h1>
-
-          {/* ── SKILL PILLS — what I do, unmissable ── */}
+          {/* ZONE 3 — Stats */}
           <div
             style={{
               display: "flex",
-              gap: "0.6rem",
-              flexWrap: "wrap",
-              marginBottom: "2rem",
+              borderTop: "1px solid #1a1a1a",
+              borderBottom: "1px solid #1a1a1a",
             }}
           >
             {[
-              { label: "Brand Messaging", icon: "◈" },
-              { label: "Ad Strategy & Copy", icon: "◎" },
-              { label: "SEO & Web", icon: "⬡" },
-            ].map((skill) => (
+              { num: "2", label: "Brands Built" },
+              { num: "3X", label: "Organic Growth" },
+              { num: "₹0", label: "Paid at Launch" },
+            ].map((s, i) => (
               <div
-                key={skill.label}
+                key={i}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  background: "rgba(184,240,60,0.06)",
-                  border: "1px solid rgba(184,240,60,0.2)",
-                  padding: "0.45rem 1rem",
-                  borderRadius: "2px",
-                  fontSize: "0.78rem",
-                  color: "var(--accent)",
-                  fontFamily: "var(--font-sans)",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
+                  flex: 1,
+                  padding: "14px 0",
+                  textAlign: "center",
+                  borderLeft: i > 0 ? "1px solid #1a1a1a" : "none",
                 }}
               >
-                <span style={{ fontSize: "0.65rem", opacity: 0.7 }}>
-                  {skill.icon}
-                </span>
-                {skill.label}
-              </div>
-            ))}
-          </div>
-
-          <p
-            style={{
-              fontSize: "1.05rem",
-              lineHeight: 1.65,
-              color: "#b5b0a8",
-              maxWidth: 480,
-              marginBottom: "2.5rem",
-              fontWeight: 300,
-            }}
-          >
-            One person. All of it connected.{" "}
-            <strong style={{ color: "var(--text)", fontWeight: 400 }}>
-              Strategy, copy, and execution that works as a system — not a stack
-              of separate deliverables.
-            </strong>
-          </p>
-
-          {/* CTA buttons */}
-          <div
-            style={{
-              display: "flex",
-              gap: 24,
-              alignItems: "center",
-              flexWrap: "wrap",
-              marginBottom: "3rem",
-            }}
-          >
-            <a href="mailto:hello@sushanthp.com" style={btnPrimary}>
-              Let's talk →
-            </a>
-            <Link href="/blog" style={btnGhost}>
-              Read how I think
-            </Link>
-          </div>
-
-          {/* Mini stats row */}
-          <div
-            style={{
-              display: "flex",
-              gap: "3rem",
-              paddingTop: "2rem",
-              borderTop: "1px solid var(--border)",
-              flexWrap: "wrap",
-            }}
-          >
-            {[
-              { num: "2", label: "Brands Built End-to-End" },
-              { num: "3X", label: "Organic Growth, TMCI" },
-              { num: "₹0", label: "Ad Spend to First Sales, Ever Sweet" },
-            ].map((s, i) => (
-              <div key={i}>
                 <div
                   style={{
                     fontFamily: "var(--font-display)",
-                    fontSize: "2.4rem",
+                    fontSize: "1.75rem",
                     color: "var(--accent)",
-                    letterSpacing: "0.02em",
                     lineHeight: 1,
+                    letterSpacing: "0.03em",
                   }}
                 >
                   {s.num}
                 </div>
                 <div
                   style={{
-                    fontSize: "0.72rem",
-                    letterSpacing: "0.12em",
+                    fontSize: "0.5rem",
+                    letterSpacing: "0.1em",
                     textTransform: "uppercase",
                     color: "var(--text-muted)",
-                    marginTop: "0.3rem",
+                    marginTop: "0.25rem",
+                    fontFamily: "var(--font-sans)",
                   }}
                 >
                   {s.label}
@@ -561,50 +245,364 @@ export default function Home() {
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Scroll hint */}
-        <div
+          {/* ZONE 4 — CTAs */}
+          <div
+            style={{
+              padding: "14px 16px 28px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.6rem",
+            }}
+          >
+            <a
+              href="mailto:hello@sushanthp.com"
+              style={{
+                background: "var(--accent)",
+                color: "#0e0e0e",
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                padding: "14px",
+                textAlign: "center",
+                borderRadius: "3px",
+                textDecoration: "none",
+                display: "block",
+              }}
+            >
+              Let's Talk →
+            </a>
+            <Link
+              href="/blog"
+              style={{
+                border: "1px solid #222",
+                color: "var(--text-muted)",
+                fontSize: "0.72rem",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                padding: "13px",
+                textAlign: "center",
+                borderRadius: "3px",
+                textDecoration: "none",
+                display: "block",
+              }}
+            >
+              Read How I Think
+            </Link>
+          </div>
+
+          {/* ZONE 2 — Photo */}
+          <div
+            style={{
+              height: 320,
+              position: "relative",
+              overflow: "hidden",
+              background: "#0a0a0a",
+            }}
+          >
+            <Image
+              src="/photos/sushanth.png"
+              alt="Sushanth P"
+              fill
+              style={{ objectFit: "cover", objectPosition: "center 25%" }}
+              priority
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 100,
+                background:
+                  "linear-gradient(to bottom, transparent, var(--bg))",
+                zIndex: 2,
+              }}
+            />
+          </div>
+        </section>
+      ) : (
+        /* ── DESKTOP HERO ── */
+        <section
           style={{
-            position: "absolute",
-            right: "2.5rem",
-            bottom: "4rem",
-            writingMode: "vertical-rl",
-            fontSize: "0.7rem",
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            color: "var(--text-muted)",
+            position: "relative",
+            minHeight: "100vh",
+            background: "var(--bg)",
+            overflow: "hidden",
             display: "flex",
-            alignItems: "center",
-            gap: "0.8rem",
-            zIndex: 5,
+            alignItems: "flex-end",
+            paddingTop: 120,
           }}
         >
-          <span
+          {/* Ghost watermark */}
+          <div
             style={{
-              width: 1,
-              height: 60,
-              background:
-                "linear-gradient(to bottom, transparent, var(--text-muted))",
-              display: "block",
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(6rem, 14vw, 13rem)",
+              color: "rgba(255,255,255,0.02)",
+              whiteSpace: "nowrap",
+              pointerEvents: "none",
+              letterSpacing: "-0.02em",
+              userSelect: "none",
+              zIndex: 1,
             }}
-          />
-          Scroll
-        </div>
-      </section>
+          >
+            SUSHANTH
+          </div>
+
+          {/* Photo — right half */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: "55%",
+              zIndex: 2,
+            }}
+          >
+            <Image
+              src="/photos/sushanth.png"
+              alt="Sushanth P"
+              fill
+              style={{ objectFit: "cover", objectPosition: "top center" }}
+              priority
+            />
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(to right, #0e0e0e 0%, rgba(14,14,14,0.65) 40%, rgba(14,14,14,0.05) 100%)",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 240,
+                background: "linear-gradient(to top, #0e0e0e, transparent)",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 2,
+                background: "var(--accent)",
+              }}
+            />
+            <p
+              style={{
+                position: "absolute",
+                right: 20,
+                top: "50%",
+                transform: "translateY(-50%) rotate(90deg)",
+                fontSize: 9,
+                letterSpacing: "4px",
+                color: "rgba(232,228,220,0.1)",
+                textTransform: "uppercase",
+                fontFamily: "var(--font-sans)",
+                zIndex: 3,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Marketing Strategist
+            </p>
+          </div>
+
+          {/* Hero text */}
+          <div
+            style={{
+              position: "relative",
+              zIndex: 5,
+              maxWidth: 1100,
+              margin: "0 auto",
+              padding: "6rem 2.5rem 5rem",
+              width: "100%",
+            }}
+          >
+            <p style={eyebrow({})}>
+              {hp.heroEyebrow || "Sushanth P — Marketing Strategist, Bangalore"}
+            </p>
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(2rem, 5vw, 4.5rem)",
+                lineHeight: 1.05,
+                letterSpacing: "-0.01em",
+                color: "var(--white)",
+                marginBottom: "1.5rem",
+                maxWidth: 700,
+              }}
+            >
+              You've seen enough average.{" "}
+              <span style={{ color: "var(--accent)" }}>
+                Welcome to the other side of it.
+              </span>
+            </h1>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "0.6rem",
+                flexWrap: "wrap",
+                marginBottom: "2rem",
+              }}
+            >
+              {[
+                { label: "Brand Messaging", icon: "◈" },
+                { label: "Ad Strategy & Copy", icon: "◎" },
+                { label: "SEO & Web", icon: "⬡" },
+              ].map((skill) => (
+                <div
+                  key={skill.label}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    background: "rgba(184,240,60,0.06)",
+                    border: "1px solid rgba(184,240,60,0.2)",
+                    padding: "0.45rem 1rem",
+                    borderRadius: "2px",
+                    fontSize: "0.78rem",
+                    color: "var(--accent)",
+                    fontFamily: "var(--font-sans)",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  <span style={{ fontSize: "0.65rem", opacity: 0.7 }}>
+                    {skill.icon}
+                  </span>
+                  {skill.label}
+                </div>
+              ))}
+            </div>
+
+            <p
+              style={{
+                fontSize: "1.05rem",
+                lineHeight: 1.65,
+                color: "#b5b0a8",
+                maxWidth: 480,
+                marginBottom: "2.5rem",
+                fontWeight: 300,
+              }}
+            >
+              One person. All of it connected.{" "}
+              <strong style={{ color: "var(--text)", fontWeight: 400 }}>
+                Strategy, copy, and execution that works as a system — not a
+                stack of separate deliverables.
+              </strong>
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 24,
+                alignItems: "center",
+                flexWrap: "wrap",
+                marginBottom: "3rem",
+              }}
+            >
+              <a href="mailto:hello@sushanthp.com" style={btnPrimary}>
+                Let's talk →
+              </a>
+              <Link href="/blog" style={btnGhost}>
+                Read how I think
+              </Link>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "3rem",
+                paddingTop: "2rem",
+                borderTop: "1px solid var(--border)",
+                flexWrap: "wrap",
+              }}
+            >
+              {[
+                { num: "2", label: "Brands Built End-to-End" },
+                { num: "3X", label: "Organic Growth, TMCI" },
+                { num: "₹0", label: "Ad Spend to First Sales, Ever Sweet" },
+              ].map((s, i) => (
+                <div key={i}>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "2.4rem",
+                      color: "var(--accent)",
+                      letterSpacing: "0.02em",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {s.num}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.72rem",
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: "var(--text-muted)",
+                      marginTop: "0.3rem",
+                    }}
+                  >
+                    {s.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Scroll hint */}
+          <div
+            style={{
+              position: "absolute",
+              right: "2.5rem",
+              bottom: "4rem",
+              writingMode: "vertical-rl",
+              fontSize: "0.7rem",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "var(--text-muted)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.8rem",
+              zIndex: 5,
+            }}
+          >
+            <span
+              style={{
+                width: 1,
+                height: 60,
+                background:
+                  "linear-gradient(to bottom, transparent, var(--text-muted))",
+                display: "block",
+              }}
+            />
+            Scroll
+          </div>
+        </section>
+      )}
 
       {/* ============================================================
-          SECTION 4 — PROBLEM
-          Three StoryBrand layers:
-          LEFT  — External problem (the world is broken)
-          RIGHT — Internal problem (what it makes you feel)
-                  + Philosophical problem (the injustice)
-          BOTTOM — Research stats + hook line
+          SECTION 3 — PROBLEM
       ============================================================ */}
       <section
         style={{
           background: "var(--surface)",
-          padding: "6rem 2.5rem",
+          padding: `${sectionPy} ${px}`,
           borderTop: "1px solid var(--border)",
         }}
       >
@@ -613,15 +611,15 @@ export default function Home() {
             maxWidth: 1100,
             margin: "0 auto",
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "5rem",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: isMobile ? "2.5rem" : "5rem",
             alignItems: "start",
           }}
         >
-          {/* LEFT — External problem */}
+          {/* LEFT */}
           <div>
             <p style={eyebrow({})}>The external problem</p>
-            <h2 style={sectionTitle}>
+            <h2 style={sectionTitle(isMobile)}>
               You're putting time and money
               <br />
               <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
@@ -655,20 +653,19 @@ export default function Home() {
             </div>
           </div>
 
-          {/* RIGHT — Internal + Philosophical problem */}
+          {/* RIGHT */}
           <div
             style={{
               background: "var(--bg)",
               border: "1px solid var(--border)",
               borderLeft: "3px solid var(--accent)",
-              padding: "2.5rem",
+              padding: isMobile ? "1.75rem" : "2.5rem",
               borderRadius: "4px",
               display: "flex",
               flexDirection: "column",
               gap: "2rem",
             }}
           >
-            {/* Internal problem */}
             <div>
               <p
                 style={{
@@ -686,7 +683,7 @@ export default function Home() {
               <p
                 style={{
                   fontFamily: "var(--font-serif)",
-                  fontSize: "1.15rem",
+                  fontSize: "1.1rem",
                   lineHeight: 1.65,
                   color: "var(--white)",
                   marginBottom: "0.75rem",
@@ -710,10 +707,8 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Divider */}
             <div style={{ height: 1, background: "var(--border)" }} />
 
-            {/* Philosophical problem */}
             <div>
               <p
                 style={{
@@ -731,7 +726,7 @@ export default function Home() {
               <p
                 style={{
                   fontFamily: "var(--font-serif)",
-                  fontSize: "1.15rem",
+                  fontSize: "1.1rem",
                   lineHeight: 1.65,
                   color: "var(--white)",
                   marginBottom: "0.75rem",
@@ -757,13 +752,13 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Research stats row */}
+        {/* Stats row */}
         <div
           style={{
             maxWidth: 1100,
             margin: "4rem auto 0",
             display: "grid",
-            gridTemplateColumns: "repeat(3,1fr)",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
             borderTop: "1px solid var(--border)",
           }}
         >
@@ -771,15 +766,19 @@ export default function Home() {
             <div
               key={i}
               style={{
-                padding: "2rem",
-                paddingLeft: i > 0 ? "2rem" : 0,
-                borderRight: i < 2 ? "1px solid var(--border)" : "none",
+                padding: "1.75rem",
+                paddingLeft: !isMobile && i > 0 ? "2rem" : isMobile ? 0 : 0,
+                borderRight:
+                  !isMobile && i < 2 ? "1px solid var(--border)" : "none",
+                borderBottom:
+                  isMobile && i < 2 ? "1px solid var(--border)" : "none",
+                paddingTop: isMobile && i > 0 ? "1.75rem" : "1.75rem",
               }}
             >
               <p
                 style={{
                   fontFamily: "var(--font-display)",
-                  fontSize: "3rem",
+                  fontSize: isMobile ? "2.5rem" : "3rem",
                   color: "var(--accent)",
                   fontWeight: 400,
                   lineHeight: 1,
@@ -826,246 +825,96 @@ export default function Home() {
       </section>
 
       {/* ============================================================
-          SECTION 5 — SCROLL TRIGGER + PATH INDICATOR
-          (invisible div that fires overlay; active-path banner)
-      ============================================================ */}
-      <div id="path-trigger" />
-
-      {activePath && (
-        <section
-          style={{
-            background: "var(--dark-2)",
-            padding: "1rem 2.5rem",
-            borderTop: "1px solid var(--border)",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
-          <div
-            style={{
-              maxWidth: 1100,
-              margin: "0 auto",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 12,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: "var(--accent)",
-                  flexShrink: 0,
-                }}
-              />
-              <p
-                style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(232,228,220,0.4)",
-                  fontFamily: "var(--font-sans)",
-                }}
-              >
-                Showing content for:{" "}
-                <strong
-                  style={{ color: "rgba(232,228,220,0.7)", fontWeight: 400 }}
-                >
-                  {paths[activePath]?.label}
-                </strong>
-              </p>
-            </div>
-            <button
-              onClick={() => setShowOverlay(true)}
-              style={{
-                fontSize: "0.7rem",
-                color: "var(--accent)",
-                fontFamily: "var(--font-sans)",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-              }}
-            >
-              Change →
-            </button>
-          </div>
-        </section>
-      )}
-
-      {/* ============================================================
-          SECTION 6 — INOCULATION / PATH-AWARE CONTENT
-          (shows personalised copy if path selected, else generic 2-card grid)
+          SECTION 4 — WHY MARKETING FAILS
       ============================================================ */}
       <section
         style={{
           background: "var(--bg)",
-          padding: "6rem 2.5rem",
+          padding: `${sectionPy} ${px}`,
           borderTop: "1px solid var(--border)",
         }}
       >
         <div style={{ maxWidth: 760, margin: "0 auto" }}>
-          {path ? (
-            <>
-              <h2 style={sectionTitle}>{path.inocTitle}</h2>
-              <p
+          <p style={eyebrow({})}>The real reason</p>
+          <h2 style={sectionTitle(isMobile)}>
+            Most marketing fails for one reason.
+          </h2>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: 1,
+              background: "rgba(255,255,255,0.04)",
+              marginTop: "3rem",
+            }}
+          >
+            {[
+              {
+                icon: "◉",
+                title: "It talks to everyone",
+                body: "When you write for everyone, you resonate with no one. A message built for a 28-year-old SaaS founder and a 52-year-old operations director lands with neither.",
+              },
+              {
+                icon: "◈",
+                title: "Humans don't buy logically",
+                body: "Your customer doesn't compare features in a spreadsheet. They feel something — or they don't. The brand that wins is rarely the best product. It's the one that made the right person feel understood.",
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
                 style={{
-                  fontSize: "1rem",
-                  color: "rgba(232,228,220,0.6)",
-                  lineHeight: 1.85,
-                  marginBottom: "1.75rem",
-                  fontWeight: 300,
-                }}
-              >
-                {path.inocBody}
-              </p>
-              <blockquote
-                style={{
-                  borderLeft: "2px solid var(--accent)",
-                  paddingLeft: "1.75rem",
-                  margin: "2rem 0",
+                  background: "var(--surface)",
+                  padding: isMobile ? "2rem 1.5rem" : "2.5rem 2rem",
                 }}
               >
                 <p
                   style={{
-                    fontFamily: "var(--font-serif)",
-                    fontSize: "1.35rem",
-                    fontStyle: "italic",
-                    color: "var(--text-light)",
-                    lineHeight: 1.6,
+                    fontSize: "1.2rem",
+                    color: "var(--accent)",
+                    marginBottom: "1rem",
                   }}
                 >
-                  {path.inocQuestion}
+                  {item.icon}
                 </p>
-              </blockquote>
-              <p
-                style={{
-                  fontSize: "1rem",
-                  color: "rgba(232,228,220,0.6)",
-                  lineHeight: 1.85,
-                  marginBottom: "1.25rem",
-                  fontWeight: 300,
-                }}
-              >
-                {path.inocClose}
-              </p>
-              <p
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "1.15rem",
-                  color: "var(--accent)",
-                  fontStyle: "italic",
-                  marginBottom: "2rem",
-                }}
-              >
-                {path.inocEnd}
-              </p>
-              <Link
-                href={`/blog/${path.inocBlog.slug}`}
-                style={{
-                  color: "var(--accent)",
-                  fontSize: "0.85rem",
-                  fontFamily: "var(--font-sans)",
-                  letterSpacing: "0.5px",
-                  textDecoration: "none",
-                  borderBottom: "1px solid rgba(184,240,60,0.3)",
-                  paddingBottom: 2,
-                }}
-              >
-                {path.inocBlog.text}
-              </Link>
-            </>
-          ) : (
-            <>
-              <p style={eyebrow({})}>The real reason</p>
-              <h2 style={sectionTitle}>Most marketing fails for one reason.</h2>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 1,
-                  background: "rgba(255,255,255,0.04)",
-                  marginTop: "3rem",
-                }}
-              >
-                {[
-                  {
-                    icon: "◉",
-                    title: "It talks to everyone",
-                    body: "When you write for everyone, you resonate with no one. A message built for a 28-year-old SaaS founder and a 52-year-old operations director lands with neither.",
-                  },
-                  {
-                    icon: "◈",
-                    title: "Humans don't buy logically",
-                    body: "Your customer doesn't compare features in a spreadsheet. They feel something — or they don't. The brand that wins is rarely the best product. It's the one that made the right person feel understood.",
-                  },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      background: "var(--surface)",
-                      padding: "2.5rem 2rem",
-                    }}
-                  >
-                    <p
-                      style={{
-                        fontSize: "1.2rem",
-                        color: "var(--accent)",
-                        marginBottom: "1rem",
-                      }}
-                    >
-                      {item.icon}
-                    </p>
-                    <p
-                      style={{
-                        fontFamily: "var(--font-serif)",
-                        fontSize: "1.1rem",
-                        color: "var(--text-light)",
-                        marginBottom: "0.75rem",
-                      }}
-                    >
-                      {item.title}
-                    </p>
-                    <p
-                      style={{
-                        fontSize: "0.88rem",
-                        color: "rgba(232,228,220,0.5)",
-                        lineHeight: 1.85,
-                        fontWeight: 300,
-                      }}
-                    >
-                      {item.body}
-                    </p>
-                  </div>
-                ))}
+                <p
+                  style={{
+                    fontFamily: "var(--font-serif)",
+                    fontSize: "1.1rem",
+                    color: "var(--text-light)",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  {item.title}
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.88rem",
+                    color: "rgba(232,228,220,0.5)",
+                    lineHeight: 1.85,
+                    fontWeight: 300,
+                  }}
+                >
+                  {item.body}
+                </p>
               </div>
-            </>
-          )}
+            ))}
+          </div>
         </div>
       </section>
 
       {/* ============================================================
-          SECTION 7 — PATH INFOGRAPHIC
-          (tabbed interactive component — see components/PathInfographic.js)
-      ============================================================ */}
-      <PathInfographic activePath={activePath} />
-
-      {/* ============================================================
-          SECTION 8 — WHAT I DO / SERVICES
-          (3-card services grid)
+          SECTION 5 — SERVICES
       ============================================================ */}
       <section
         style={{
           background: "var(--surface)",
-          padding: "6rem 2.5rem",
+          padding: `${sectionPy} ${px}`,
           borderTop: "1px solid var(--border)",
         }}
       >
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <p style={eyebrow({})}>What I bring</p>
-          <h2 style={{ ...sectionTitle, marginBottom: "0.75rem" }}>
+          <h2 style={{ ...sectionTitle(isMobile), marginBottom: "0.75rem" }}>
             Three things. One person.{" "}
             <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
               Zero handoff friction.
@@ -1092,7 +941,7 @@ export default function Home() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
               gap: "1.5rem",
             }}
           >
@@ -1174,19 +1023,18 @@ export default function Home() {
       </section>
 
       {/* ============================================================
-          SECTION 9 — CASE STUDIES
-          (2-col cards: TMCI and Ever Sweet)
+          SECTION 6 — CASE STUDIES
       ============================================================ */}
       <section
         style={{
           background: "var(--bg)",
-          padding: "6rem 2.5rem",
+          padding: `${sectionPy} ${px}`,
           borderTop: "1px solid var(--border)",
         }}
       >
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <p style={eyebrow({})}>Case studies</p>
-          <h2 style={sectionTitle}>
+          <h2 style={sectionTitle(isMobile)}>
             Two brands. Built from zero.{" "}
             <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
               Different worlds, same approach.
@@ -1196,12 +1044,12 @@ export default function Home() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
               gap: "2rem",
               marginTop: "3rem",
             }}
           >
-            {/* TMCI card */}
+            {/* TMCI */}
             <div
               style={{
                 background: "var(--surface)",
@@ -1221,7 +1069,7 @@ export default function Home() {
             >
               <div
                 style={{
-                  height: 200,
+                  height: 180,
                   background: "#0a0e1a",
                   display: "flex",
                   alignItems: "center",
@@ -1258,7 +1106,7 @@ export default function Home() {
                   B2B Industrial
                 </div>
               </div>
-              <div style={{ padding: "1.8rem" }}>
+              <div style={{ padding: "1.75rem" }}>
                 <p
                   style={{
                     fontSize: "1rem",
@@ -1280,8 +1128,7 @@ export default function Home() {
                   An industrial brand that marketed like it was still 2010. I
                   built the site in Next.js from scratch, rewrote every word,
                   ran SEO campaigns, and set up a Google Ads funnel targeting
-                  engineers, not just procurement teams. The site now works
-                  harder than the sales team used to.
+                  engineers, not just procurement teams.
                 </p>
                 <div
                   style={{
@@ -1293,7 +1140,7 @@ export default function Home() {
                 >
                   {[
                     ["3X", "Organic Sessions"],
-                    ["Full", "SEO + Ads Ownership"],
+                    ["Full", "SEO + Ads"],
                     ["Next.js", "Built & Maintained"],
                   ].map(([v, l], i) => (
                     <div key={i}>
@@ -1309,7 +1156,7 @@ export default function Home() {
                       </div>
                       <div
                         style={{
-                          fontSize: "0.68rem",
+                          fontSize: "0.65rem",
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
                           color: "var(--text-muted)",
@@ -1323,7 +1170,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Ever Sweet card */}
+            {/* Ever Sweet */}
             <div
               style={{
                 background: "var(--surface)",
@@ -1343,7 +1190,7 @@ export default function Home() {
             >
               <div
                 style={{
-                  height: 200,
+                  height: 180,
                   background: "#0e0a05",
                   display: "flex",
                   alignItems: "center",
@@ -1380,7 +1227,7 @@ export default function Home() {
                   D2C Artisan Food
                 </div>
               </div>
-              <div style={{ padding: "1.8rem" }}>
+              <div style={{ padding: "1.75rem" }}>
                 <p
                   style={{
                     fontSize: "1rem",
@@ -1403,7 +1250,7 @@ export default function Home() {
                   marketing budget. I built the brand identity, the Instagram
                   content system, the pricing strategy, and the first sales
                   funnel entirely on organic reach. Daily revenue from month
-                  one. Nothing we post looks like every other pastry brand.
+                  one.
                 </p>
                 <div
                   style={{
@@ -1414,9 +1261,9 @@ export default function Home() {
                   }}
                 >
                   {[
-                    ["₹0", "Paid Spend at Launch"],
+                    ["₹0", "Paid Spend"],
                     ["Day 1", "First Revenue"],
-                    ["Organic", "100% Growth Channel"],
+                    ["Organic", "100% Growth"],
                   ].map(([v, l], i) => (
                     <div key={i}>
                       <div
@@ -1431,7 +1278,7 @@ export default function Home() {
                       </div>
                       <div
                         style={{
-                          fontSize: "0.68rem",
+                          fontSize: "0.65rem",
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
                           color: "var(--text-muted)",
@@ -1453,13 +1300,12 @@ export default function Home() {
       </section>
 
       {/* ============================================================
-          SECTION 10 — BACKGROUND / ABOUT
-          (2-col: timeline left, statement paragraphs + books right)
+          SECTION 7 — ABOUT
       ============================================================ */}
       <section
         style={{
           background: "var(--surface)",
-          padding: "6rem 2.5rem",
+          padding: `${sectionPy} ${px}`,
           borderTop: "1px solid var(--border)",
         }}
       >
@@ -1468,15 +1314,15 @@ export default function Home() {
             maxWidth: 1100,
             margin: "0 auto",
             display: "grid",
-            gridTemplateColumns: "1fr 1.5fr",
-            gap: "5rem",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1.5fr",
+            gap: isMobile ? "3rem" : "5rem",
             alignItems: "start",
           }}
         >
           {/* Timeline */}
           <div>
             <p style={eyebrow({})}>The person behind it</p>
-            <h2 style={sectionTitle}>
+            <h2 style={sectionTitle(isMobile)}>
               I didn't start in marketing.{" "}
               <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
                 That's the point.
@@ -1502,7 +1348,7 @@ export default function Home() {
                 {
                   year: "Now",
                   title: "Strategist, Builder, Writer",
-                  body: "At TMCI and Ever Sweet — doing all of it at once. SEO, paid ads, copy, design, development. Not as a generalist who knows a bit of everything. As someone who sees how everything connects.",
+                  body: "At TMCI and Ever Sweet — doing all of it at once. SEO, paid ads, copy, design, development. Not as a generalist. As someone who sees how everything connects.",
                 },
               ].map((item, i, arr) => (
                 <div
@@ -1586,7 +1432,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Statement paragraphs + books */}
+          {/* Statement paragraphs */}
           <div>
             <div
               style={{
@@ -1596,7 +1442,7 @@ export default function Home() {
             >
               {[
                 "Most specialists protect their corner. They do the thing they're good at and hand off everything else. You end up with a beautiful website that nobody visits, or an ad campaign driving traffic to a landing page that doesn't convert.",
-                "I think in loops. The ad brings them in. The site earns their attention. The copy closes them. If any part of that chain is weak, the whole thing leaks money. I fix the chain, not just one link in it.",
+                "loop",
                 "I've built a pastry brand from scratch with my mother and a manufacturer's website from a blank Next.js file. I've read Breakthrough Advertising the way some people read scripture. I play chess. I think two moves ahead by default.",
                 "That's not a brag. It's a warning — if you hire me, I will question your funnel, challenge your assumptions, and care more about the outcome than the invoice.",
               ].map((p, i) => (
@@ -1664,19 +1510,18 @@ export default function Home() {
       </section>
 
       {/* ============================================================
-          SECTION 11 — BLOG GATEWAY
-          (5-card blog teaser grid + see all link)
+          SECTION 8 — BLOG GATEWAY
       ============================================================ */}
       <section
         style={{
           background: "var(--bg)",
-          padding: "6rem 2.5rem",
+          padding: `${sectionPy} ${px}`,
           borderTop: "1px solid var(--border)",
         }}
       >
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <p style={eyebrow({})}>From the blog</p>
-          <h2 style={{ ...sectionTitle, marginBottom: "0.5rem" }}>
+          <h2 style={{ ...sectionTitle(isMobile), marginBottom: "0.5rem" }}>
             Still forming your question?
           </h2>
           <p
@@ -1692,7 +1537,9 @@ export default function Home() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : "repeat(auto-fill, minmax(260px, 1fr))",
               gap: 1,
               background: "rgba(255,255,255,0.04)",
             }}
@@ -1770,13 +1617,12 @@ export default function Home() {
       </section>
 
       {/* ============================================================
-          SECTION 12 — FINAL CTA
-          (centred headline, email link)
+          SECTION 9 — FINAL CTA
       ============================================================ */}
       <section
         style={{
           background: "var(--surface)",
-          padding: "8rem 2.5rem",
+          padding: isMobile ? "5rem 1.25rem" : "8rem 2.5rem",
           textAlign: "center",
           borderTop: "1px solid var(--border)",
         }}
@@ -1786,7 +1632,9 @@ export default function Home() {
           <h2
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "clamp(3rem, 7vw, 6rem)",
+              fontSize: isMobile
+                ? "clamp(2.8rem, 12vw, 4.5rem)"
+                : "clamp(3rem, 7vw, 6rem)",
               lineHeight: 0.95,
               color: "var(--white)",
               marginBottom: "1.5rem",
@@ -1815,12 +1663,13 @@ export default function Home() {
             href="mailto:hello@sushanthp.com"
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "1.4rem",
+              fontSize: isMobile ? "1.1rem" : "1.4rem",
               letterSpacing: "0.06em",
               color: "var(--accent)",
               textDecoration: "none",
               borderBottom: "2px solid var(--accent)",
               paddingBottom: "4px",
+              wordBreak: "break-all",
             }}
           >
             hello@sushanthp.com
@@ -1834,8 +1683,7 @@ export default function Home() {
 }
 
 /* ================================================================
-   SECTION 13 — SHARED STYLE HELPERS
-   (eyebrow, sectionTitle, hookLine, btnPrimary, btnGhost)
+   SHARED STYLE HELPERS
 ================================================================ */
 
 function eyebrow({ center } = {}) {
@@ -1850,14 +1698,19 @@ function eyebrow({ center } = {}) {
   };
 }
 
-const sectionTitle = {
-  fontFamily: "var(--font-serif)",
-  fontSize: "clamp(1.8rem, 3.5vw, 3rem)",
-  lineHeight: 1.15,
-  color: "var(--white)",
-  marginBottom: "1.5rem",
-  fontWeight: 400,
-};
+// sectionTitle is now a function to support mobile font scaling
+function sectionTitle(isMobile) {
+  return {
+    fontFamily: "var(--font-serif)",
+    fontSize: isMobile
+      ? "clamp(1.6rem, 7vw, 2.2rem)"
+      : "clamp(1.8rem, 3.5vw, 3rem)",
+    lineHeight: 1.15,
+    color: "var(--white)",
+    marginBottom: "1.5rem",
+    fontWeight: 400,
+  };
+}
 
 const hookLine = {
   fontFamily: "var(--font-serif)",
