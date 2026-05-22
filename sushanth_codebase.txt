@@ -1,0 +1,5206 @@
+========================================
+  TMCI CODEBASE DUMP
+  Generated: Thu May 21 15:27:43 IST 2026
+  Root: /Users/sushanthp/SushanthpWebstie/sushanthp
+========================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./AGENTS.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./CLAUDE.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@AGENTS.md
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./README.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# sushanthp.com
+
+## Quick Setup
+
+### 1. Add your Supabase keys to .env.local
+Replace the placeholder values:
+- NEXT_PUBLIC_SUPABASE_URL → your Supabase project URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY → your Supabase anon key
+(Get these from Supabase Dashboard → Settings → API)
+
+### 2. Run the SQL in Supabase
+Copy the contents of supabase-setup.sql and run it in your Supabase SQL Editor.
+
+### 3. Your photo is already included
+Located at public/photos/sushanth.png
+
+### 4. Install and run
+npm install
+npm run dev
+
+### 5. Admin panel
+Go to /admin/login — password is in .env.local
+
+### 6. Deploy to Vercel
+Push to GitHub → connect to Vercel → add env vars → deploy
+Then add sushanthp.com in Vercel → Settings → Domains
+# Sushanth-Marketer
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/admin/login/page.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function AdminLogin() {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const res = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.location.href = "/admin";
+    } else {
+      setError("Incorrect password.");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--dark)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        style={{
+          width: 360,
+          background: "var(--dark-2)",
+          border: "1px solid var(--border-dark)",
+          padding: "48px 40px",
+        }}
+      >
+        <p
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontSize: 22,
+            color: "var(--text-light)",
+            marginBottom: 8,
+          }}
+        >
+          Admin
+        </p>
+        <p
+          style={{
+            fontSize: 13,
+            color: "var(--text-light-muted)",
+            marginBottom: 36,
+            fontFamily: "var(--font-sans)",
+          }}
+        >
+          sushanthp.com
+        </p>
+        <form onSubmit={handleLogin}>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{
+              width: "100%",
+              background: "var(--dark)",
+              border: "1px solid var(--border-dark)",
+              color: "var(--text-light)",
+              padding: "12px 16px",
+              fontSize: 15,
+              fontFamily: "var(--font-sans)",
+              marginBottom: 16,
+              outline: "none",
+            }}
+          />
+          {error && (
+            <p
+              style={{
+                fontSize: 13,
+                color: "#E05555",
+                marginBottom: 12,
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: "100%",
+              background: "var(--amber)",
+              color: "var(--dark)",
+              padding: "12px",
+              fontSize: 13,
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              fontFamily: "var(--font-sans)",
+              fontWeight: 500,
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            {loading ? "Checking..." : "Enter →"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/admin/page.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const RichEditor = dynamic(() => import("@/components/RichEditor"), {
+  ssr: false,
+});
+
+const tabs = ["Posts", "New Post", "Homepage", "Navigation", "Settings"];
+
+function slugify(str) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+const defaultHomepage = {
+  heroEyebrow: "For founders who are done guessing",
+  heroHeadline: "You need sales.",
+  heroAccent: "Period.",
+  heroSub:
+    "Not more content. Not a brand refresh. Not another agency retainer.\n\nJust customers who actually pay.",
+  heroCta: "Let's talk →",
+  doubtTitle: "You're putting time and money into marketing.",
+  doubtSub:
+    "Some of it is working. Enough to keep going. Not enough to stop wondering.",
+  doubtQ1: "Is this really the best my marketing can do?",
+  doubtQ2: "How much am I leaving on the table?",
+  doubtQ3: "Should I spend more — or is the problem somewhere else entirely?",
+  doubtClose:
+    "Nobody around you has a straight answer. And that's the problem.",
+  pathLabel: "Where are you right now?",
+  path1Label: "I have someone handling my marketing",
+  path2Label: "I'm doing it myself",
+  path3Label: "I'm just getting started",
+  whatIDoHeadline: "I ask the questions nobody is asking.",
+  whatIDoBody:
+    "Before any copy. Before any campaign. Before any content calendar — there's a conversation most founders have never had: Who exactly are you for? What do they feel? What do they need to hear before they buy? I answer those questions first. Then build everything else around them.",
+  ctaHeadline: "That's a sign.",
+  ctaBody:
+    "The founders who reach out to me aren't looking for another vendor. They're looking for someone who will tell them the truth about why their marketing isn't working — and actually fix it.",
+  ctaButton: "Work With Me →",
+};
+
+export default function AdminPage() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("Posts");
+  const [posts, setPosts] = useState([]);
+  const [editingPost, setEditingPost] = useState(null);
+  const [navSettings, setNavSettings] = useState({
+    blog: true,
+    pricing: false,
+  });
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [homepage, setHomepage] = useState(defaultHomepage);
+  const [form, setForm] = useState({
+    title: "",
+    slug: "",
+    tag: "",
+    excerpt: "",
+    content: "",
+    published: false,
+    cover_image: "",
+  });
+
+  useEffect(() => {
+    fetchPosts();
+    fetchNavSettings();
+    fetchHomepage();
+  }, []);
+
+  async function fetchPosts() {
+    const { data } = await supabase
+      .from("posts")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setPosts(data || []);
+  }
+
+  async function fetchNavSettings() {
+    const { data } = await supabase
+      .from("settings")
+      .select("*")
+      .eq("key", "nav");
+    if (data && data[0]) {
+      try {
+        setNavSettings(JSON.parse(data[0].value));
+      } catch {}
+    }
+  }
+
+  async function fetchHomepage() {
+    const { data } = await supabase
+      .from("settings")
+      .select("*")
+      .eq("key", "homepage");
+    if (data && data[0]) {
+      try {
+        setHomepage({ ...defaultHomepage, ...JSON.parse(data[0].value) });
+      } catch {}
+    }
+  }
+
+  async function saveHomepage() {
+    setSaving(true);
+    const { data } = await supabase
+      .from("settings")
+      .select("*")
+      .eq("key", "homepage");
+    if (data && data[0]) {
+      await supabase
+        .from("settings")
+        .update({ value: JSON.stringify(homepage) })
+        .eq("key", "homepage");
+    } else {
+      await supabase
+        .from("settings")
+        .insert([{ key: "homepage", value: JSON.stringify(homepage) }]);
+    }
+    setSaving(false);
+    setMsg("Homepage saved!");
+    setTimeout(() => setMsg(""), 2000);
+  }
+
+  function newPostForm() {
+    setForm({
+      title: "",
+      slug: "",
+      tag: "",
+      excerpt: "",
+      content: "",
+      published: false,
+      cover_image: "",
+    });
+    setEditingPost(null);
+    setActiveTab("New Post");
+  }
+
+  function editPost(post) {
+    setForm({
+      title: post.title,
+      slug: post.slug,
+      tag: post.tag || "",
+      excerpt: post.excerpt || "",
+      content: post.content || "",
+      published: post.published,
+      cover_image: post.cover_image || "",
+    });
+    setEditingPost(post.id);
+    setActiveTab("New Post");
+  }
+
+  async function savePost() {
+    if (!form.title) {
+      setMsg("Title is required.");
+      return;
+    }
+    setSaving(true);
+    const slug = form.slug || slugify(form.title);
+    const payload = { ...form, slug };
+    let error;
+    if (editingPost) {
+      const res = await supabase
+        .from("posts")
+        .update(payload)
+        .eq("id", editingPost);
+      error = res.error;
+    } else {
+      const res = await supabase.from("posts").insert([payload]);
+      error = res.error;
+    }
+    setSaving(false);
+    if (error) {
+      setMsg("Error: " + error.message);
+      return;
+    }
+    setMsg(editingPost ? "Post updated!" : "Post saved!");
+    fetchPosts();
+    setTimeout(() => {
+      setMsg("");
+      setActiveTab("Posts");
+    }, 1500);
+  }
+
+  async function deletePost(id) {
+    if (!confirm("Delete this post?")) return;
+    await supabase.from("posts").delete().eq("id", id);
+    fetchPosts();
+  }
+
+  async function togglePublish(post) {
+    await supabase
+      .from("posts")
+      .update({ published: !post.published })
+      .eq("id", post.id);
+    fetchPosts();
+  }
+
+  async function saveNavSettings() {
+    setSaving(true);
+    const { data } = await supabase
+      .from("settings")
+      .select("*")
+      .eq("key", "nav");
+    if (data && data[0]) {
+      await supabase
+        .from("settings")
+        .update({ value: JSON.stringify(navSettings) })
+        .eq("key", "nav");
+    } else {
+      await supabase
+        .from("settings")
+        .insert([{ key: "nav", value: JSON.stringify(navSettings) }]);
+    }
+    setSaving(false);
+    setMsg("Navigation saved!");
+    setTimeout(() => setMsg(""), 1500);
+  }
+
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    window.location.href = "/admin/login";
+  }
+
+  // Styles
+  const sideStyle = {
+    width: 220,
+    background: "var(--dark-2)",
+    borderRight: "1px solid var(--border-dark)",
+    minHeight: "100vh",
+    padding: "24px 0",
+    flexShrink: 0,
+  };
+
+  const tabStyle = (active) => ({
+    display: "block",
+    padding: "10px 24px",
+    fontSize: 13,
+    color: active ? "var(--amber)" : "var(--text-light-muted)",
+    background: active ? "rgba(200,169,110,0.08)" : "transparent",
+    borderTop: "none",
+    borderRight: "none",
+    borderBottom: "none",
+    borderLeft: active ? "2px solid var(--amber)" : "2px solid transparent",
+    cursor: "pointer",
+    fontFamily: "var(--font-sans)",
+    letterSpacing: 0.5,
+    width: "100%",
+    textAlign: "left",
+  });
+
+  const inputStyle = {
+    width: "100%",
+    background: "#fff",
+    border: "1px solid var(--border-light)",
+    color: "var(--text-primary)",
+    padding: "10px 14px",
+    fontSize: 14,
+    fontFamily: "var(--font-sans)",
+    marginBottom: 16,
+    outline: "none",
+    borderRadius: 3,
+  };
+
+  const textareaStyle = { ...inputStyle, resize: "vertical", lineHeight: 1.6 };
+
+  const labelStyle = {
+    fontSize: 12,
+    color: "var(--text-muted)",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    fontFamily: "var(--font-sans)",
+    display: "block",
+    marginBottom: 6,
+  };
+
+  const sectionHeadStyle = {
+    fontSize: 11,
+    color: "var(--amber)",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    fontFamily: "var(--font-sans)",
+    marginBottom: 16,
+    marginTop: 36,
+    paddingBottom: 8,
+    borderBottom: "1px solid var(--border-light)",
+  };
+
+  const hp = homepage;
+  const setHp = (key, val) => setHomepage((h) => ({ ...h, [key]: val }));
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#F0EDE6", display: "flex" }}>
+      {/* Sidebar */}
+      <div style={sideStyle}>
+        <div
+          style={{
+            padding: "0 24px 24px",
+            borderBottom: "1px solid var(--border-dark)",
+            marginBottom: 16,
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: 18,
+              color: "var(--text-light)",
+            }}
+          >
+            Admin
+          </p>
+          <p
+            style={{
+              fontSize: 11,
+              color: "#3A3830",
+              fontFamily: "var(--font-sans)",
+              marginTop: 4,
+            }}
+          >
+            sushanthp.com
+          </p>
+        </div>
+        {tabs.map((t) => (
+          <button
+            key={t}
+            onClick={() => {
+              setActiveTab(t);
+              if (t === "New Post") {
+                setEditingPost(null);
+                setForm({
+                  title: "",
+                  slug: "",
+                  tag: "",
+                  excerpt: "",
+                  content: "",
+                  published: false,
+                  cover_image: "",
+                });
+              }
+            }}
+            style={tabStyle(activeTab === t)}
+          >
+            {t}
+          </button>
+        ))}
+        <div
+          style={{
+            borderTop: "1px solid var(--border-dark)",
+            marginTop: 24,
+            paddingTop: 16,
+          }}
+        >
+          <Link
+            href="/"
+            target="_blank"
+            style={{
+              display: "block",
+              padding: "8px 24px",
+              fontSize: 12,
+              color: "#3A3830",
+              fontFamily: "var(--font-sans)",
+              textDecoration: "none",
+              letterSpacing: 0.5,
+            }}
+          >
+            View Site ↗
+          </Link>
+          <button
+            onClick={logout}
+            style={{
+              display: "block",
+              padding: "8px 24px",
+              fontSize: 12,
+              color: "#3A3830",
+              fontFamily: "var(--font-sans)",
+              background: "none",
+              borderTop: "none",
+              borderRight: "none",
+              borderBottom: "none",
+              borderLeft: "none",
+              cursor: "pointer",
+              letterSpacing: 0.5,
+              width: "100%",
+              textAlign: "left",
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
+        {msg && (
+          <div
+            style={{
+              background: "#E8F5E9",
+              border: "1px solid #A5D6A7",
+              color: "#2E7D32",
+              padding: "10px 16px",
+              borderRadius: 4,
+              marginBottom: 24,
+              fontSize: 14,
+              fontFamily: "var(--font-sans)",
+            }}
+          >
+            {msg}
+          </div>
+        )}
+
+        {/* POSTS LIST */}
+        {activeTab === "Posts" && (
+          <div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 32,
+              }}
+            >
+              <h1
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: 28,
+                  color: "var(--text-primary)",
+                  fontWeight: 400,
+                }}
+              >
+                Posts
+              </h1>
+              <button
+                onClick={newPostForm}
+                style={{
+                  background: "var(--dark)",
+                  color: "var(--text-light)",
+                  padding: "10px 24px",
+                  fontSize: 12,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  fontFamily: "var(--font-sans)",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                + New Post
+              </button>
+            </div>
+            {posts.length === 0 ? (
+              <p
+                style={{
+                  color: "var(--text-muted)",
+                  fontStyle: "italic",
+                  fontFamily: "var(--font-serif)",
+                  fontSize: 18,
+                }}
+              >
+                No posts yet. Create your first one.
+              </p>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                  background: "var(--border-light)",
+                }}
+              >
+                {posts.map((post) => (
+                  <div
+                    key={post.id}
+                    style={{
+                      background: "#fff",
+                      padding: "20px 24px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 16,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <p
+                        style={{
+                          fontFamily: "var(--font-serif)",
+                          fontSize: 16,
+                          color: "var(--text-primary)",
+                          marginBottom: 4,
+                        }}
+                      >
+                        {post.title}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: "var(--text-muted)",
+                          fontFamily: "var(--font-sans)",
+                        }}
+                      >
+                        /{post.slug} ·{" "}
+                        {new Date(post.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div
+                      style={{ display: "flex", gap: 8, alignItems: "center" }}
+                    >
+                      <button
+                        onClick={() => togglePublish(post)}
+                        style={{
+                          padding: "5px 14px",
+                          fontSize: 11,
+                          letterSpacing: 1,
+                          fontFamily: "var(--font-sans)",
+                          background: post.published ? "#E8F5E9" : "#FFF8E1",
+                          color: post.published ? "#2E7D32" : "#F57F17",
+                          border: `1px solid ${post.published ? "#A5D6A7" : "#FFE082"}`,
+                          cursor: "pointer",
+                          borderRadius: 20,
+                        }}
+                      >
+                        {post.published ? "Published" : "Draft"}
+                      </button>
+                      <button
+                        onClick={() => editPost(post)}
+                        style={{
+                          padding: "6px 16px",
+                          fontSize: 12,
+                          fontFamily: "var(--font-sans)",
+                          background: "transparent",
+                          border: "1px solid var(--border-light)",
+                          cursor: "pointer",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deletePost(post.id)}
+                        style={{
+                          padding: "6px 16px",
+                          fontSize: 12,
+                          fontFamily: "var(--font-sans)",
+                          background: "transparent",
+                          border: "1px solid #FFCDD2",
+                          cursor: "pointer",
+                          color: "#E53935",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* NEW / EDIT POST */}
+        {activeTab === "New Post" && (
+          <div>
+            <h1
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: 28,
+                color: "var(--text-primary)",
+                fontWeight: 400,
+                marginBottom: 32,
+              }}
+            >
+              {editingPost ? "Edit Post" : "New Post"}
+            </h1>
+            <div style={{ maxWidth: 860 }}>
+              <label style={labelStyle}>Title *</label>
+              <input
+                value={form.title}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    title: e.target.value,
+                    slug: f.slug || slugify(e.target.value),
+                  }))
+                }
+                placeholder="Post title"
+                style={inputStyle}
+              />
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 16,
+                }}
+              >
+                <div>
+                  <label style={labelStyle}>Slug (URL)</label>
+                  <input
+                    value={form.slug}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, slug: e.target.value }))
+                    }
+                    placeholder="auto-generated-from-title"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Tag / Category</label>
+                  <input
+                    value={form.tag}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, tag: e.target.value }))
+                    }
+                    placeholder="Strategy, Copywriting, etc."
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+              <label style={labelStyle}>Excerpt</label>
+              <textarea
+                value={form.excerpt}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, excerpt: e.target.value }))
+                }
+                placeholder="A short summary shown on the blog listing..."
+                rows={2}
+                style={textareaStyle}
+              />
+              <label style={labelStyle}>Cover Image URL</label>
+              <input
+                value={form.cover_image}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, cover_image: e.target.value }))
+                }
+                placeholder="https://images.unsplash.com/..."
+                style={inputStyle}
+              />
+              {form.cover_image && (
+                <img
+                  src={form.cover_image}
+                  alt="Cover preview"
+                  style={{
+                    width: "100%",
+                    height: 180,
+                    objectFit: "cover",
+                    marginBottom: 16,
+                    borderRadius: 3,
+                  }}
+                />
+              )}
+              <label style={labelStyle}>Content *</label>
+              <RichEditor
+                content={form.content}
+                onChange={(html) => setForm((f) => ({ ...f, content: html }))}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 24,
+                  marginTop: 24,
+                }}
+              >
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    cursor: "pointer",
+                    fontSize: 14,
+                    color: "var(--text-secondary)",
+                    fontFamily: "var(--font-sans)",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.published}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, published: e.target.checked }))
+                    }
+                    style={{
+                      width: 16,
+                      height: 16,
+                      accentColor: "var(--amber)",
+                    }}
+                  />
+                  Publish immediately
+                </label>
+                <button
+                  onClick={savePost}
+                  disabled={saving}
+                  style={{
+                    background: "var(--dark)",
+                    color: "var(--text-light)",
+                    padding: "12px 32px",
+                    fontSize: 12,
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                    fontFamily: "var(--font-sans)",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  {saving
+                    ? "Saving..."
+                    : editingPost
+                      ? "Update Post"
+                      : "Save Post"}
+                </button>
+                <button
+                  onClick={() => setActiveTab("Posts")}
+                  style={{
+                    background: "transparent",
+                    color: "var(--text-muted)",
+                    padding: "12px 24px",
+                    fontSize: 12,
+                    fontFamily: "var(--font-sans)",
+                    border: "1px solid var(--border-light)",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* HOMEPAGE EDITOR */}
+        {activeTab === "Homepage" && (
+          <div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
+              }}
+            >
+              <h1
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: 28,
+                  color: "var(--text-primary)",
+                  fontWeight: 400,
+                }}
+              >
+                Homepage
+              </h1>
+              <button
+                onClick={saveHomepage}
+                disabled={saving}
+                style={{
+                  background: "var(--dark)",
+                  color: "var(--text-light)",
+                  padding: "10px 28px",
+                  fontSize: 12,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  fontFamily: "var(--font-sans)",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+            <p
+              style={{
+                fontSize: 14,
+                color: "var(--text-muted)",
+                marginBottom: 32,
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              Edit all copy on the landing page. Changes go live instantly after
+              saving.
+            </p>
+
+            <div style={{ maxWidth: 760 }}>
+              {/* HERO */}
+              <p style={sectionHeadStyle}>Hero Section</p>
+              <label style={labelStyle}>
+                Eyebrow text (small line above headline)
+              </label>
+              <input
+                value={hp.heroEyebrow}
+                onChange={(e) => setHp("heroEyebrow", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Main Headline</label>
+              <input
+                value={hp.heroHeadline}
+                onChange={(e) => setHp("heroHeadline", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Accent word (shown in gold)</label>
+              <input
+                value={hp.heroAccent}
+                onChange={(e) => setHp("heroAccent", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Subtext</label>
+              <textarea
+                value={hp.heroSub}
+                onChange={(e) => setHp("heroSub", e.target.value)}
+                rows={3}
+                style={textareaStyle}
+              />
+              <label style={labelStyle}>CTA Button Text</label>
+              <input
+                value={hp.heroCta}
+                onChange={(e) => setHp("heroCta", e.target.value)}
+                style={inputStyle}
+              />
+
+              {/* DOUBT SECTION */}
+              <p style={sectionHeadStyle}>Doubt Section</p>
+              <label style={labelStyle}>Section Headline</label>
+              <input
+                value={hp.doubtTitle}
+                onChange={(e) => setHp("doubtTitle", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Opening line</label>
+              <input
+                value={hp.doubtSub}
+                onChange={(e) => setHp("doubtSub", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Question 1</label>
+              <input
+                value={hp.doubtQ1}
+                onChange={(e) => setHp("doubtQ1", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Question 2</label>
+              <input
+                value={hp.doubtQ2}
+                onChange={(e) => setHp("doubtQ2", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Question 3</label>
+              <input
+                value={hp.doubtQ3}
+                onChange={(e) => setHp("doubtQ3", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Closing line</label>
+              <input
+                value={hp.doubtClose}
+                onChange={(e) => setHp("doubtClose", e.target.value)}
+                style={inputStyle}
+              />
+
+              {/* PATH BUTTONS */}
+              <p style={sectionHeadStyle}>Path Selector Buttons</p>
+              <label style={labelStyle}>Label above buttons</label>
+              <input
+                value={hp.pathLabel}
+                onChange={(e) => setHp("pathLabel", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Button 1 — Agency / Team</label>
+              <input
+                value={hp.path1Label}
+                onChange={(e) => setHp("path1Label", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Button 2 — DIY</label>
+              <input
+                value={hp.path2Label}
+                onChange={(e) => setHp("path2Label", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Button 3 — Just Starting</label>
+              <input
+                value={hp.path3Label}
+                onChange={(e) => setHp("path3Label", e.target.value)}
+                style={inputStyle}
+              />
+
+              {/* WHAT I DO */}
+              <p style={sectionHeadStyle}>What I Do Section</p>
+              <label style={labelStyle}>Headline</label>
+              <input
+                value={hp.whatIDoHeadline}
+                onChange={(e) => setHp("whatIDoHeadline", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Body text</label>
+              <textarea
+                value={hp.whatIDoBody}
+                onChange={(e) => setHp("whatIDoBody", e.target.value)}
+                rows={4}
+                style={textareaStyle}
+              />
+
+              {/* CTA */}
+              <p style={sectionHeadStyle}>Final CTA Section</p>
+              <label style={labelStyle}>Headline</label>
+              <input
+                value={hp.ctaHeadline}
+                onChange={(e) => setHp("ctaHeadline", e.target.value)}
+                style={inputStyle}
+              />
+              <label style={labelStyle}>Body text</label>
+              <textarea
+                value={hp.ctaBody}
+                onChange={(e) => setHp("ctaBody", e.target.value)}
+                rows={3}
+                style={textareaStyle}
+              />
+              <label style={labelStyle}>Button text</label>
+              <input
+                value={hp.ctaButton}
+                onChange={(e) => setHp("ctaButton", e.target.value)}
+                style={inputStyle}
+              />
+
+              <div
+                style={{
+                  marginTop: 32,
+                  paddingTop: 24,
+                  borderTop: "1px solid var(--border-light)",
+                }}
+              >
+                <button
+                  onClick={saveHomepage}
+                  disabled={saving}
+                  style={{
+                    background: "var(--dark)",
+                    color: "var(--text-light)",
+                    padding: "14px 36px",
+                    fontSize: 12,
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                    fontFamily: "var(--font-sans)",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  {saving ? "Saving..." : "Save All Changes"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NAVIGATION */}
+        {activeTab === "Navigation" && (
+          <div>
+            <h1
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: 28,
+                color: "var(--text-primary)",
+                fontWeight: 400,
+                marginBottom: 8,
+              }}
+            >
+              Navigation
+            </h1>
+            <p
+              style={{
+                fontSize: 14,
+                color: "var(--text-muted)",
+                marginBottom: 32,
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              Control which pages appear in the navigation bar.
+            </p>
+            <div
+              style={{
+                maxWidth: 480,
+                background: "#fff",
+                border: "1px solid var(--border-light)",
+                borderRadius: 4,
+                overflow: "hidden",
+              }}
+            >
+              {[
+                {
+                  key: "blog",
+                  label: "Blog",
+                  desc: "Show the Blog link in navigation",
+                },
+                {
+                  key: "pricing",
+                  label: "Pricing",
+                  desc: "Show the Pricing link in navigation",
+                },
+              ].map((item) => (
+                <div
+                  key={item.key}
+                  style={{
+                    padding: "20px 24px",
+                    borderBottom: "1px solid var(--border-light)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <p
+                      style={{
+                        fontSize: 15,
+                        color: "var(--text-primary)",
+                        fontFamily: "var(--font-sans)",
+                        marginBottom: 2,
+                      }}
+                    >
+                      {item.label}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: 12,
+                        color: "var(--text-muted)",
+                        fontFamily: "var(--font-sans)",
+                      }}
+                    >
+                      {item.desc}
+                    </p>
+                  </div>
+                  <label
+                    style={{
+                      position: "relative",
+                      display: "inline-block",
+                      width: 44,
+                      height: 24,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={navSettings[item.key]}
+                      onChange={(e) =>
+                        setNavSettings((n) => ({
+                          ...n,
+                          [item.key]: e.target.checked,
+                        }))
+                      }
+                      style={{ opacity: 0, width: 0, height: 0 }}
+                    />
+                    <span
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: navSettings[item.key]
+                          ? "var(--amber)"
+                          : "#ccc",
+                        borderRadius: 24,
+                        transition: "0.2s",
+                      }}
+                    >
+                      <span
+                        style={{
+                          position: "absolute",
+                          left: navSettings[item.key] ? 22 : 2,
+                          top: 2,
+                          width: 20,
+                          height: 20,
+                          background: "#fff",
+                          borderRadius: "50%",
+                          transition: "0.2s",
+                        }}
+                      />
+                    </span>
+                  </label>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={saveNavSettings}
+              disabled={saving}
+              style={{
+                marginTop: 24,
+                background: "var(--dark)",
+                color: "var(--text-light)",
+                padding: "12px 32px",
+                fontSize: 12,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                fontFamily: "var(--font-sans)",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              {saving ? "Saving..." : "Save Navigation"}
+            </button>
+          </div>
+        )}
+
+        {/* SETTINGS */}
+        {activeTab === "Settings" && (
+          <div>
+            <h1
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: 28,
+                color: "var(--text-primary)",
+                fontWeight: 400,
+                marginBottom: 8,
+              }}
+            >
+              Settings
+            </h1>
+            <p
+              style={{
+                fontSize: 14,
+                color: "var(--text-muted)",
+                marginBottom: 32,
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              Site configuration.
+            </p>
+            <div
+              style={{
+                maxWidth: 480,
+                background: "#fff",
+                border: "1px solid var(--border-light)",
+                borderRadius: 4,
+                padding: "24px",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 14,
+                  color: "var(--text-secondary)",
+                  fontFamily: "var(--font-sans)",
+                  lineHeight: 1.7,
+                }}
+              >
+                To change your admin password, update the{" "}
+                <code
+                  style={{
+                    background: "#f4f4f4",
+                    padding: "2px 6px",
+                    borderRadius: 3,
+                  }}
+                >
+                  ADMIN_PASSWORD
+                </code>{" "}
+                value in your{" "}
+                <code
+                  style={{
+                    background: "#f4f4f4",
+                    padding: "2px 6px",
+                    borderRadius: 3,
+                  }}
+                >
+                  .env.local
+                </code>{" "}
+                file and restart.
+              </p>
+              <p
+                style={{
+                  fontSize: 14,
+                  color: "var(--text-secondary)",
+                  fontFamily: "var(--font-sans)",
+                  lineHeight: 1.7,
+                  marginTop: 16,
+                }}
+              >
+                Supabase keys: update{" "}
+                <code
+                  style={{
+                    background: "#f4f4f4",
+                    padding: "2px 6px",
+                    borderRadius: 3,
+                  }}
+                >
+                  NEXT_PUBLIC_SUPABASE_URL
+                </code>{" "}
+                and{" "}
+                <code
+                  style={{
+                    background: "#f4f4f4",
+                    padding: "2px 6px",
+                    borderRadius: 3,
+                  }}
+                >
+                  NEXT_PUBLIC_SUPABASE_ANON_KEY
+                </code>{" "}
+                in{" "}
+                <code
+                  style={{
+                    background: "#f4f4f4",
+                    padding: "2px 6px",
+                    borderRadius: 3,
+                  }}
+                >
+                  .env.local
+                </code>
+                .
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/api/admin/login/route.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const { password } = body;
+
+    if (!password || password !== process.env.ADMIN_PASSWORD) {
+      return NextResponse.json({ success: false });
+    }
+
+    const cookieStore = await cookies();
+    cookieStore.set("admin_auth", "authenticated", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24 * 30,
+      path: "/",
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    return NextResponse.json({ success: false, error: e.message });
+  }
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/api/admin/logout/route.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+
+export async function POST() {
+  const cookieStore = cookies()
+  cookieStore.delete('admin_auth')
+  return NextResponse.json({ success: true })
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/api/posts/route.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
+
+export async function GET() {
+  const { data, error } = await supabase.from('posts').select('*').eq('published', true).order('created_at', { ascending: false })
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/blog/[slug]/page.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { supabase } from '@/lib/supabase'
+import { notFound } from 'next/navigation'
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
+import Link from 'next/link'
+
+export const revalidate = 60
+
+export async function generateMetadata({ params }) {
+  const { data } = await supabase.from('posts').select('title, excerpt').eq('slug', params.slug).single()
+  if (!data) return { title: 'Post not found' }
+  return { title: `${data.title} — Sushanth P`, description: data.excerpt }
+}
+
+export default async function BlogPost({ params }) {
+  const { data: post } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('slug', params.slug)
+    .eq('published', true)
+    .single()
+
+  if (!post) notFound()
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--cream)' }}>
+      <Navbar />
+      <div style={{ paddingTop: 68 }}>
+        {/* Post header */}
+        <section style={{ background: 'var(--dark)', padding: '80px 32px 64px' }}>
+          <div style={{ maxWidth: 720, margin: '0 auto' }}>
+            <Link href="/blog" style={{ fontSize: 12, color: 'var(--text-light-muted)', fontFamily: 'var(--font-sans)', letterSpacing: 1, textTransform: 'uppercase', textDecoration: 'none', display: 'inline-block', marginBottom: 32 }}>
+              ← All posts
+            </Link>
+            {post.tag && (
+              <p style={{ fontSize: 11, color: 'var(--amber)', letterSpacing: 3, textTransform: 'uppercase', fontFamily: 'var(--font-sans)', marginBottom: 20 }}>{post.tag}</p>
+            )}
+            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 400, color: 'var(--text-light)', lineHeight: 1.2, marginBottom: 24 }}>
+              {post.title}
+            </h1>
+            <p style={{ fontSize: 13, color: 'var(--text-light-muted)', fontFamily: 'var(--font-sans)' }}>
+              {new Date(post.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          </div>
+        </section>
+
+        {/* Post content */}
+        <section style={{ padding: '72px 32px 96px' }}>
+          <div style={{ maxWidth: 720, margin: '0 auto' }}>
+            {post.cover_image && (
+              <img src={post.cover_image} alt={post.title} style={{ width: '100%', height: 380, objectFit: 'cover', marginBottom: 56, borderRadius: 2 }} />
+            )}
+            <div className="blog-content" dangerouslySetInnerHTML={{ __html: post.content }} />
+
+            <div style={{ marginTop: 72, paddingTop: 40, borderTop: '1px solid var(--border-light)', textAlign: 'center' }}>
+              <p style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-primary)', marginBottom: 16 }}>Found this useful?</p>
+              <p style={{ fontSize: 15, color: 'var(--text-muted)', marginBottom: 28 }}>Let's talk about what this means for your marketing.</p>
+              <a href="mailto:hello@sushanthp.com" style={{ background: 'var(--dark)', color: 'var(--text-light)', padding: '13px 28px', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', fontFamily: 'var(--font-sans)', textDecoration: 'none', display: 'inline-block' }}>
+                Work With Me →
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+      <Footer />
+    </div>
+  )
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/blog/page.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { supabase } from "@/lib/supabase";
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+
+export const revalidate = 60;
+
+export default async function BlogPage() {
+  const { data: posts } = await supabase
+    .from("posts")
+    .select("*")
+    .eq("published", true)
+    .order("created_at", { ascending: false });
+
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+      <Navbar />
+      <div style={{ paddingTop: 68 }}>
+        {/* Header */}
+        <section
+          style={{
+            background: "var(--surface)",
+            padding: "6rem 2.5rem",
+            borderBottom: "1px solid var(--border)",
+          }}
+        >
+          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+            <p
+              style={{
+                fontSize: 11,
+                color: "var(--accent)",
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
+                fontFamily: "var(--font-sans)",
+                marginBottom: 20,
+              }}
+            >
+              From the blog
+            </p>
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(3rem, 7vw, 6rem)",
+                lineHeight: 0.95,
+                color: "var(--white)",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Read how I think.
+              <br />
+              <span style={{ color: "var(--accent)" }}>
+                If it resonates, we'll talk.
+              </span>
+            </h1>
+          </div>
+        </section>
+
+        {/* Posts */}
+        <section style={{ padding: "5rem 2.5rem" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+            {!posts || posts.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "80px 0" }}>
+                <p
+                  style={{
+                    fontFamily: "var(--font-serif)",
+                    fontSize: 24,
+                    color: "var(--text-muted)",
+                    fontStyle: "italic",
+                  }}
+                >
+                  Posts coming soon.
+                </p>
+                <p
+                  style={{
+                    fontSize: 14,
+                    color: "var(--text-muted)",
+                    marginTop: 12,
+                    fontFamily: "var(--font-sans)",
+                  }}
+                >
+                  Check back — something worth reading is on its way.
+                </p>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                  gap: 1,
+                  background: "rgba(255,255,255,0.04)",
+                }}
+              >
+                {posts.map((post) => (
+                  <Link
+                    key={post.id}
+                    href={`/blog/${post.slug}`}
+                    style={{
+                      background: "var(--surface)",
+                      padding: "2.25rem 1.75rem",
+                      textDecoration: "none",
+                      display: "block",
+                      transition: "background 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "var(--surface2)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "var(--surface)";
+                    }}
+                  >
+                    {post.tag && (
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: "var(--accent)",
+                          letterSpacing: "0.18em",
+                          textTransform: "uppercase",
+                          fontFamily: "var(--font-sans)",
+                          marginBottom: 14,
+                        }}
+                      >
+                        {post.tag}
+                      </p>
+                    )}
+                    <h2
+                      style={{
+                        fontFamily: "var(--font-serif)",
+                        fontSize: 19,
+                        fontWeight: 400,
+                        color: "var(--text)",
+                        lineHeight: 1.5,
+                        marginBottom: 16,
+                      }}
+                    >
+                      {post.title}
+                    </h2>
+                    {post.excerpt && (
+                      <p
+                        style={{
+                          fontSize: 14,
+                          color: "var(--text-muted)",
+                          lineHeight: 1.7,
+                          marginBottom: 20,
+                        }}
+                      >
+                        {post.excerpt}
+                      </p>
+                    )}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: "var(--accent)",
+                          fontFamily: "var(--font-sans)",
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        Read →
+                      </p>
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: "var(--text-muted)",
+                          fontFamily: "var(--font-sans)",
+                        }}
+                      >
+                        {new Date(post.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/globals.css
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0e0e0e;
+  --dark: #0e0e0e;
+  --dark-2: #161616;
+  --surface: #161616;
+  --surface2: #1e1e1e;
+  --border: #2a2a2a;
+  --border-dark: #2a2a2a;
+  --border-light: #2a2a2a;
+  --accent: #b8f03c;
+  --accent-dim: #8ab82c;
+  --amber: #b8f03c;
+  --amber-light: #c8f55a;
+  --amber-dim: rgba(184,240,60,0.12);
+  --text: #e8e4dc;
+  --text-light: #e8e4dc;
+  --text-light-muted: #6b6560;
+  --text-primary: #e8e4dc;
+  --text-secondary: #9a9690;
+  --text-muted: #5a5550;
+  --white: #f5f2ec;
+  --cream: #0e0e0e;
+  --cream-2: #161616;
+  --cream-3: #1e1e1e;
+  --font-serif: 'DM Serif Display', Georgia, serif;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-display: 'Bebas Neue', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 { font-family: var(--font-serif); }
+
+/* Grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Rich editor */
+.ProseMirror { outline: none; min-height: 400px; padding: 1rem; font-family: var(--font-sans); font-size: 16px; line-height: 1.8; color: #1a1814; background: #fff; }
+.ProseMirror h1 { font-family: var(--font-serif); font-size: 2rem; margin: 1.5rem 0 1rem; color: #1a1814; }
+.ProseMirror h2 { font-family: var(--font-serif); font-size: 1.6rem; margin: 1.5rem 0 0.75rem; color: #1a1814; }
+.ProseMirror h3 { font-family: var(--font-serif); font-size: 1.3rem; margin: 1.25rem 0 0.5rem; color: #1a1814; }
+.ProseMirror p { margin-bottom: 1rem; }
+.ProseMirror ul, .ProseMirror ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+.ProseMirror blockquote { border-left: 3px solid var(--accent); padding-left: 1rem; margin: 1.5rem 0; color: #5a5550; font-style: italic; }
+.ProseMirror img { max-width: 100%; border-radius: 4px; margin: 1rem 0; }
+.ProseMirror a { color: var(--accent); text-decoration: underline; }
+.ProseMirror code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+.ProseMirror .is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: #9a9185; pointer-events: none; height: 0; }
+
+/* Blog content */
+.blog-content h1 { font-family: var(--font-serif); font-size: 2rem; margin: 2rem 0 1rem; color: var(--text); }
+.blog-content h2 { font-family: var(--font-serif); font-size: 1.6rem; margin: 2rem 0 0.75rem; color: var(--text); }
+.blog-content h3 { font-family: var(--font-serif); font-size: 1.3rem; margin: 1.5rem 0 0.5rem; color: var(--text); }
+.blog-content p { margin-bottom: 1.25rem; line-height: 1.85; color: var(--text-secondary); font-size: 17px; }
+.blog-content ul, .blog-content ol { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+.blog-content li { margin-bottom: 0.5rem; color: var(--text-secondary); line-height: 1.7; }
+.blog-content blockquote { border-left: 3px solid var(--accent); padding-left: 1.5rem; margin: 2rem 0; font-style: italic; font-family: var(--font-serif); font-size: 1.1rem; color: var(--text); }
+.blog-content img { max-width: 100%; border-radius: 4px; margin: 1.5rem 0; }
+.blog-content a { color: var(--accent); text-decoration: underline; }
+.blog-content strong { color: var(--text); font-weight: 500; }
+
+/* PathInfographic override for dark theme */
+.path-infographic-panel {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/layout.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import "./globals.css";
+import Script from "next/script";
+
+export const metadata = {
+  title: "Sushanth P — Marketing Strategist for Founders",
+  description:
+    "Sushanth P is a marketing strategist for D2C and B2B founders. Brand messaging, ad copy, and SEO built as one system — not separate deliverables.",
+  keywords:
+    "Sushanth P, Sushanth marketing strategist, marketing strategist for founders, D2C marketing, brand messaging, ad copywriting",
+  alternates: {
+    canonical: "https://sushanthp.com",
+  },
+  openGraph: {
+    title: "Sushanth P — Marketing Strategist for Founders",
+    description:
+      "Brand messaging, ad copy, and SEO built as one system. For founders who are done guessing.",
+    url: "https://sushanthp.com",
+    siteName: "Sushanth P",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sushanth P — Marketing Strategist for Founders",
+    description: "Brand messaging, ad copy, and SEO built as one system.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Sushanth P",
+  url: "https://sushanthp.com",
+  jobTitle: "Marketing Strategist",
+  description:
+    "Marketing strategist for D2C and B2B founders. Brand messaging, ad copy, SEO, and web built as one system.",
+  knowsAbout: [
+    "Brand Messaging",
+    "Copywriting",
+    "SEO",
+    "Paid Advertising",
+    "Marketing Strategy for Founders",
+  ],
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <Script
+          id="schema-person"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+        {children}
+      </body>
+    </html>
+  );
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/page.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"use client";
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { supabase } from "@/lib/supabase";
+
+/* ================================================================
+   MOBILE HOOK — SSR-safe, re-checks on resize
+================================================================ */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
+
+/* ================================================================
+   SECTION 0 — DATA & CONSTANTS
+================================================================ */
+
+const stats = [
+  {
+    stat: "95%",
+    desc: "of buying decisions are made in the subconscious mind",
+    source: "Harvard Business School",
+    url: "https://www.library.hbs.edu/working-knowledge/the-subconscious-mind-of-the-consumer-and-how-to-reach-it",
+  },
+  {
+    stat: "64%",
+    desc: "of consumers cite shared values as the main reason they have a relationship with a brand",
+    source: "Harvard Business Review",
+    url: "https://hbr.org/2012/05/three-myths-about-what-customers-want",
+  },
+  {
+    stat: "71%",
+    desc: "of consumers who have had a good social media experience with a brand are likely to recommend it",
+    source: "Ambassador",
+    url: "https://www.ambassador.com/blog/word-of-mouth-statistics",
+  },
+];
+
+const blogTeasers = [
+  {
+    tag: "Agency",
+    title: "Your agency made a beautiful ad. Did they ask who it was for?",
+    slug: "agency-beautiful-ad-who-is-it-for",
+  },
+  {
+    tag: "Strategy",
+    title: "What to ask your marketing team before the next campaign",
+    slug: "what-to-ask-your-marketing-team",
+  },
+  {
+    tag: "Psychology",
+    title: "Why the best product doesn't always win",
+    slug: "why-best-product-doesnt-always-win",
+  },
+  {
+    tag: "Fundamentals",
+    title:
+      "You don't need to learn marketing. You need to understand one thing.",
+    slug: "you-dont-need-to-learn-marketing",
+  },
+  {
+    tag: "Insight",
+    title: "What your customer feels the moment before they find you",
+    slug: "what-customer-feels-before-finding-you",
+  },
+];
+
+const services = [
+  {
+    num: "01",
+    title: "Brand Messaging",
+    desc: 'The words that make your right customer say "this is exactly for me."',
+    detail:
+      "2–3 week engagement. Positioning, tone, and a messaging doc your whole team can use.",
+  },
+  {
+    num: "02",
+    title: "Ad Strategy & Copy",
+    desc: "Campaigns built on psychology, not best practices from 2019.",
+    detail:
+      "Starts with audience research. Ends with ad copy you can run the same week.",
+  },
+  {
+    num: "03",
+    title: "Marketing Audit",
+    desc: "Find exactly where your marketing is leaking before spending another dollar.",
+    detail:
+      "One focused session. You leave with a ranked list of what to fix first.",
+  },
+];
+
+const defaultHp = {
+  heroEyebrow: "Marketing strategist — for founders",
+  ctaHeadline: "That's a sign.",
+  ctaBody:
+    "The founders who reach out to me aren't looking for another vendor. They're looking for someone who will tell them the truth about why their marketing isn't working — and actually fix it.",
+};
+
+/* ================================================================
+   SECTION 1 — ROOT COMPONENT
+================================================================ */
+
+export default function Home() {
+  const [hp, setHpState] = useState(defaultHp);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    async function fetchHp() {
+      const { data } = await supabase
+        .from("settings")
+        .select("*")
+        .eq("key", "homepage");
+      if (data && data[0]) {
+        try {
+          setHpState((h) => ({ ...h, ...JSON.parse(data[0].value) }));
+        } catch {}
+      }
+    }
+    fetchHp();
+  }, []);
+
+  const px = isMobile ? "1.25rem" : "2.5rem";
+  const sectionPy = isMobile ? "3.5rem" : "6rem";
+
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+      <Navbar />
+
+      {/* ============================================================
+          SECTION 2 — HERO
+          Mobile: photo as top banner, text stacked below
+          Desktop: photo absolute right-half, text left
+      ============================================================ */}
+      {isMobile ? (
+        <section style={{ background: "var(--bg)" }}>
+          {/* ZONE 1 — Headline */}
+          <div
+            style={{
+              padding: "86px 18px 24px",
+              borderBottom: "1px solid #1a1a1a",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "0.6rem",
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
+                color: "var(--accent)",
+                marginBottom: "1rem",
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              {hp.heroEyebrow || "Marketing Strategist — For Founders"}
+            </p>
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(2.8rem, 13vw, 4rem)",
+                lineHeight: 1.0,
+                letterSpacing: "-0.01em",
+                color: "var(--white)",
+                marginBottom: "1.25rem",
+              }}
+            >
+              You've seen
+              <br />
+              enough average.{" "}
+              <span style={{ color: "var(--accent)" }}>
+                Welcome to
+                <br />
+                the other side.
+              </span>
+            </h1>
+            <p
+              style={{
+                fontSize: "0.88rem",
+                lineHeight: 1.65,
+                color: "#b5b0a8",
+                fontWeight: 300,
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              One person. All of it connected.{" "}
+              <strong style={{ color: "var(--text)", fontWeight: 400 }}>
+                Strategy, copy, and execution that works as a system — not a
+                stack of separate deliverables.
+              </strong>
+            </p>
+          </div>
+
+          {/* ZONE 3 — Stats */}
+          <div
+            style={{
+              display: "flex",
+              borderTop: "1px solid #1a1a1a",
+              borderBottom: "1px solid #1a1a1a",
+            }}
+          >
+            {[
+              { num: "2", label: "Brands Built" },
+              { num: "3X", label: "Organic Growth" },
+              { num: "₹0", label: "Paid at Launch" },
+            ].map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  padding: "14px 0",
+                  textAlign: "center",
+                  borderLeft: i > 0 ? "1px solid #1a1a1a" : "none",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "1.75rem",
+                    color: "var(--accent)",
+                    lineHeight: 1,
+                    letterSpacing: "0.03em",
+                  }}
+                >
+                  {s.num}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.5rem",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "var(--text-muted)",
+                    marginTop: "0.25rem",
+                    fontFamily: "var(--font-sans)",
+                  }}
+                >
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ZONE 4 — CTAs */}
+          <div
+            style={{
+              padding: "14px 16px 28px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.6rem",
+            }}
+          >
+            <a
+              href="mailto:hello@sushanthp.com"
+              style={{
+                background: "var(--accent)",
+                color: "#0e0e0e",
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                padding: "14px",
+                textAlign: "center",
+                borderRadius: "3px",
+                textDecoration: "none",
+                display: "block",
+              }}
+            >
+              Let's Talk →
+            </a>
+            <Link
+              href="/blog"
+              style={{
+                border: "1px solid #222",
+                color: "var(--text-muted)",
+                fontSize: "0.72rem",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                padding: "13px",
+                textAlign: "center",
+                borderRadius: "3px",
+                textDecoration: "none",
+                display: "block",
+              }}
+            >
+              Read How I Think
+            </Link>
+          </div>
+
+          {/* ZONE 2 — Photo */}
+          <div
+            style={{
+              height: 320,
+              position: "relative",
+              overflow: "hidden",
+              background: "#0a0a0a",
+            }}
+          >
+            <Image
+              src="/photos/sushanth.png"
+              alt="Sushanth P"
+              fill
+              style={{ objectFit: "cover", objectPosition: "center 25%" }}
+              priority
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 100,
+                background:
+                  "linear-gradient(to bottom, transparent, var(--bg))",
+                zIndex: 2,
+              }}
+            />
+          </div>
+        </section>
+      ) : (
+        /* ── DESKTOP HERO ── */
+        <section
+          style={{
+            position: "relative",
+            minHeight: "100vh",
+            background: "var(--bg)",
+            overflow: "hidden",
+            display: "flex",
+            alignItems: "flex-end",
+            paddingTop: 120,
+          }}
+        >
+          {/* Ghost watermark */}
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(6rem, 14vw, 13rem)",
+              color: "rgba(255,255,255,0.02)",
+              whiteSpace: "nowrap",
+              pointerEvents: "none",
+              letterSpacing: "-0.02em",
+              userSelect: "none",
+              zIndex: 1,
+            }}
+          >
+            SUSHANTH
+          </div>
+
+          {/* Photo — right half */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: "55%",
+              zIndex: 2,
+            }}
+          >
+            <Image
+              src="/photos/sushanth.png"
+              alt="Sushanth P"
+              fill
+              style={{ objectFit: "cover", objectPosition: "top center" }}
+              priority
+            />
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(to right, #0e0e0e 0%, rgba(14,14,14,0.65) 40%, rgba(14,14,14,0.05) 100%)",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 240,
+                background: "linear-gradient(to top, #0e0e0e, transparent)",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 2,
+                background: "var(--accent)",
+              }}
+            />
+            <p
+              style={{
+                position: "absolute",
+                right: 20,
+                top: "50%",
+                transform: "translateY(-50%) rotate(90deg)",
+                fontSize: 9,
+                letterSpacing: "4px",
+                color: "rgba(232,228,220,0.1)",
+                textTransform: "uppercase",
+                fontFamily: "var(--font-sans)",
+                zIndex: 3,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Marketing Strategist
+            </p>
+          </div>
+
+          {/* Hero text */}
+          <div
+            style={{
+              position: "relative",
+              zIndex: 5,
+              maxWidth: 1100,
+              margin: "0 auto",
+              padding: "6rem 2.5rem 5rem",
+              width: "100%",
+            }}
+          >
+            <p style={eyebrow({})}>
+              {hp.heroEyebrow || "Sushanth P — Marketing Strategist, Bangalore"}
+            </p>
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(2rem, 5vw, 4.5rem)",
+                lineHeight: 1.05,
+                letterSpacing: "-0.01em",
+                color: "var(--white)",
+                marginBottom: "1.5rem",
+                maxWidth: 700,
+              }}
+            >
+              You've seen enough average.{" "}
+              <span style={{ color: "var(--accent)" }}>
+                Welcome to the other side of it.
+              </span>
+            </h1>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "0.6rem",
+                flexWrap: "wrap",
+                marginBottom: "2rem",
+              }}
+            >
+              {[
+                { label: "Brand Messaging", icon: "◈" },
+                { label: "Ad Strategy & Copy", icon: "◎" },
+                { label: "SEO & Web", icon: "⬡" },
+              ].map((skill) => (
+                <div
+                  key={skill.label}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    background: "rgba(184,240,60,0.06)",
+                    border: "1px solid rgba(184,240,60,0.2)",
+                    padding: "0.45rem 1rem",
+                    borderRadius: "2px",
+                    fontSize: "0.78rem",
+                    color: "var(--accent)",
+                    fontFamily: "var(--font-sans)",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  <span style={{ fontSize: "0.65rem", opacity: 0.7 }}>
+                    {skill.icon}
+                  </span>
+                  {skill.label}
+                </div>
+              ))}
+            </div>
+
+            <p
+              style={{
+                fontSize: "1.05rem",
+                lineHeight: 1.65,
+                color: "#b5b0a8",
+                maxWidth: 480,
+                marginBottom: "2.5rem",
+                fontWeight: 300,
+              }}
+            >
+              One person. All of it connected.{" "}
+              <strong style={{ color: "var(--text)", fontWeight: 400 }}>
+                Strategy, copy, and execution that works as a system — not a
+                stack of separate deliverables.
+              </strong>
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 24,
+                alignItems: "center",
+                flexWrap: "wrap",
+                marginBottom: "3rem",
+              }}
+            >
+              <a href="mailto:hello@sushanthp.com" style={btnPrimary}>
+                Let's talk →
+              </a>
+              <Link href="/blog" style={btnGhost}>
+                Read how I think
+              </Link>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "3rem",
+                paddingTop: "2rem",
+                borderTop: "1px solid var(--border)",
+                flexWrap: "wrap",
+              }}
+            >
+              {[
+                { num: "2", label: "Brands Built End-to-End" },
+                { num: "3X", label: "Organic Growth, TMCI" },
+                { num: "₹0", label: "Ad Spend to First Sales, Ever Sweet" },
+              ].map((s, i) => (
+                <div key={i}>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "2.4rem",
+                      color: "var(--accent)",
+                      letterSpacing: "0.02em",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {s.num}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.72rem",
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: "var(--text-muted)",
+                      marginTop: "0.3rem",
+                    }}
+                  >
+                    {s.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Scroll hint */}
+          <div
+            style={{
+              position: "absolute",
+              right: "2.5rem",
+              bottom: "4rem",
+              writingMode: "vertical-rl",
+              fontSize: "0.7rem",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "var(--text-muted)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.8rem",
+              zIndex: 5,
+            }}
+          >
+            <span
+              style={{
+                width: 1,
+                height: 60,
+                background:
+                  "linear-gradient(to bottom, transparent, var(--text-muted))",
+                display: "block",
+              }}
+            />
+            Scroll
+          </div>
+        </section>
+      )}
+
+      {/* ============================================================
+          SECTION 3 — PROBLEM
+      ============================================================ */}
+      <section
+        style={{
+          background: "var(--surface)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: isMobile ? "2.5rem" : "5rem",
+            alignItems: "start",
+          }}
+        >
+          {/* LEFT */}
+          <div>
+            <p style={eyebrow({})}>The problem</p>
+            <h2 style={sectionTitle(isMobile)}>
+              You're putting time and money
+              <br />
+              <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+                into marketing.
+              </em>
+            </h2>
+            <div
+              style={{
+                fontSize: "1rem",
+                color: "#b5b0a8",
+                fontWeight: 300,
+                lineHeight: 1.8,
+              }}
+            >
+              <p style={{ marginBottom: "1.5rem" }}>
+                Some of it is working. Enough to keep going. Not enough to stop
+                wondering.
+              </p>
+              <p style={{ marginBottom: "1.5rem" }}>
+                The agency is producing. The content is going out. The ads are
+                running. But nobody owns the whole picture — and that gap is
+                where your budget disappears.
+              </p>
+              <p
+                style={{ color: "rgba(232,228,220,0.7)", fontSize: "0.92rem" }}
+              >
+                Marketing today is sold in pieces. Strategy from one person.
+                Copy from another. Ads from a third. Each doing their part.
+                Nobody responsible for whether it actually works together.
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT */}
+          <div
+            style={{
+              background: "var(--bg)",
+              border: "1px solid var(--border)",
+              borderLeft: "3px solid var(--accent)",
+              padding: isMobile ? "1.75rem" : "2.5rem",
+              borderRadius: "4px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "2rem",
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  fontSize: "0.68rem",
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  color: "var(--accent)",
+                  fontFamily: "var(--font-sans)",
+                  marginBottom: "1rem",
+                  opacity: 0.7,
+                }}
+              >
+                What it makes you feel
+              </p>
+              <p
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "1.1rem",
+                  lineHeight: 1.65,
+                  color: "var(--white)",
+                  marginBottom: "0.75rem",
+                }}
+              >
+                You built something real. You're smart enough to run a business.
+                So why can't you figure out why the marketing isn't working?
+              </p>
+              <p
+                style={{
+                  fontSize: "0.92rem",
+                  color: "rgba(232,228,220,0.75)",
+                  lineHeight: 1.75,
+                  fontWeight: 300,
+                }}
+              >
+                That question sits quietly. In the review meeting. In the
+                monthly report. In the gap between what you're spending and what
+                you're seeing. Most founders I talk to aren't failing — they're
+                succeeding just enough to keep second-guessing everything.
+              </p>
+            </div>
+
+            <div style={{ height: 1, background: "var(--border)" }} />
+
+            <div>
+              <p
+                style={{
+                  fontSize: "0.68rem",
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  color: "var(--accent)",
+                  fontFamily: "var(--font-sans)",
+                  marginBottom: "1rem",
+                  opacity: 0.7,
+                }}
+              >
+                Why it's wrong
+              </p>
+              <p
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "1.1rem",
+                  lineHeight: 1.65,
+                  color: "var(--white)",
+                  marginBottom: "0.75rem",
+                }}
+              >
+                The best product shouldn't lose because someone else told a
+                better story.
+              </p>
+              <p
+                style={{
+                  fontSize: "0.92rem",
+                  color: "rgba(232,228,220,0.75)",
+                  lineHeight: 1.75,
+                  fontWeight: 300,
+                }}
+              >
+                But right now, it does. Every day. Founders who built something
+                genuinely better are being out-marketed by people who simply
+                understood their customer more clearly. That's not a marketing
+                problem. That's an injustice. And it's fixable.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: "4rem auto 0",
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+            borderTop: "1px solid var(--border)",
+          }}
+        >
+          {stats.map((s, i) => (
+            <div
+              key={i}
+              style={{
+                padding: "1.75rem",
+                paddingLeft: !isMobile && i > 0 ? "2rem" : isMobile ? 0 : 0,
+                borderRight:
+                  !isMobile && i < 2 ? "1px solid var(--border)" : "none",
+                borderBottom:
+                  isMobile && i < 2 ? "1px solid var(--border)" : "none",
+                paddingTop: isMobile && i > 0 ? "1.75rem" : "1.75rem",
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: isMobile ? "2.5rem" : "3rem",
+                  color: "var(--accent)",
+                  fontWeight: 400,
+                  lineHeight: 1,
+                  marginBottom: "0.75rem",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {s.stat}
+              </p>
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.75,
+                  marginBottom: "0.75rem",
+                  fontWeight: 300,
+                }}
+              >
+                {s.desc}
+              </p>
+              <a
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: "0.7rem",
+                  color: "rgba(255,255,255,0.35)",
+                  fontFamily: "var(--font-sans)",
+                  textDecoration: "none",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                {s.source} ↗
+              </a>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ maxWidth: 1100, margin: "3rem auto 0" }}>
+          <p style={hookLine}>
+            Here's what working with me actually looks like
+          </p>
+        </div>
+      </section>
+
+      {/* ============================================================
+          SECTION 4 — WHY MARKETING FAILS
+      ============================================================ */}
+      {/* <section
+        style={{
+          background: "var(--bg)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <p style={eyebrow({})}>The real reason</p>
+          <h2 style={sectionTitle(isMobile)}>
+            Most marketing fails for one reason.
+          </h2>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: 1,
+              background: "rgba(255,255,255,0.04)",
+              marginTop: "3rem",
+            }}
+          >
+            {[
+              {
+                icon: "◉",
+                title: "It talks to everyone",
+                body: "When you write for everyone, you resonate with no one. A message built for a 28-year-old SaaS founder and a 52-year-old operations director lands with neither.",
+              },
+              {
+                icon: "◈",
+                title: "Humans don't buy logically",
+                body: "Your customer doesn't compare features in a spreadsheet. They feel something — or they don't. The brand that wins is rarely the best product. It's the one that made the right person feel understood.",
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "var(--surface)",
+                  padding: isMobile ? "2rem 1.5rem" : "2.5rem 2rem",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "1.2rem",
+                    color: "var(--accent)",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  {item.icon}
+                </p>
+                <p
+                  style={{
+                    fontFamily: "var(--font-serif)",
+                    fontSize: "1.1rem",
+                    color: "var(--text-light)",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  {item.title}
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.88rem",
+                    color: "rgba(232,228,220,0.5)",
+                    lineHeight: 1.85,
+                    fontWeight: 300,
+                  }}
+                >
+                  {item.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section> */}
+<section style={{
+  background: "var(--bg)",
+  padding: `${sectionPy} ${px}`,
+  borderTop: "1px solid var(--border)",
+}}>
+  <div style={{ maxWidth: 760, margin: "0 auto" }}>
+    <p style={eyebrow({})}>Why it happens</p>
+    <h2 style={sectionTitle(isMobile)}>
+      Your customer doesn't buy with their brain.
+    </h2>
+    <p style={{
+      fontSize: "1rem",
+      color: "#b5b0a8",
+      fontWeight: 300,
+      lineHeight: 1.8,
+      marginBottom: "3rem",
+      maxWidth: 620,
+    }}>
+      Most marketing is built for the logical mind — features, comparisons, price points. But buying decisions don't happen there. They happen faster, deeper, and mostly without the customer realising it. The marketing that wins isn't the most informative. It's the most felt.
+    </p>
+
+    {/* Stats as proof */}
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+      borderTop: "1px solid var(--border)",
+      marginBottom: "3rem",
+    }}>
+      {[
+        {
+          stat: "95%",
+          desc: "of purchase decisions are made in the subconscious mind",
+          source: "Harvard Business School",
+          url: "https://www.library.hbs.edu/working-knowledge/the-subconscious-mind-of-the-consumer-and-how-to-reach-it",
+        },
+        {
+          stat: "64%",
+          desc: "of consumers say shared values are the main reason they stay loyal to a brand",
+          source: "Harvard Business Review",
+          url: "https://hbr.org/2012/05/three-myths-about-what-customers-want",
+        },
+        {
+          stat: "57%",
+          desc: "of consumers spend more with brands they feel emotionally connected to",
+          source: "Sprout Social",
+          url: "https://sproutsocial.com/insights/data/social-media-connection/",
+        },
+      ].map((s, i) => (
+        <div key={i} style={{
+          padding: "1.75rem",
+          paddingLeft: !isMobile && i > 0 ? "2rem" : 0,
+          borderRight: !isMobile && i < 2 ? "1px solid var(--border)" : "none",
+          borderBottom: isMobile && i < 2 ? "1px solid var(--border)" : "none",
+          paddingTop: "1.75rem",
+        }}>
+          <p style={{
+            fontFamily: "var(--font-display)",
+            fontSize: isMobile ? "2.5rem" : "3rem",
+            color: "var(--accent)",
+            fontWeight: 400,
+            lineHeight: 1,
+            marginBottom: "0.75rem",
+            letterSpacing: "0.02em",
+          }}>
+            {s.stat}
+          </p>
+          <p style={{
+            fontSize: "0.85rem",
+            color: "var(--text-secondary)",
+            lineHeight: 1.75,
+            marginBottom: "0.75rem",
+            fontWeight: 300,
+          }}>
+            {s.desc}
+          </p>
+          
+            href={s.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: "0.7rem",
+              color: "rgba(255,255,255,0.35)",
+              fontFamily: "var(--font-sans)",
+              textDecoration: "none",
+              letterSpacing: "0.5px",
+            }}
+          >
+            {s.source} ↗
+          </a>
+        </div>
+      ))}
+    </div>
+
+    {/* Two root causes */}
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+      gap: 1,
+      background: "rgba(255,255,255,0.04)",
+    }}>
+      {[
+        {
+          icon: "◉",
+          title: "It talks to everyone",
+          body: "When you write for everyone, you resonate with no one. A message built for a 28-year-old SaaS founder and a 52-year-old operations director lands with neither. Most marketing fails before a single rupee is spent on ads.",
+        },
+        {
+          icon: "◈",
+          title: "It speaks to the wrong part of the brain",
+          body: "Your customer doesn't compare features in a spreadsheet. They feel something — or they don't. The brand that wins is rarely the best product. It's the one that made the right person feel understood.",
+        },
+      ].map((item, i) => (
+        <div key={i} style={{
+          background: "var(--surface)",
+          padding: isMobile ? "2rem 1.5rem" : "2.5rem 2rem",
+        }}>
+          <p style={{
+            fontSize: "1.2rem",
+            color: "var(--accent)",
+            marginBottom: "1rem",
+          }}>
+            {item.icon}
+          </p>
+          <p style={{
+            fontFamily: "var(--font-serif)",
+            fontSize: "1.1rem",
+            color: "var(--text-light)",
+            marginBottom: "0.75rem",
+          }}>
+            {item.title}
+          </p>
+          <p style={{
+            fontSize: "0.88rem",
+            color: "rgba(232,228,220,0.5)",
+            lineHeight: 1.85,
+            fontWeight: 300,
+          }}>
+            {item.body}
+          </p>
+        </div>
+      ))}
+    </div>
+
+    <p style={{ ...hookLine, marginTop: "3rem" }}>
+      So what's the fix?
+    </p>
+  </div>
+</section>
+
+
+
+      {/* ============================================================
+          SECTION 5 — SERVICES
+      ============================================================ */}
+
+      <section style={{
+  background: "var(--surface)",
+  padding: `${sectionPy} ${px}`,
+  borderTop: "1px solid var(--border)",
+}}>
+  <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+    <p style={eyebrow({})}>The solution</p>
+    <h2 style={{ ...sectionTitle(isMobile), marginBottom: "0.75rem" }}>
+      Stop buying pieces.{" "}
+      <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+        Own the whole system.
+      </em>
+    </h2>
+    <p style={{
+      fontSize: "1rem",
+      color: "rgba(232,228,220,0.5)",
+      lineHeight: 1.85,
+      marginBottom: "1.5rem",
+      fontWeight: 300,
+      maxWidth: 600,
+    }}>
+      The reason your marketing feels disconnected is because it is. You hired separate people for strategy, copy, and ads — and nobody is responsible for how it all fits together.
+    </p>
+    <p style={{
+      fontSize: "1rem",
+      color: "rgba(232,228,220,0.6)",
+      lineHeight: 1.85,
+      marginBottom: "3rem",
+      fontWeight: 300,
+      maxWidth: 600,
+    }}>
+      The fix isn't another vendor. It's one person who starts with who your customer actually is, what they feel, and what they need to hear — then builds everything from that foundation.
+    </p>
+
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+      gap: "1.5rem",
+    }}>
+      {[
+        {
+          num: "01",
+          title: "Brand Messaging",
+          desc: 'The words that make your right customer say "this is exactly for me."',
+          detail: "2–3 week engagement. Positioning, tone, and a messaging doc your whole team can use.",
+        },
+        {
+          num: "02",
+          title: "Ad Strategy & Copy",
+          desc: "Campaigns built on psychology, not best practices from 2019.",
+          detail: "Starts with audience research. Ends with ad copy you can run the same week.",
+        },
+        {
+          num: "03",
+          title: "Marketing Audit",
+          desc: "Find exactly where your marketing is leaking before spending another dollar.",
+          detail: "One focused session. You leave with a ranked list of what to fix first.",
+        },
+      ].map((s, i) => (
+        <div
+          key={i}
+          style={{
+            background: "var(--bg)",
+            border: "1px solid var(--border)",
+            padding: "2rem",
+            borderRadius: "4px",
+            borderTop: i === 0
+              ? "2px solid var(--accent)"
+              : "2px solid rgba(184,240,60,0.2)",
+            transition: "transform 0.2s, border-color 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-3px)";
+            e.currentTarget.style.borderTopColor = "var(--accent)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.borderTopColor = i === 0
+              ? "var(--accent)"
+              : "rgba(184,240,60,0.2)";
+          }}
+        >
+          <div style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "3.5rem",
+            color: "rgba(184,240,60,0.08)",
+            lineHeight: 1,
+            marginBottom: "0.5rem",
+          }}>
+            {s.num}
+          </div>
+          <p style={{
+            fontSize: "0.95rem",
+            fontWeight: 500,
+            color: "var(--white)",
+            marginBottom: "0.8rem",
+            letterSpacing: "0.02em",
+          }}>
+            {s.title}
+          </p>
+          <p style={{
+            fontSize: "0.88rem",
+            color: "var(--text-muted)",
+            lineHeight: 1.65,
+            marginBottom: "1.2rem",
+          }}>
+            {s.desc}
+          </p>
+          <div style={{
+            marginTop: "1.2rem",
+            paddingTop: "1.2rem",
+            borderTop: "1px solid var(--border)",
+            fontSize: "0.75rem",
+            color: "var(--accent)",
+            letterSpacing: "0.06em",
+          }}>
+            → {s.detail}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <p style={{ ...hookLine, marginTop: "4rem" }}>
+      But why should you trust me to do this?
+    </p>
+  </div>
+</section>
+      {/* <section
+        style={{
+          background: "var(--surface)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <p style={eyebrow({})}>What I bring</p>
+          <h2 style={{ ...sectionTitle(isMobile), marginBottom: "0.75rem" }}>
+            Three things. One person.{" "}
+            <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+              Zero handoff friction.
+            </em>
+          </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "rgba(232,228,220,0.4)",
+              lineHeight: 1.85,
+              marginBottom: "3rem",
+              fontWeight: 300,
+              maxWidth: 560,
+            }}
+          >
+            Before any copy. Before any campaign. Before any content calendar —
+            there's a conversation most founders have never had:{" "}
+            <em style={{ color: "rgba(232,228,220,0.6)" }}>
+              Who exactly are you for? What do they feel? What do they need to
+              hear before they buy?
+            </em>
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+              gap: "1.5rem",
+            }}
+          >
+            {services.map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "var(--bg)",
+                  border: "1px solid var(--border)",
+                  padding: "2rem",
+                  borderRadius: "4px",
+                  borderTop:
+                    i === 0
+                      ? "2px solid var(--accent)"
+                      : "2px solid rgba(184,240,60,0.2)",
+                  transition: "transform 0.2s, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-3px)";
+                  e.currentTarget.style.borderColor = "#3a3a3a";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.borderColor = "var(--border)";
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "3.5rem",
+                    color: "rgba(184,240,60,0.08)",
+                    lineHeight: 1,
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  {s.num}
+                </div>
+                <p
+                  style={{
+                    fontSize: "0.95rem",
+                    fontWeight: 500,
+                    color: "var(--white)",
+                    marginBottom: "0.8rem",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {s.title}
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.88rem",
+                    color: "var(--text-muted)",
+                    lineHeight: 1.65,
+                    marginBottom: "1.2rem",
+                  }}
+                >
+                  {s.desc}
+                </p>
+                <div
+                  style={{
+                    marginTop: "1.2rem",
+                    paddingTop: "1.2rem",
+                    borderTop: "1px solid var(--border)",
+                    fontSize: "0.75rem",
+                    color: "var(--accent)",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  → {s.detail}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ ...hookLine, marginTop: "4rem" }}>
+            The work isn't theory
+          </p>
+        </div>
+      </section> */}
+
+      {/* ============================================================
+          SECTION 6 — CASE STUDIES
+      ============================================================ */}
+      <section
+        style={{
+          background: "var(--bg)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <p style={eyebrow({})}>Case studies</p>
+          <h2 style={sectionTitle(isMobile)}>
+            Two brands. Built from zero.{" "}
+            <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+              Different worlds, same approach.
+            </em>
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: "2rem",
+              marginTop: "3rem",
+            }}
+          >
+            {/* TMCI */}
+            <div
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: "4px",
+                overflow: "hidden",
+                transition: "transform 0.25s, border-color 0.25s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.borderColor = "#3a3a3a";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.borderColor = "var(--border)";
+              }}
+            >
+              <div
+                style={{
+                  height: 180,
+                  background: "#0a0e1a",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "5rem",
+                    letterSpacing: "0.05em",
+                    opacity: 0.1,
+                    color: "#4a9eff",
+                    position: "absolute",
+                  }}
+                >
+                  TMCI
+                </div>
+                <div
+                  style={{
+                    background: "var(--surface2)",
+                    border: "1px solid var(--border)",
+                    padding: "0.4rem 1rem",
+                    borderRadius: "2px",
+                    fontSize: "0.72rem",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#4a9eff",
+                    zIndex: 1,
+                  }}
+                >
+                  B2B Industrial
+                </div>
+              </div>
+              <div style={{ padding: "1.75rem" }}>
+                <p
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: 500,
+                    color: "var(--white)",
+                    marginBottom: "0.6rem",
+                  }}
+                >
+                  TMCI — Bangalore-Based Manufacturer
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.88rem",
+                    color: "var(--text-muted)",
+                    lineHeight: 1.65,
+                    marginBottom: "1.2rem",
+                  }}
+                >
+                  An industrial brand that marketed like it was still 2010. I
+                  built the site in Next.js from scratch, rewrote every word,
+                  ran SEO campaigns, and set up a Google Ads funnel targeting
+                  engineers, not just procurement teams.
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "1.5rem",
+                    paddingTop: "1.2rem",
+                    borderTop: "1px solid var(--border)",
+                  }}
+                >
+                  {[
+                    ["3X", "Organic Sessions"],
+                    ["Full", "SEO + Ads"],
+                    ["Next.js", "Built & Maintained"],
+                  ].map(([v, l], i) => (
+                    <div key={i}>
+                      <div
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: "1.6rem",
+                          color: "var(--accent)",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        {v}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.65rem",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          color: "var(--text-muted)",
+                        }}
+                      >
+                        {l}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Ever Sweet */}
+            <div
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: "4px",
+                overflow: "hidden",
+                transition: "transform 0.25s, border-color 0.25s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.borderColor = "#3a3a3a";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.borderColor = "var(--border)";
+              }}
+            >
+              <div
+                style={{
+                  height: 180,
+                  background: "#0e0a05",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "5rem",
+                    letterSpacing: "0.05em",
+                    opacity: 0.1,
+                    color: "#f5a623",
+                    position: "absolute",
+                  }}
+                >
+                  ES
+                </div>
+                <div
+                  style={{
+                    background: "var(--surface2)",
+                    border: "1px solid var(--border)",
+                    padding: "0.4rem 1rem",
+                    borderRadius: "2px",
+                    fontSize: "0.72rem",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#f5a623",
+                    zIndex: 1,
+                  }}
+                >
+                  D2C Artisan Food
+                </div>
+              </div>
+              <div style={{ padding: "1.75rem" }}>
+                <p
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: 500,
+                    color: "var(--white)",
+                    marginBottom: "0.6rem",
+                  }}
+                >
+                  Ever Sweet — Artisan Mochi & Pastry, Kochi
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.88rem",
+                    color: "var(--text-muted)",
+                    lineHeight: 1.65,
+                    marginBottom: "1.2rem",
+                  }}
+                >
+                  Started with one product, my mother's hands, and zero
+                  marketing budget. I built the brand identity, the Instagram
+                  content system, the pricing strategy, and the first sales
+                  funnel entirely on organic reach. Daily revenue from month
+                  one.
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "1.5rem",
+                    paddingTop: "1.2rem",
+                    borderTop: "1px solid var(--border)",
+                  }}
+                >
+                  {[
+                    ["₹0", "Paid Spend"],
+                    ["Day 1", "First Revenue"],
+                    ["Organic", "100% Growth"],
+                  ].map(([v, l], i) => (
+                    <div key={i}>
+                      <div
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: "1.6rem",
+                          color: "var(--accent)",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        {v}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.65rem",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          color: "var(--text-muted)",
+                        }}
+                      >
+                        {l}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p style={{ ...hookLine, marginTop: "4rem" }}>
+            None of this happened by accident
+          </p>
+        </div>
+      </section>
+
+      {/* ============================================================
+          SECTION 7 — ABOUT
+      ============================================================ */}
+      <section
+        style={{
+          background: "var(--surface)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1.5fr",
+            gap: isMobile ? "3rem" : "5rem",
+            alignItems: "start",
+          }}
+        >
+          {/* Timeline */}
+          <div>
+            <p style={eyebrow({})}>The person behind it</p>
+            <h2 style={sectionTitle(isMobile)}>
+              I didn't start in marketing.{" "}
+              <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+                That's the point.
+              </em>
+            </h2>
+            <div style={{ position: "relative", marginTop: "2rem" }}>
+              {[
+                {
+                  year: "Where it started",
+                  title: "Mechanical Engineering + Robotics",
+                  body: "Trained to think in systems, not just tasks. That habit never left. It's why I can't just 'run ads' without asking what happens after the click.",
+                },
+                {
+                  year: "Then",
+                  title: "Fitness Training + Coaching",
+                  body: "Sold with nothing but trust and results. Taught me that the product is never the hard part — the conversation is. That's half of what copywriting is.",
+                },
+                {
+                  year: "Then",
+                  title: "Web Development + UI/UX",
+                  body: "Learned to build what I was imagining, not describe it to someone else. That closed the loop between strategy and execution permanently.",
+                },
+                {
+                  year: "Now",
+                  title: "Strategist, Builder, Writer",
+                  body: "At TMCI and Ever Sweet — doing all of it at once. SEO, paid ads, copy, design, development. Not as a generalist. As someone who sees how everything connects.",
+                },
+              ].map((item, i, arr) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    gap: "1.5rem",
+                    paddingBottom: "2rem",
+                    position: "relative",
+                  }}
+                >
+                  {i < arr.length - 1 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 11,
+                        top: 24,
+                        bottom: 0,
+                        width: 1,
+                        background: "var(--border)",
+                      }}
+                    />
+                  )}
+                  <div
+                    style={{
+                      width: 24,
+                      height: 24,
+                      minWidth: 24,
+                      borderRadius: "50%",
+                      background: "var(--surface2)",
+                      border: "1px solid var(--border)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginTop: 2,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: "var(--accent)",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "0.7rem",
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                        color: "var(--text-muted)",
+                        marginBottom: "0.3rem",
+                      }}
+                    >
+                      {item.year}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.95rem",
+                        fontWeight: 500,
+                        color: "var(--white)",
+                        marginBottom: "0.3rem",
+                      }}
+                    >
+                      {item.title}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "var(--text-muted)",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {item.body}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Statement paragraphs */}
+          <div>
+            <div
+              style={{
+                borderLeft: "2px solid var(--accent)",
+                paddingLeft: "2rem",
+              }}
+            >
+              {[
+                "Most specialists protect their corner. They do the thing they're good at and hand off everything else. You end up with a beautiful website that nobody visits, or an ad campaign driving traffic to a landing page that doesn't convert.",
+                "loop",
+                "I've built a pastry brand from scratch with my mother and a manufacturer's website from a blank Next.js file. I've read Breakthrough Advertising the way some people read scripture. I play chess. I think two moves ahead by default.",
+                "That's not a brag. It's a warning — if you hire me, I will question your funnel, challenge your assumptions, and care more about the outcome than the invoice.",
+              ].map((p, i) => (
+                <p
+                  key={i}
+                  style={{
+                    fontSize: "1rem",
+                    color: "#b5b0a8",
+                    fontWeight: 300,
+                    lineHeight: 1.75,
+                    marginBottom: "1.4rem",
+                  }}
+                >
+                  {i === 1 ? (
+                    <>
+                      The ad brings them in.{" "}
+                      <strong style={{ color: "var(--text)", fontWeight: 400 }}>
+                        The site earns their attention. The copy closes them.
+                      </strong>{" "}
+                      If any part of that chain is weak, the whole thing leaks
+                      money. I fix the chain, not just one link in it.
+                    </>
+                  ) : (
+                    p
+                  )}
+                </p>
+              ))}
+            </div>
+
+            <div style={{ marginTop: "3rem" }}>
+              <p style={eyebrow({})}>Currently reading</p>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.75rem",
+                  flexWrap: "wrap",
+                  marginTop: "1rem",
+                }}
+              >
+                {[
+                  "Breakthrough Advertising",
+                  "Cashvertising",
+                  "They Ask You Answer",
+                  "Product-Led SEO",
+                ].map((book) => (
+                  <div
+                    key={book}
+                    style={{
+                      background: "var(--bg)",
+                      border: "1px solid var(--border)",
+                      padding: "0.4rem 1rem",
+                      borderRadius: "2px",
+                      fontSize: "0.78rem",
+                      color: "var(--text-muted)",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {book}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          SECTION 8 — BLOG GATEWAY
+      ============================================================ */}
+      <section
+        style={{
+          background: "var(--bg)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <p style={eyebrow({})}>From the blog</p>
+          <h2 style={{ ...sectionTitle(isMobile), marginBottom: "0.5rem" }}>
+            Still forming your question?
+          </h2>
+          <p
+            style={{
+              fontSize: "0.88rem",
+              color: "var(--text-muted)",
+              marginBottom: "3rem",
+              fontWeight: 300,
+            }}
+          >
+            Read how I think. If it resonates, we'll talk.
+          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : "repeat(auto-fill, minmax(260px, 1fr))",
+              gap: 1,
+              background: "rgba(255,255,255,0.04)",
+            }}
+          >
+            {blogTeasers.map((b, i) => (
+              <Link
+                key={i}
+                href={`/blog/${b.slug}`}
+                style={{
+                  background: "var(--surface)",
+                  padding: "1.75rem 1.5rem",
+                  textDecoration: "none",
+                  display: "block",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--surface2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "var(--surface)";
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "0.68rem",
+                    color: "var(--accent)",
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    fontFamily: "var(--font-sans)",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  {b.tag}
+                </p>
+                <p
+                  style={{
+                    fontFamily: "var(--font-serif)",
+                    fontSize: "1rem",
+                    color: "var(--text-light)",
+                    lineHeight: 1.6,
+                    marginBottom: "1.5rem",
+                  }}
+                >
+                  {b.title}
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.72rem",
+                    color: "var(--accent)",
+                    fontFamily: "var(--font-sans)",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  Read →
+                </p>
+              </Link>
+            ))}
+          </div>
+          <div style={{ textAlign: "center", marginTop: "2.5rem" }}>
+            <Link
+              href="/blog"
+              style={{
+                fontSize: "0.78rem",
+                color: "rgba(232,228,220,0.25)",
+                fontFamily: "var(--font-sans)",
+                textDecoration: "none",
+                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                paddingBottom: 2,
+              }}
+            >
+              See all posts →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          SECTION 9 — FINAL CTA
+      ============================================================ */}
+      <section
+        style={{
+          background: "var(--surface)",
+          padding: isMobile ? "5rem 1.25rem" : "8rem 2.5rem",
+          textAlign: "center",
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 580, margin: "0 auto" }}>
+          <p style={eyebrow({ center: true })}>Let's build something</p>
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: isMobile
+                ? "clamp(2.8rem, 12vw, 4.5rem)"
+                : "clamp(3rem, 7vw, 6rem)",
+              lineHeight: 0.95,
+              color: "var(--white)",
+              marginBottom: "1.5rem",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {hp.ctaHeadline || "Your marketing should"}
+            <br />
+            feel like your{" "}
+            <span style={{ color: "var(--accent)" }}>product does.</span>
+          </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "var(--text-muted)",
+              maxWidth: 480,
+              margin: "0 auto 3rem",
+              lineHeight: 1.65,
+              fontWeight: 300,
+            }}
+          >
+            {hp.ctaBody ||
+              "If you've read this far, you already know whether this is the right fit. No forms, no discovery call decks. Just send me an email and we'll figure out the rest."}
+          </p>
+          <a
+            href="mailto:hello@sushanthp.com"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: isMobile ? "1.1rem" : "1.4rem",
+              letterSpacing: "0.06em",
+              color: "var(--accent)",
+              textDecoration: "none",
+              borderBottom: "2px solid var(--accent)",
+              paddingBottom: "4px",
+              wordBreak: "break-all",
+            }}
+          >
+            hello@sushanthp.com
+          </a>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+}
+
+/* ================================================================
+   SHARED STYLE HELPERS
+================================================================ */
+
+function eyebrow({ center } = {}) {
+  return {
+    fontSize: "0.72rem",
+    letterSpacing: "0.22em",
+    textTransform: "uppercase",
+    color: "var(--accent)",
+    marginBottom: "1.2rem",
+    fontFamily: "var(--font-sans)",
+    textAlign: center ? "center" : "left",
+  };
+}
+
+// sectionTitle is now a function to support mobile font scaling
+function sectionTitle(isMobile) {
+  return {
+    fontFamily: "var(--font-serif)",
+    fontSize: isMobile
+      ? "clamp(1.6rem, 7vw, 2.2rem)"
+      : "clamp(1.8rem, 3.5vw, 3rem)",
+    lineHeight: 1.15,
+    color: "var(--white)",
+    marginBottom: "1.5rem",
+    fontWeight: 400,
+  };
+}
+
+const hookLine = {
+  fontFamily: "var(--font-serif)",
+  fontSize: "1.1rem",
+  fontStyle: "italic",
+  color: "var(--text-muted)",
+  display: "flex",
+  alignItems: "center",
+  gap: "1rem",
+};
+
+const btnPrimary = {
+  background: "var(--accent)",
+  color: "#0e0e0e",
+  padding: "0.9rem 2rem",
+  borderRadius: "4px",
+  fontWeight: 500,
+  fontSize: "0.88rem",
+  textDecoration: "none",
+  letterSpacing: "0.04em",
+  display: "inline-block",
+};
+
+const btnGhost = {
+  color: "var(--text-muted)",
+  fontSize: "0.85rem",
+  textDecoration: "none",
+  letterSpacing: "0.04em",
+  borderBottom: "1px solid var(--border)",
+  paddingBottom: "2px",
+};
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/pricing/page.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
+
+export const metadata = {
+  title: 'Pricing — Sushanth P',
+  description: 'Transparent pricing for marketing strategy and copywriting.'
+}
+
+export default function PricingPage() {
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--cream)' }}>
+      <Navbar />
+      <div style={{ paddingTop: 68 }}>
+        <section style={{ background: 'var(--dark)', padding: '80px 32px' }}>
+          <div style={{ maxWidth: 900, margin: '0 auto' }}>
+            <p style={{ fontSize: 11, color: 'var(--amber)', letterSpacing: 3, textTransform: 'uppercase', fontFamily: 'var(--font-sans)', marginBottom: 20 }}>Pricing</p>
+            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 400, color: 'var(--text-light)', lineHeight: 1.15 }}>
+              Straightforward.<br />
+              <span style={{ color: 'var(--amber)' }}>No surprises.</span>
+            </h1>
+          </div>
+        </section>
+
+        <section style={{ padding: '80px 32px' }}>
+          <div style={{ maxWidth: 900, margin: '0 auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 1, background: 'var(--border-light)' }}>
+              {[
+                { name: 'Marketing Audit', price: '$299', desc: 'A full review of your current marketing. What\'s working, what\'s not, and exactly what to fix first.', includes: ['Full funnel review', 'Messaging analysis', 'Written report + recommendations', '1 hour call'] },
+                { name: 'Brand Messaging', price: '$799', desc: 'Your complete messaging foundation — who you\'re for, what you say, and how you say it.', includes: ['Customer insight work', 'Core messaging document', 'Taglines + headline variants', 'Positioning statement'] },
+                { name: 'Done-With-You Strategy', price: '$1,499', desc: 'Monthly engagement. I work alongside you to build and refine your marketing strategy.', includes: ['Weekly 1:1 calls', 'Copy reviews', 'Campaign strategy', 'Ongoing messaging support'] },
+              ].map((plan, i) => (
+                <div key={i} style={{ background: i === 1 ? 'var(--dark)' : 'var(--cream-2)', padding: '40px 28px' }}>
+                  {i === 1 && <p style={{ fontSize: 11, color: 'var(--amber)', letterSpacing: 2, fontFamily: 'var(--font-sans)', marginBottom: 12 }}>MOST POPULAR</p>}
+                  <p style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: i === 1 ? 'var(--text-light)' : 'var(--text-primary)', marginBottom: 8 }}>{plan.name}</p>
+                  <p style={{ fontFamily: 'var(--font-serif)', fontSize: 36, color: 'var(--amber)', marginBottom: 16 }}>{plan.price}</p>
+                  <p style={{ fontSize: 14, color: i === 1 ? 'var(--text-light-muted)' : 'var(--text-muted)', lineHeight: 1.7, marginBottom: 24 }}>{plan.desc}</p>
+                  <ul style={{ listStyle: 'none', padding: 0, marginBottom: 32 }}>
+                    {plan.includes.map((item, j) => (
+                      <li key={j} style={{ fontSize: 13, color: i === 1 ? 'var(--text-light-muted)' : 'var(--text-secondary)', padding: '6px 0', borderBottom: `1px solid ${i === 1 ? '#2A2A26' : 'var(--border-light)'}`, display: 'flex', gap: 10 }}>
+                        <span style={{ color: 'var(--amber)' }}>✓</span> {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <a href="mailto:hello@sushanthp.com" style={{ background: i === 1 ? 'var(--amber)' : 'transparent', color: i === 1 ? 'var(--dark)' : 'var(--text-primary)', border: i === 1 ? 'none' : '1px solid var(--border-light)', padding: '12px 24px', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', fontFamily: 'var(--font-sans)', textDecoration: 'none', display: 'inline-block' }}>
+                    Get Started →
+                  </a>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', marginTop: 40, fontStyle: 'italic', fontFamily: 'var(--font-serif)' }}>
+              Not sure which is right? <a href="mailto:hello@sushanthp.com" style={{ color: 'var(--amber)', textDecoration: 'none' }}>Send me a message</a> and we'll figure it out.
+            </p>
+          </div>
+        </section>
+      </div>
+      <Footer />
+    </div>
+  )
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./components/Footer.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import Link from "next/link";
+
+export default function Footer() {
+  return (
+    <footer
+      style={{
+        background: "var(--bg)",
+        borderTop: "1px solid var(--border)",
+        padding: "2rem 1.25rem",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 20,
+        }}
+      >
+        {/* Top row */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
+          <div>
+            <span
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "1.2rem",
+                letterSpacing: "0.08em",
+                color: "var(--accent)",
+              }}
+            >
+              SP
+            </span>
+            <p
+              style={{
+                fontSize: "0.75rem",
+                color: "var(--text-muted)",
+                marginTop: 6,
+                letterSpacing: "0.05em",
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              Bangalore / Kochi — Open to remote
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+            <Link href="/blog" style={footerLink}>
+              Blog
+            </Link>
+            <a href="mailto:hello@sushanthp.com" style={footerLink}>
+              Contact
+            </a>
+          </div>
+        </div>
+
+        {/* Bottom row */}
+        <p
+          style={{
+            fontSize: "0.72rem",
+            color: "#333",
+            fontFamily: "var(--font-sans)",
+            borderTop: "1px solid var(--border)",
+            paddingTop: 16,
+          }}
+        >
+          © 2026 sushanthp.com
+        </p>
+      </div>
+    </footer>
+  );
+}
+
+const footerLink = {
+  fontSize: "0.72rem",
+  color: "#444",
+  letterSpacing: "0.1em",
+  textDecoration: "none",
+  fontFamily: "var(--font-sans)",
+  textTransform: "uppercase",
+};
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./components/Navbar.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"use client";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+
+export default function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [navSettings, setNavSettings] = useState({
+    blog: true,
+    pricing: false,
+  });
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Close menu on resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) setMenuOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Prevent body scroll when menu open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    async function fetchSettings() {
+      const { data } = await supabase
+        .from("settings")
+        .select("*")
+        .eq("key", "nav");
+      if (data && data[0]) {
+        try {
+          setNavSettings(JSON.parse(data[0].value));
+        } catch {}
+      }
+    }
+    fetchSettings();
+  }, []);
+
+  const navLinks = [
+    { href: "/", label: "Home" },
+    ...(navSettings.blog ? [{ href: "/blog", label: "Blog" }] : []),
+    ...(navSettings.pricing ? [{ href: "/pricing", label: "Pricing" }] : []),
+  ];
+
+  return (
+    <>
+      <nav
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 200,
+          background:
+            scrolled || menuOpen ? "rgba(14,14,14,0.98)" : "rgba(14,14,14,0.7)",
+          borderBottom: "1px solid #2a2a2a",
+          backdropFilter: "blur(12px)",
+          transition: "background 0.3s ease",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: "0 auto",
+            padding: "0 1.25rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            height: 64,
+          }}
+        >
+          {/* Logo */}
+          <Link
+            href="/"
+            style={{ textDecoration: "none" }}
+            onClick={() => setMenuOpen(false)}
+          >
+            <span
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "1.4rem",
+                letterSpacing: "0.08em",
+                color: "var(--accent)",
+              }}
+            >
+              SP
+            </span>
+          </Link>
+
+          {/* Desktop nav */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 36,
+            }}
+            className="desktop-nav"
+          >
+            <div style={{ display: "flex", gap: 32 }}>
+              {navLinks.map((l) => (
+                <Link key={l.href} href={l.href} style={navLink}>
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+            <a href="mailto:hello@sushanthp.com" style={ctaStyle}>
+              Let's Talk
+            </a>
+          </div>
+
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            style={{
+              display: "none",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "8px",
+              color: "var(--text)",
+            }}
+            className="hamburger-btn"
+          >
+            {menuOpen ? (
+              /* X */
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <line
+                  x1="4"
+                  y1="4"
+                  x2="18"
+                  y2="18"
+                  stroke="var(--text)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="18"
+                  y1="4"
+                  x2="4"
+                  y2="18"
+                  stroke="var(--text)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            ) : (
+              /* Hamburger */
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <line
+                  x1="3"
+                  y1="6"
+                  x2="19"
+                  y2="6"
+                  stroke="var(--text)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="3"
+                  y1="11"
+                  x2="19"
+                  y2="11"
+                  stroke="var(--text)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="3"
+                  y1="16"
+                  x2="19"
+                  y2="16"
+                  stroke="var(--text)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {/* Mobile dropdown menu */}
+        {menuOpen && (
+          <div
+            style={{
+              borderTop: "1px solid var(--border)",
+              padding: "1.5rem 1.25rem 2rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.25rem",
+            }}
+          >
+            {navLinks.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  color: "var(--text)",
+                  fontSize: "1.15rem",
+                  fontFamily: "var(--font-sans)",
+                  textDecoration: "none",
+                  padding: "0.85rem 0",
+                  borderBottom: "1px solid var(--border)",
+                  letterSpacing: "0.02em",
+                  display: "block",
+                }}
+              >
+                {l.label}
+              </Link>
+            ))}
+            <a
+              href="mailto:hello@sushanthp.com"
+              onClick={() => setMenuOpen(false)}
+              style={{
+                marginTop: "1.25rem",
+                background: "var(--accent)",
+                color: "#0e0e0e",
+                padding: "1rem",
+                borderRadius: "4px",
+                fontSize: "0.88rem",
+                fontWeight: 600,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+                textAlign: "center",
+                display: "block",
+              }}
+            >
+              Let's Talk →
+            </a>
+          </div>
+        )}
+      </nav>
+
+      {/* Responsive styles injected as a style tag */}
+      <style>{`
+        @media (max-width: 767px) {
+          .desktop-nav { display: none !important; }
+          .hamburger-btn { display: block !important; }
+        }
+      `}</style>
+    </>
+  );
+}
+
+const navLink = {
+  color: "#7a7570",
+  fontSize: "0.8rem",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  textDecoration: "none",
+  fontFamily: "var(--font-sans)",
+};
+
+const ctaStyle = {
+  background: "var(--accent)",
+  color: "#0e0e0e",
+  padding: "0.5rem 1.2rem",
+  borderRadius: "4px",
+  fontSize: "0.78rem",
+  fontWeight: 500,
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
+  textDecoration: "none",
+  fontFamily: "var(--font-sans)",
+};
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./components/PathInfographic.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"use client";
+import { useState, useEffect } from "react";
+
+const TAB_LABELS = {
+  searching: "Looking for the right marketer",
+  delegated: "Handed it to an agency",
+  sales: "Sales aren't where I want them",
+};
+
+const SEARCHING_STEPS = [
+  {
+    num: "01",
+    title: "The uncomfortable question call",
+    body: "Before I touch anything, we spend 60 minutes on one question: who exactly are you for, and what do they feel before they find you? Most founders have never been asked this clearly. This session usually surfaces the real problem — which is rarely what they thought it was.",
+    signal: "What you walk away with: clarity on your one real customer",
+    good: true,
+  },
+  {
+    num: "02",
+    title: "The message, built from scratch",
+    body: "No templates. No brand guidelines filled in with your logo. I write the words your customer needs to hear — at the exact moment they're deciding whether you're worth their attention. Positioning, tone, the one sentence that makes them feel seen.",
+    signal: "What you walk away with: a messaging doc your whole team can use",
+    good: true,
+  },
+  {
+    num: "03",
+    title: "The execution — copy, ads, content",
+    body: "Only after the foundation is solid do we build anything. Ad copy, landing pages, content strategy — all pulled from the same source: what your customer actually feels. Nothing gets made that doesn't serve that.",
+    signal: "What you walk away with: work you can run the same week",
+    good: true,
+  },
+  {
+    num: "04",
+    title: "What I don't do",
+    body: "I don't manage your social calendar. I don't post on your behalf. I don't write AI-generated blogs dressed as strategy. I'm not a retainer you forget you're paying. You'll know exactly what changed and why it worked.",
+    signal: "Not a fit: if you need volume over quality",
+    good: false,
+  },
+];
+
+const DELEGATED_CHECKS = [
+  {
+    q: "Can they name your one specific customer — not a demographic, a person?",
+    note: "Age range isn't a customer. \"32-year-old ops manager who's burned out from manual reporting\" is a customer.",
+  },
+  {
+    q: "Do they know what your customer feels before they find you?",
+    note: "Not what they want — what they feel. Frustrated? Embarrassed? Quietly desperate? This drives the copy.",
+  },
+  {
+    q: "Can they explain why your customer would choose you over the next option?",
+    note: "Not features. The emotional reason. If they can't say it plainly, neither can your ads.",
+  },
+  {
+    q: "Did they test the messaging before scaling spend?",
+    note: "Scaling bad messaging faster is how agencies burn budgets confidently.",
+  },
+  {
+    q: "Have they changed their approach based on what the data showed?",
+    note: "A report full of impressions isn't a strategy. Ask what they changed last month and why.",
+  },
+  {
+    q: "Do they measure the metric that leads to sales — not just reach?",
+    note: "Reach, likes, and follower growth are comfortable numbers. Cost per qualified lead is an uncomfortable one. Which are they showing you?",
+  },
+  {
+    q: "Would they tell you if something wasn't working — before you asked?",
+    note: "This one you already know the answer to.",
+  },
+];
+
+const FUNNEL_STAGES = [
+  {
+    pct: 100,
+    fill: 100,
+    label: "People who could need you",
+    sub: "They exist. The market is real.",
+    detail:
+      "The people who would genuinely benefit from what you sell are out there. This isn't the problem. The problem is somewhere below this.",
+    leak: false,
+    badge: null,
+    highlight: false,
+  },
+  {
+    pct: 72,
+    fill: 72,
+    label: "People who encounter your marketing",
+    sub: "They've seen an ad, a post, a referral.",
+    detail:
+      "Reach isn't the problem for most founders. They're getting eyeballs. The drop happens next — when those eyeballs don't become interest.",
+    leak: true,
+    badge: "check here",
+    highlight: false,
+  },
+  {
+    pct: 28,
+    fill: 28,
+    label: "People who feel like it's for them",
+    sub: "This is where most businesses leak.",
+    detail:
+      "This is the real gap. You're reaching people who could buy — but your messaging doesn't make them feel like it was made for them specifically. They scroll past. Not because they don't need it. Because it didn't feel like it was talking to them.",
+    leak: true,
+    badge: "biggest leak",
+    highlight: true,
+  },
+  {
+    pct: 18,
+    fill: 18,
+    label: "People who consider buying",
+    sub: "They've looked at pricing or reached out.",
+    detail:
+      "By the time someone is considering buying, your messaging already did its job — or didn't. Fixing the sales process here is like mopping the floor while the tap is still running.",
+    leak: false,
+    badge: null,
+    highlight: false,
+  },
+  {
+    pct: 8,
+    fill: 8,
+    label: "People who buy",
+    sub: "Your actual customers.",
+    detail:
+      "If this number feels low, resist the urge to look at your sales process first. Look at step 3 — messaging resonance. That's where the 72% went.",
+    leak: false,
+    badge: null,
+    highlight: false,
+  },
+];
+
+function getCheckResult(count) {
+  if (count === 0) return null;
+  if (count <= 2)
+    return `They can answer ${count} of these. That means the work they're producing is built on guesses — however professional it looks. You're paying for execution without foundation.`;
+  if (count <= 4)
+    return "They've done some of the groundwork. But the gaps in what they can't answer are exactly where your budget is going to waste. Worth a direct conversation about the unanswered ones.";
+  if (count <= 6)
+    return "They're doing more than most agencies. The remaining gaps are worth pushing on — they're small but they're where the difference between good results and great ones lives.";
+  return "They can answer all of these clearly? That's rare. Either you have an unusually good agency — or it's worth verifying the answers are real and not rehearsed.";
+}
+
+function SearchingPanel() {
+  return (
+    <>
+      <p style={s.eyebrow}>How I work</p>
+      <p style={s.headline}>
+        What working with me actually looks like — step by step
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {SEARCHING_STEPS.map((step) => (
+          <div key={step.num} style={s.mechStep}>
+            <div style={s.mechNum}>{step.num}</div>
+            <div style={{ flex: 1 }}>
+              <p style={s.mechTitle}>{step.title}</p>
+              <p style={s.mechBody}>{step.body}</p>
+              <span
+                style={{
+                  ...s.signal,
+                  ...(step.good ? s.signalGood : s.signalBad),
+                }}
+              >
+                {step.signal}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p style={s.panelNote}>
+        "The right marketer asks the uncomfortable questions before touching
+        anything. Have you been asked them yet?"
+      </p>
+    </>
+  );
+}
+
+function DelegatedPanel() {
+  const [checked, setChecked] = useState([]);
+  function toggle(i) {
+    setChecked((prev) =>
+      prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i],
+    );
+  }
+  const count = checked.length;
+  const result = getCheckResult(count);
+  return (
+    <>
+      <p style={s.eyebrow}>Agency audit</p>
+      <p style={s.headline}>
+        Seven questions to ask your agency in the next review
+      </p>
+      <p
+        style={{
+          fontSize: 13,
+          color: "var(--text-secondary)",
+          marginBottom: 16,
+        }}
+      >
+        Tick the ones they can actually answer.{" "}
+        <span style={{ color: "var(--accent)", fontWeight: 500 }}>
+          {count} / 7
+        </span>{" "}
+        means they've done the groundwork.
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {DELEGATED_CHECKS.map((item, i) => {
+          const isChecked = checked.includes(i);
+          return (
+            <div
+              key={i}
+              onClick={() => toggle(i)}
+              style={{
+                ...s.checkItem,
+                ...(isChecked ? s.checkItemChecked : {}),
+              }}
+            >
+              <div
+                style={{
+                  ...s.checkBox,
+                  ...(isChecked ? s.checkBoxChecked : {}),
+                }}
+              >
+                {isChecked && "✓"}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={s.checkQ}>{item.q}</p>
+                <p style={s.checkNote}>{item.note}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {result && <div style={s.checkResult}>{result}</div>}
+    </>
+  );
+}
+
+function SalesPanel() {
+  const [openIdx, setOpenIdx] = useState(null);
+  function toggle(i) {
+    setOpenIdx((prev) => (prev === i ? null : i));
+  }
+  return (
+    <>
+      <p style={s.eyebrow}>Find the leak</p>
+      <p style={s.headline}>Where exactly is your revenue disappearing?</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {FUNNEL_STAGES.map((stage, i) => {
+          const isOpen = openIdx === i;
+          return (
+            <div key={i}>
+              <div
+                onClick={() => toggle(i)}
+                style={{
+                  ...s.funnelStage,
+                  ...(stage.leak && !stage.highlight ? s.funnelLeak : {}),
+                  ...(stage.highlight ? s.funnelHighlight : {}),
+                }}
+              >
+                <div style={{ width: 60, flexShrink: 0 }}>
+                  <div style={s.funnelBarBg}>
+                    <div
+                      style={{ ...s.funnelBarFill, width: `${stage.fill}%` }}
+                    />
+                  </div>
+                  <p style={s.funnelPct}>~{stage.pct}%</p>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={s.funnelLabel}>{stage.label}</p>
+                  <p style={s.funnelSub}>{stage.sub}</p>
+                  {isOpen && <p style={s.funnelDetail}>{stage.detail}</p>}
+                </div>
+                {stage.badge && (
+                  <span
+                    style={{
+                      ...s.funnelBadge,
+                      ...(stage.highlight ? s.funnelBadgeHighlight : {}),
+                    }}
+                  >
+                    {stage.badge}
+                  </span>
+                )}
+              </div>
+              {i < FUNNEL_STAGES.length - 1 && (
+                <div style={s.funnelConnector} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <p style={s.panelNote}>
+        "Most sales problems are fixed upstream. If your message doesn't make
+        the right person feel seen, no closer in the world will save the deal."
+      </p>
+    </>
+  );
+}
+
+const s = {
+  eyebrow: {
+    fontSize: 11,
+    letterSpacing: 3,
+    textTransform: "uppercase",
+    color: "var(--accent)",
+    marginBottom: 12,
+    fontFamily: "var(--font-sans)",
+  },
+  headline: {
+    fontSize: "clamp(18px, 2.5vw, 24px)",
+    fontFamily: "var(--font-serif)",
+    fontWeight: 400,
+    color: "var(--text)",
+    lineHeight: 1.3,
+    marginBottom: 28,
+  },
+  panelNote: {
+    marginTop: 24,
+    fontSize: 13,
+    color: "var(--text-secondary)",
+    lineHeight: 1.7,
+    fontStyle: "italic",
+    fontFamily: "var(--font-serif)",
+  },
+  mechStep: {
+    display: "flex",
+    gap: 20,
+    alignItems: "flex-start",
+    padding: "20px 8px",
+    borderBottom: "0.5px solid var(--border)",
+  },
+  mechNum: {
+    fontSize: 11,
+    letterSpacing: 2,
+    color: "var(--accent)",
+    minWidth: 28,
+    paddingTop: 2,
+    flexShrink: 0,
+    fontFamily: "var(--font-sans)",
+  },
+  mechTitle: {
+    fontSize: 15,
+    color: "var(--text)",
+    fontWeight: 500,
+    marginBottom: 4,
+    fontFamily: "var(--font-serif)",
+  },
+  mechBody: {
+    fontSize: 13,
+    color: "var(--text-secondary)",
+    lineHeight: 1.6,
+    marginBottom: 8,
+  },
+  signal: {
+    display: "inline-block",
+    fontSize: 11,
+    letterSpacing: 1,
+    padding: "4px 10px",
+    border: "0.5px solid",
+    borderRadius: 2,
+  },
+  signalGood: { borderColor: "var(--accent)", color: "var(--accent)" },
+  signalBad: { borderColor: "var(--border)", color: "var(--text-secondary)" },
+  checkItem: {
+    display: "flex",
+    gap: 14,
+    alignItems: "flex-start",
+    padding: 16,
+    border: "0.5px solid var(--border)",
+    borderRadius: 4,
+    cursor: "pointer",
+  },
+  checkItemChecked: {
+    borderColor: "var(--accent)",
+    background: "rgba(184,240,60,0.04)",
+  },
+  checkBox: {
+    width: 18,
+    height: 18,
+    border: "1.5px solid var(--border)",
+    borderRadius: 3,
+    flexShrink: 0,
+    marginTop: 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 11,
+    color: "#0e0e0e",
+  },
+  checkBoxChecked: {
+    background: "var(--accent)",
+    borderColor: "var(--accent)",
+  },
+  checkQ: { fontSize: 14, color: "var(--text)", lineHeight: 1.5 },
+  checkNote: {
+    fontSize: 12,
+    color: "var(--text-secondary)",
+    marginTop: 4,
+    lineHeight: 1.5,
+  },
+  checkResult: {
+    marginTop: 20,
+    padding: "14px 16px",
+    borderLeft: "2px solid var(--accent)",
+    fontSize: 13,
+    color: "var(--text-secondary)",
+    lineHeight: 1.6,
+  },
+  funnelStage: {
+    display: "flex",
+    gap: 16,
+    alignItems: "center",
+    padding: "14px 16px",
+    border: "0.5px solid var(--border)",
+    borderRadius: 4,
+    cursor: "pointer",
+  },
+  funnelLeak: {
+    borderColor: "rgba(184,240,60,0.3)",
+    background: "rgba(184,240,60,0.03)",
+  },
+  funnelHighlight: {
+    borderColor: "rgba(184,240,60,0.6)",
+    background: "rgba(184,240,60,0.05)",
+  },
+  funnelBarBg: {
+    height: 6,
+    background: "var(--border)",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  funnelBarFill: {
+    height: "100%",
+    borderRadius: 3,
+    background: "var(--accent)",
+    transition: "width .6s ease",
+  },
+  funnelPct: {
+    fontSize: 11,
+    color: "var(--accent)",
+    marginTop: 3,
+    letterSpacing: 0.5,
+    fontFamily: "var(--font-sans)",
+  },
+  funnelLabel: { fontSize: 14, color: "var(--text)", fontWeight: 500 },
+  funnelSub: {
+    fontSize: 12,
+    color: "var(--text-secondary)",
+    marginTop: 2,
+    lineHeight: 1.5,
+  },
+  funnelDetail: {
+    marginTop: 10,
+    fontSize: 13,
+    color: "var(--text-secondary)",
+    lineHeight: 1.6,
+  },
+  funnelBadge: {
+    fontSize: 10,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: "var(--text-secondary)",
+    border: "0.5px solid rgba(184,240,60,0.3)",
+    padding: "3px 8px",
+    borderRadius: 2,
+    flexShrink: 0,
+    fontFamily: "var(--font-sans)",
+  },
+  funnelBadgeHighlight: {
+    color: "var(--accent)",
+    borderColor: "var(--accent)",
+  },
+  funnelConnector: {
+    width: 1,
+    height: 8,
+    background: "var(--border)",
+    margin: "0 auto",
+  },
+};
+
+export default function PathInfographic({ activePath }) {
+  const defaultTab =
+    activePath && TAB_LABELS[activePath] ? activePath : "searching";
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  useEffect(() => {
+    if (activePath && TAB_LABELS[activePath]) setActiveTab(activePath);
+  }, [activePath]);
+
+  return (
+    <section
+      style={{
+        background: "var(--surface2, #1e1e1e)",
+        padding: "6rem 2.5rem",
+        borderTop: "1px solid var(--border)",
+      }}
+    >
+      <div style={{ maxWidth: 760, margin: "0 auto" }}>
+        {/* Tabs */}
+        <div
+          style={{
+            display: "flex",
+            gap: 0,
+            borderBottom: "0.5px solid var(--border)",
+            marginBottom: 32,
+            overflowX: "auto",
+          }}
+        >
+          {Object.entries(TAB_LABELS).map(([key, label]) => {
+            const isActive = activeTab === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  color: isActive ? "var(--accent)" : "var(--text-muted)",
+                  padding: "10px 20px",
+                  border: "none",
+                  borderBottom: isActive
+                    ? "2px solid var(--accent)"
+                    : "2px solid transparent",
+                  background: "none",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  fontFamily: "var(--font-sans)",
+                  transition: "color .2s, border-color .2s",
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {activeTab === "searching" && <SearchingPanel />}
+        {activeTab === "delegated" && <DelegatedPanel />}
+        {activeTab === "sales" && <SalesPanel />}
+      </div>
+    </section>
+  );
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./components/RichEditor.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"use client";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
+import Placeholder from "@tiptap/extension-placeholder";
+import { useCallback } from "react";
+
+const btn = (active, onClick, title, content) => (
+  <button
+    key={title}
+    onMouseDown={(e) => {
+      e.preventDefault();
+      onClick();
+    }}
+    title={title}
+    style={{
+      background: active ? "#2A2A26" : "transparent",
+      border: "none",
+      color: active ? "var(--amber)" : "var(--text-muted)",
+      padding: "6px 10px",
+      cursor: "pointer",
+      fontSize: 13,
+      borderRadius: 3,
+      fontFamily: "var(--font-sans)",
+      minWidth: 32,
+    }}
+  >
+    {content}
+  </button>
+);
+
+export default function RichEditor({ content, onChange }) {
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit,
+      Underline,
+      Image.configure({ inline: false }),
+      Link.configure({ openOnClick: false }),
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      Placeholder.configure({ placeholder: "Start writing your post..." }),
+    ],
+    content,
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+  });
+
+  const addImage = useCallback(() => {
+    const url = window.prompt("Image URL:");
+    if (url && editor) editor.chain().focus().setImage({ src: url }).run();
+  }, [editor]);
+
+  const setLink = useCallback(() => {
+    const prev = editor.getAttributes("link").href;
+    const url = window.prompt("URL:", prev);
+    if (url === null) return;
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  }, [editor]);
+
+  if (!editor) return null;
+
+  const e = editor;
+
+  return (
+    <div
+      style={{
+        border: "1px solid var(--border-light)",
+        borderRadius: 4,
+        overflow: "hidden",
+        background: "#fff",
+      }}
+    >
+      {/* Toolbar */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 2,
+          padding: "8px 12px",
+          background: "#F9F6F0",
+          borderBottom: "1px solid var(--border-light)",
+          alignItems: "center",
+        }}
+      >
+        {btn(
+          e.isActive("bold"),
+          () => e.chain().focus().toggleBold().run(),
+          "Bold",
+          <b>B</b>,
+        )}
+        {btn(
+          e.isActive("italic"),
+          () => e.chain().focus().toggleItalic().run(),
+          "Italic",
+          <i>I</i>,
+        )}
+        {btn(
+          e.isActive("underline"),
+          () => e.chain().focus().toggleUnderline().run(),
+          "Underline",
+          <u>U</u>,
+        )}
+        {btn(
+          e.isActive("strike"),
+          () => e.chain().focus().toggleStrike().run(),
+          "Strike",
+          <s>S</s>,
+        )}
+        <div
+          style={{
+            width: 1,
+            height: 20,
+            background: "var(--border-light)",
+            margin: "0 4px",
+          }}
+        />
+        {btn(
+          e.isActive("heading", { level: 1 }),
+          () => e.chain().focus().toggleHeading({ level: 1 }).run(),
+          "H1",
+          "H1",
+        )}
+        {btn(
+          e.isActive("heading", { level: 2 }),
+          () => e.chain().focus().toggleHeading({ level: 2 }).run(),
+          "H2",
+          "H2",
+        )}
+        {btn(
+          e.isActive("heading", { level: 3 }),
+          () => e.chain().focus().toggleHeading({ level: 3 }).run(),
+          "H3",
+          "H3",
+        )}
+        <div
+          style={{
+            width: 1,
+            height: 20,
+            background: "var(--border-light)",
+            margin: "0 4px",
+          }}
+        />
+        {btn(
+          e.isActive("bulletList"),
+          () => e.chain().focus().toggleBulletList().run(),
+          "Bullet list",
+          "• List",
+        )}
+        {btn(
+          e.isActive("orderedList"),
+          () => e.chain().focus().toggleOrderedList().run(),
+          "Numbered list",
+          "1. List",
+        )}
+        {btn(
+          e.isActive("blockquote"),
+          () => e.chain().focus().toggleBlockquote().run(),
+          "Blockquote",
+          '" "',
+        )}
+        {btn(
+          e.isActive("codeBlock"),
+          () => e.chain().focus().toggleCodeBlock().run(),
+          "Code block",
+          "</>",
+        )}
+        <div
+          style={{
+            width: 1,
+            height: 20,
+            background: "var(--border-light)",
+            margin: "0 4px",
+          }}
+        />
+        {btn(
+          e.isActive({ textAlign: "left" }),
+          () => e.chain().focus().setTextAlign("left").run(),
+          "Align left",
+          "⬅",
+        )}
+        {btn(
+          e.isActive({ textAlign: "center" }),
+          () => e.chain().focus().setTextAlign("center").run(),
+          "Align center",
+          "↔",
+        )}
+        {btn(
+          e.isActive({ textAlign: "right" }),
+          () => e.chain().focus().setTextAlign("right").run(),
+          "Align right",
+          "➡",
+        )}
+        <div
+          style={{
+            width: 1,
+            height: 20,
+            background: "var(--border-light)",
+            margin: "0 4px",
+          }}
+        />
+        {btn(e.isActive("link"), setLink, "Link", "🔗")}
+        {btn(false, addImage, "Image", "🖼")}
+        {btn(
+          false,
+          () => e.chain().focus().setHorizontalRule().run(),
+          "Divider",
+          "—",
+        )}
+        <div
+          style={{
+            width: 1,
+            height: 20,
+            background: "var(--border-light)",
+            margin: "0 4px",
+          }}
+        />
+        {btn(false, () => e.chain().focus().undo().run(), "Undo", "↩")}
+        {btn(false, () => e.chain().focus().redo().run(), "Redo", "↪")}
+      </div>
+      <EditorContent editor={editor} style={{ minHeight: 400 }} />
+    </div>
+  );
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./lib/supabase.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./middleware.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { NextResponse } from "next/server";
+
+export function middleware(request) {
+  const { pathname } = request.nextUrl;
+
+  // Only protect admin UI pages, not the API routes
+  if (
+    pathname.startsWith("/admin") &&
+    !pathname.startsWith("/admin/login") &&
+    !pathname.startsWith("/api/")
+  ) {
+    const authCookie = request.cookies.get("admin_auth");
+    if (!authCookie || authCookie.value !== "authenticated") {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/admin/:path*"],
+};
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./next-env.d.ts
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+import "./.next/dev/types/routes.d.ts";
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./next.config.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const nextConfig = {
+  turbopack: {
+    root: __dirname,
+  },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '**' },
+    ],
+  },
+}
+module.exports = nextConfig
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./next.config.ts
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+
+
+========================================
+  TOTAL FILES: 23
+  TOTAL LINES:     5201
+========================================
