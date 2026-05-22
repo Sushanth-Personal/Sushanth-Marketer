@@ -189,10 +189,13 @@ export default function Home() {
                 fontFamily: "var(--font-sans)",
               }}
             >
-              One person. All of it connected.{" "}
+              Average is forgettable. It's the ad you scroll past, the website
+              you close in eight seconds, the brand you can't remember by
+              Tuesday.
+              <br />
+              <br />
               <strong style={{ color: "var(--text)", fontWeight: 400 }}>
-                Strategy, copy, and execution that works as a system — not a
-                stack of separate deliverables.
+                The other side is marketing that makes your customer feel found.
               </strong>
             </p>
           </div>
@@ -451,43 +454,7 @@ export default function Home() {
               </span>
             </h1>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "0.6rem",
-                flexWrap: "wrap",
-                marginBottom: "2rem",
-              }}
-            >
-              {[
-                { label: "Brand Messaging", icon: "◈" },
-                { label: "Ad Strategy & Copy", icon: "◎" },
-                { label: "SEO & Web", icon: "⬡" },
-              ].map((skill) => (
-                <div
-                  key={skill.label}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    background: "rgba(184,240,60,0.06)",
-                    border: "1px solid rgba(184,240,60,0.2)",
-                    padding: "0.45rem 1rem",
-                    borderRadius: "2px",
-                    fontSize: "0.78rem",
-                    color: "var(--accent)",
-                    fontFamily: "var(--font-sans)",
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  <span style={{ fontSize: "0.65rem", opacity: 0.7 }}>
-                    {skill.icon}
-                  </span>
-                  {skill.label}
-                </div>
-              ))}
-            </div>
+    
 
             <p
               style={{
@@ -499,10 +466,13 @@ export default function Home() {
                 fontWeight: 300,
               }}
             >
-              One person. All of it connected.{" "}
+              Average is forgettable. It's the ad you scroll past, the website
+              you close in eight seconds, the brand you can't remember by
+              Tuesday.
+              <br />
+              <br />
               <strong style={{ color: "var(--text)", fontWeight: 400 }}>
-                Strategy, copy, and execution that works as a system — not a
-                stack of separate deliverables.
+                The other side is marketing that makes your customer feel found.
               </strong>
             </p>
 
@@ -1278,15 +1248,17 @@ export default function Home() {
             }}
           >
             {[
-  {
-    problem: "Nobody owns the outcome",
-    detail: "When results don't come, the SEO says the copy isn't converting. The copywriter says the traffic is unqualified. Everyone is doing their job. Nobody is responsible for whether it works together.",
-  },
-  {
-    problem: "SEO and copy pulling in opposite directions",
-    detail: "The SEO wants the headline to contain the keyword. The copywriter wants the headline to land emotionally. Without someone who understands both deeply, you compromise both. You rank adequately and convert poorly.",
-  },
-].map((item, i) => (
+              {
+                problem: "Nobody owns the outcome",
+                detail:
+                  "When results don't come, the SEO says the copy isn't converting. The copywriter says the traffic is unqualified. Everyone is doing their job. Nobody is responsible for whether it works together.",
+              },
+              {
+                problem: "SEO and copy pulling in opposite directions",
+                detail:
+                  "The SEO wants the headline to contain the keyword. The copywriter wants the headline to land emotionally. Without someone who understands both deeply, you compromise both. You rank adequately and convert poorly.",
+              },
+            ].map((item, i) => (
               <div
                 key={i}
                 style={{
