@@ -124,11 +124,11 @@ export default async function BlogPost({ params }) {
               <p style={{ fontSize: 15, color: 'var(--text-muted)', marginBottom: 28 }}>
                 Let's talk about what this means for your marketing.
               </p>
-              
+              <a
                 href="mailto:hello@sushanthp.com"
                 style={{ background: 'var(--dark)', color: 'var(--text-light)', padding: '13px 28px', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', fontFamily: 'var(--font-sans)', textDecoration: 'none', display: 'inline-block' }}
               >
-                Work With Me →
+               Work With Me &#8594;
               </a>
             </div>
           </div>
