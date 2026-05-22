@@ -1,8 +1,6 @@
 import "./globals.css";
 import Script from "next/script";
 
-export const metadataBase = new URL("https://sushanthp.com");
-
 export const metadata = {
   metadataBase: new URL("https://sushanthp.com"),
   title: {
@@ -11,13 +9,6 @@ export const metadata = {
   },
   description:
     "Sushanth P is a marketing strategist for D2C and B2B founders. SEO, brand messaging, and ad copy built as one system — not separate deliverables.",
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.png", type: "image/png", sizes: "32x32" },
-    ],
-    apple: [{ url: "/apple-icon.png", sizes: "180x180" }],
-  },
   keywords:
     "Sushanth P, marketing strategist for founders, D2C marketing, brand messaging, SEO copywriter, ad copywriting, Bangalore marketing strategist",
   alternates: {
@@ -33,7 +24,7 @@ export const metadata = {
     locale: "en_IN",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "https://sushanthp.com/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Sushanth P — Marketing Strategist for Founders",
@@ -45,7 +36,7 @@ export const metadata = {
     title: "Sushanth P — Marketing Strategist for Founders",
     description:
       "SEO, brand messaging, and ad copy built as one system. For founders who are done guessing.",
-    images: ["/og-image.jpg"],
+    images: ["https://sushanthp.com/og-image.jpg"],
   },
   robots: {
     index: true,
@@ -96,6 +87,11 @@ const websiteSchema = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
+      </head>
       <body>
         <Script
           id="schema-person"
