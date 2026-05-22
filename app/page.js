@@ -258,8 +258,18 @@ export default function Home() {
               gap: "0.6rem",
             }}
           >
-            <a
-              href="mailto:hello@sushanthp.com"
+            <Link
+              href="#problem"
+              onClick={(e) => {
+                e.preventDefault();
+                const el = document.getElementById("problem");
+                if (el) {
+                  window.scrollTo({
+                    top: el.offsetTop - 68,
+                    behavior: "smooth",
+                  });
+                }
+              }}
               style={{
                 background: "var(--accent)",
                 color: "#0e0e0e",
@@ -274,10 +284,10 @@ export default function Home() {
                 display: "block",
               }}
             >
-              Let's Talk →
-            </a>
-            <Link
-              href="/blog"
+              Read How I Think
+            </Link>
+            <a
+              href="mailto:hello@sushanthp.com"
               style={{
                 border: "1px solid #222",
                 color: "var(--text-muted)",
@@ -291,8 +301,8 @@ export default function Home() {
                 display: "block",
               }}
             >
-              Read How I Think
-            </Link>
+              Let's Talk →
+            </a>
           </div>
 
           {/* ZONE 2 — Photo */}
@@ -454,8 +464,6 @@ export default function Home() {
               </span>
             </h1>
 
-    
-
             <p
               style={{
                 fontSize: "1.05rem",
@@ -485,12 +493,25 @@ export default function Home() {
                 marginBottom: "3rem",
               }}
             >
-              <a href="mailto:hello@sushanthp.com" style={btnPrimary}>
-                Let's talk →
-              </a>
-              <Link href="/blog" style={btnGhost}>
+              <Link
+                href="#problem"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const el = document.getElementById("problem");
+                  if (el) {
+                    window.scrollTo({
+                      top: el.offsetTop - 68,
+                      behavior: "smooth",
+                    });
+                  }
+                }}
+                style={btnPrimary}
+              >
                 Read how I think
               </Link>
+              <a href="mailto:hello@sushanthp.com" style={btnGhost}>
+                Let's talk →
+              </a>
             </div>
 
             <div
@@ -570,6 +591,7 @@ export default function Home() {
     SECTION 3 — THE PROBLEM
 ============================================================ */}
       <section
+        id="problem"
         style={{
           background: "var(--surface)",
           padding: `${sectionPy} ${px}`,
