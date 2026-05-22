@@ -33,7 +33,7 @@ export const metadata = {
     locale: "en_IN",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Sushanth P — Marketing Strategist for Founders",
@@ -45,7 +45,7 @@ export const metadata = {
     title: "Sushanth P — Marketing Strategist for Founders",
     description:
       "SEO, brand messaging, and ad copy built as one system. For founders who are done guessing.",
-    images: ["/og-image.png"],
+    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,
