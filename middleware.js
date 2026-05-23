@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 export function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  // Only protect admin UI pages, not the API routes
   if (
     pathname.startsWith("/admin") &&
     !pathname.startsWith("/admin/login") &&
