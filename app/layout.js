@@ -15,7 +15,7 @@ export const metadata = {
     canonical: "https://sushanthp.com",
   },
   openGraph: {
-    title: "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",,
+    title: "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
     description:
       "SEO, brand messaging, and ad copy built as one system. For founders who are done guessing.",
     url: "https://sushanthp.com",
