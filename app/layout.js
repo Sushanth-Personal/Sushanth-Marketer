@@ -4,7 +4,7 @@ import Script from "next/script";
 export const metadata = {
   metadataBase: new URL("https://sushanthp.com"),
   title: {
-    default: "Sushanth P — Marketing Strategist for Founders",
+    default: "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
     template: "%s — Sushanth P",
   },
   description:
@@ -15,7 +15,7 @@ export const metadata = {
     canonical: "https://sushanthp.com",
   },
   openGraph: {
-    title: "Sushanth P — Marketing Strategist for Founders",
+    title: "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",,
     description:
       "SEO, brand messaging, and ad copy built as one system. For founders who are done guessing.",
     url: "https://sushanthp.com",
@@ -33,7 +33,7 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sushanth P — Marketing Strategist for Founders",
+    title: "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
     description:
       "SEO, brand messaging, and ad copy built as one system. For founders who are done guessing.",
     images: ["https://sushanthp.com/og-image.jpg"],
