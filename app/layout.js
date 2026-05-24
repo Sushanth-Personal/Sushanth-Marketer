@@ -7,7 +7,8 @@ export const metadata = {
     google: "jGQ9xzNXExzZV2iSZu47Mo4GSOHfFrRcdWWaYV1y21A",
   },
   title: {
-    default: "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
+    default:
+      "Sushanth P — Marketing Strategist for Founders | SEO, Brand Messaging & Ad Copy",
     template: "%s — Sushanth P",
   },
   description:
@@ -18,7 +19,8 @@ export const metadata = {
     canonical: "https://sushanthp.com",
   },
   openGraph: {
-    title: "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
+    title:
+      "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
     description:
       "SEO, brand messaging, and ad copy built as one system. For founders who are done guessing.",
     url: "https://sushanthp.com",
@@ -36,7 +38,8 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
+    title:
+      "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
     description:
       "SEO, brand messaging, and ad copy built as one system. For founders who are done guessing.",
     images: ["https://sushanthp.com/og-image.jpg"],
@@ -60,7 +63,7 @@ const personSchema = {
   url: "https://sushanthp.com",
   jobTitle: "Marketing Strategist",
   description:
-    "Marketing strategist for D2C and B2B founders. SEO, brand messaging, and ad copy built as one system.",
+    "Your product is better than your marketing suggests. I help founders fix the whole system - SEO, brand messaging, and ad copy working as one.",
   knowsAbout: [
     "Brand Messaging",
     "Copywriting",
@@ -68,6 +71,10 @@ const personSchema = {
     "Paid Advertising",
     "Marketing Strategy",
     "Consumer Psychology",
+    "Website Optimization",
+    "Content Marketing",
+    "Blog Writing",
+    "Website Building",
   ],
   address: {
     "@type": "PostalAddress",
@@ -84,7 +91,7 @@ const websiteSchema = {
   name: "Sushanth P",
   url: "https://sushanthp.com",
   description:
-    "Marketing strategist for founders. SEO, copywriting, and brand messaging as one system.",
+    "Your product is better than your marketing suggests. I help founders fix the whole system — SEO, brand messaging, and ad copy working as one.",
 };
 
 export default function RootLayout({ children }) {
