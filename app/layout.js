@@ -3,6 +3,9 @@ import Script from "next/script";
 
 export const metadata = {
   metadataBase: new URL("https://sushanthp.com"),
+  verification: {
+    google: "jGQ9xzNXExzZV2iSZu47Mo4GSOHfFrRcdWWaYV1y21A",
+  },
   title: {
     default: "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
     template: "%s — Sushanth P",

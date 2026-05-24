@@ -460,7 +460,7 @@ export default function Home() {
             >
               You've seen enough average.{" "}
               <span style={{ color: "var(--accent)" }}>
-                Welcome to the other side of it.
+                Welcome to the other side.
               </span>
             </h1>
 
