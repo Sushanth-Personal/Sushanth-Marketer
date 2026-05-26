@@ -99,7 +99,7 @@ const services = [
 ];
 
 const defaultHp = {
-  heroEyebrow: "Marketing strategist — for founders",
+  heroEyebrow: "",
   ctaHeadline: "That's a sign.",
   ctaBody:
     "The founders who reach out to me aren't looking for another vendor. They're looking for someone who will tell them the truth about why their marketing isn't working — and actually fix it.",
@@ -159,7 +159,7 @@ export default function Home() {
                 fontFamily: "var(--font-sans)",
               }}
             >
-              {hp.heroEyebrow || "Marketing Strategist — For Founders"}
+              Your product is doing fine.{" "}
             </p>
             <h1
               style={{
@@ -171,14 +171,9 @@ export default function Home() {
                 marginBottom: "1.25rem",
               }}
             >
-              You've seen
-              <br />
-              enough average.{" "}
-              <span style={{ color: "var(--accent)" }}>
-                Welcome to
-                <br />
-                the other side.
-              </span>
+              Is just fine{" "}
+              <span style={{ color: "var(--accent)" }}>what you hoped for</span>{" "}
+              when you started?
             </h1>
             <p
               style={{
@@ -189,13 +184,12 @@ export default function Home() {
                 fontFamily: "var(--font-sans)",
               }}
             >
-              Average is forgettable. It's the ad you scroll past, the website
-              you close in eight seconds, the brand you can't remember by
-              Tuesday.
-              <br />
-              <br />
+              You're making money. The marketing is running. Something is
+              working. But there's a number in your head — the number you
+              imagined when you started — and what's actually happening isn't
+              it.{" "}
               <strong style={{ color: "var(--text)", fontWeight: 400 }}>
-                The other side is marketing that makes your customer feel found.
+                That gap is what we're here to close.
               </strong>
             </p>
           </div>
@@ -444,9 +438,6 @@ export default function Home() {
               width: "100%",
             }}
           >
-            <p style={eyebrow({})}>
-              {hp.heroEyebrow || "Sushanth P — Marketing Strategist, Bangalore"}
-            </p>
             <h1
               style={{
                 fontFamily: "var(--font-display)",
@@ -458,10 +449,9 @@ export default function Home() {
                 maxWidth: 700,
               }}
             >
-              You've seen enough average.{" "}
-              <span style={{ color: "var(--accent)" }}>
-                Welcome to the other side.
-              </span>
+              The business is alive.{" "}
+              <span style={{ color: "var(--accent)" }}>But every month</span>{" "}
+              feels like square one.
             </h1>
 
             <p
@@ -474,14 +464,7 @@ export default function Home() {
                 fontWeight: 300,
               }}
             >
-              Average is forgettable. It's the ad you scroll past, the website
-              you close in eight seconds, the brand you can't remember by
-              Tuesday.
-              <br />
-              <br />
-              <strong style={{ color: "var(--text)", fontWeight: 400 }}>
-                The other side is marketing that makes your customer feel found.
-              </strong>
+              You're starting to wonder if the product was ever good enough.
             </p>
 
             <div
