@@ -385,7 +385,7 @@ export default function Home() {
                 position: "absolute",
                 inset: 0,
                 background:
-                  "linear-gradient(to right, #0e0e0e 0%, rgba(14,14,14,0.65) 40%, rgba(14,14,14,0.05) 100%)",
+                  "linear-gradient(to right, #0e0e0e 0%, rgba(14,14,14,0.45) 30%, rgba(14,14,14,0.0) 100%)",
               }}
             />
             <div
@@ -398,16 +398,7 @@ export default function Home() {
                 background: "linear-gradient(to top, #0e0e0e, transparent)",
               }}
             />
-            <div
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 2,
-                background: "var(--accent)",
-              }}
-            />
+
             <p
               style={{
                 position: "absolute",
@@ -496,47 +487,6 @@ export default function Home() {
                 Let's talk →
               </a>
             </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "3rem",
-                paddingTop: "2rem",
-                borderTop: "1px solid var(--border)",
-                flexWrap: "wrap",
-              }}
-            >
-              {[
-                { num: "2", label: "Brands Built End-to-End" },
-                { num: "3X", label: "Organic Growth, TMCI" },
-                { num: "₹0", label: "Ad Spend to First Sales, Ever Sweet" },
-              ].map((s, i) => (
-                <div key={i}>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "2.4rem",
-                      color: "var(--accent)",
-                      letterSpacing: "0.02em",
-                      lineHeight: 1,
-                    }}
-                  >
-                    {s.num}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.72rem",
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: "var(--text-muted)",
-                      marginTop: "0.3rem",
-                    }}
-                  >
-                    {s.label}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Scroll hint */}
@@ -569,6 +519,116 @@ export default function Home() {
           </div>
         </section>
       )}
+      {/* ============================================================
+    BRIDGE SECTION — It's not the product
+============================================================ */}
+      <section
+        style={{
+          background: "var(--bg)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: "0 auto",
+          }}
+        >
+          <div style={{ maxWidth: 580 }}>
+            <p style={eyebrow({})}>Before we go further</p>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: isMobile
+                  ? "clamp(1.6rem, 7vw, 2.2rem)"
+                  : "clamp(1.8rem, 3.5vw, 3rem)",
+                lineHeight: 1.15,
+                color: "var(--white)",
+                marginBottom: "1.5rem",
+                fontWeight: 400,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              It&apos;s not the product.
+            </h2>
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "#b5b0a8",
+                fontWeight: 300,
+                lineHeight: 1.8,
+                marginBottom: "1.5rem",
+              }}
+            >
+              The people who find you love what you made. The product works.
+              What isn&apos;t working is how it reaches them — and that&apos;s a
+              completely different problem with a completely different fix.
+            </p>
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "rgba(232,228,220,0.5)",
+                fontWeight: 300,
+                lineHeight: 1.8,
+              }}
+            >
+              The doubt you feel about your product is real. But it&apos;s
+              borrowed — it came from marketing that isn&apos;t doing its job,
+              not from anything wrong with what you built.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+    STATS — moved below bridge
+============================================================ */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: `0 ${px}`,
+          display: "flex",
+          gap: "3rem",
+          paddingTop: "2rem",
+          paddingBottom: "2rem",
+          borderTop: "1px solid var(--border)",
+          borderBottom: "1px solid var(--border)",
+          flexWrap: "wrap",
+        }}
+      >
+        {[
+          { num: "2", label: "Brands Built End-to-End" },
+          { num: "3X", label: "Organic Growth, TMCI" },
+          { num: "₹0", label: "Ad Spend to First Sales, Ever Sweet" },
+        ].map((s, i) => (
+          <div key={i}>
+            <div
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "2.4rem",
+                color: "var(--accent)",
+                letterSpacing: "0.02em",
+                lineHeight: 1,
+              }}
+            >
+              {s.num}
+            </div>
+            <div
+              style={{
+                fontSize: "0.72rem",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                marginTop: "0.3rem",
+              }}
+            >
+              {s.label}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* ============================================================
     SECTION 3 — THE PROBLEM
