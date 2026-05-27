@@ -116,7 +116,7 @@ export default function Navbar() {
                 </Link>
               ))}
             </div>
-            <a href="mailto:hello@sushanthp.com" style={ctaStyle}>
+            <a href="mailto:sushanthp.careers@gmail.com" style={ctaStyle}>
               Let's Talk
             </a>
           </div>
@@ -223,7 +223,7 @@ export default function Navbar() {
               </Link>
             ))}
             <a
-              href="mailto:hello@sushanthp.com"
+              href="mailto:sushanthp.careers@gmail.com"
               onClick={() => setMenuOpen(false)}
               style={{
                 marginTop: "1.25rem",

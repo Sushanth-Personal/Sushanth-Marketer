@@ -24,27 +24,6 @@ function useIsMobile() {
    SECTION 0 — DATA & CONSTANTS
 ================================================================ */
 
-const stats = [
-  {
-    stat: "95%",
-    desc: "of buying decisions are made in the subconscious mind",
-    source: "Harvard Business School",
-    url: "https://www.library.hbs.edu/working-knowledge/the-subconscious-mind-of-the-consumer-and-how-to-reach-it",
-  },
-  {
-    stat: "64%",
-    desc: "of consumers cite shared values as the main reason they have a relationship with a brand",
-    source: "Harvard Business Review",
-    url: "https://hbr.org/2012/05/three-myths-about-what-customers-want",
-  },
-  {
-    stat: "71%",
-    desc: "of consumers who have had a good social media experience with a brand are likely to recommend it",
-    source: "Ambassador",
-    url: "https://www.ambassador.com/blog/word-of-mouth-statistics",
-  },
-];
-
 const blogTeasers = [
   {
     tag: "Agency",
@@ -159,7 +138,7 @@ export default function Home() {
                 fontFamily: "var(--font-sans)",
               }}
             >
-              Your product is doing fine.{" "}
+              Marketing Strategist — For Founders
             </p>
             <h1
               style={{
@@ -171,9 +150,9 @@ export default function Home() {
                 marginBottom: "1.25rem",
               }}
             >
-              Is just fine{" "}
-              <span style={{ color: "var(--accent)" }}>what you hoped for</span>{" "}
-              when you started?
+              The business is alive.{" "}
+              <span style={{ color: "var(--accent)" }}>But every month</span>{" "}
+              feels like square one.
             </h1>
             <p
               style={{
@@ -184,63 +163,11 @@ export default function Home() {
                 fontFamily: "var(--font-sans)",
               }}
             >
-              You're making money. The marketing is running. Something is
-              working. But there's a number in your head — the number you
-              imagined when you started — and what's actually happening isn't
-              it.{" "}
+              You're starting to wonder if the product was ever good enough.{" "}
               <strong style={{ color: "var(--text)", fontWeight: 400 }}>
-                That gap is what we're here to close.
+                It was. The marketing just never caught up.
               </strong>
             </p>
-          </div>
-
-          {/* ZONE 3 — Stats */}
-          <div
-            style={{
-              display: "flex",
-              borderTop: "1px solid #1a1a1a",
-              borderBottom: "1px solid #1a1a1a",
-            }}
-          >
-            {[
-              { num: "2", label: "Brands Built" },
-              { num: "3X", label: "Organic Growth" },
-              { num: "₹0", label: "Paid at Launch" },
-            ].map((s, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: 1,
-                  padding: "14px 0",
-                  textAlign: "center",
-                  borderLeft: i > 0 ? "1px solid #1a1a1a" : "none",
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "1.75rem",
-                    color: "var(--accent)",
-                    lineHeight: 1,
-                    letterSpacing: "0.03em",
-                  }}
-                >
-                  {s.num}
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.5rem",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "var(--text-muted)",
-                    marginTop: "0.25rem",
-                    fontFamily: "var(--font-sans)",
-                  }}
-                >
-                  {s.label}
-                </div>
-              </div>
-            ))}
           </div>
 
           {/* ZONE 4 — CTAs */}
@@ -252,18 +179,8 @@ export default function Home() {
               gap: "0.6rem",
             }}
           >
-            <Link
-              href="#problem"
-              onClick={(e) => {
-                e.preventDefault();
-                const el = document.getElementById("problem");
-                if (el) {
-                  window.scrollTo({
-                    top: el.offsetTop - 68,
-                    behavior: "smooth",
-                  });
-                }
-              }}
+            <a
+              href="mailto:sushanthp.careers@gmail.com"
               style={{
                 background: "var(--accent)",
                 color: "#0e0e0e",
@@ -278,10 +195,19 @@ export default function Home() {
                 display: "block",
               }}
             >
-              Read How I Think
-            </Link>
-            <a
-              href="mailto:hello@sushanthp.com"
+              Let's Talk →
+            </a>
+            <Link
+              href="#problem"
+              onClick={(e) => {
+                e.preventDefault();
+                const el = document.getElementById("problem");
+                if (el)
+                  window.scrollTo({
+                    top: el.offsetTop - 68,
+                    behavior: "smooth",
+                  });
+              }}
               style={{
                 border: "1px solid #222",
                 color: "var(--text-muted)",
@@ -295,8 +221,8 @@ export default function Home() {
                 display: "block",
               }}
             >
-              Let's Talk →
-            </a>
+              Read How I Think
+            </Link>
           </div>
 
           {/* ZONE 2 — Photo */}
@@ -429,6 +355,7 @@ export default function Home() {
               width: "100%",
             }}
           >
+            <p style={eyebrow({})}>Marketing Strategist — For Founders</p>
             <h1
               style={{
                 fontFamily: "var(--font-display)",
@@ -455,7 +382,10 @@ export default function Home() {
                 fontWeight: 300,
               }}
             >
-              You're starting to wonder if the product was ever good enough.
+              You're starting to wonder if the product was ever good enough.{" "}
+              <strong style={{ color: "var(--text)", fontWeight: 400 }}>
+                It was. The marketing just never caught up.
+              </strong>
             </p>
 
             <div
@@ -467,25 +397,24 @@ export default function Home() {
                 marginBottom: "3rem",
               }}
             >
+              <a href="mailto:sushanthp.careers@gmail.com" style={btnPrimary}>
+                Let's Talk →
+              </a>
               <Link
                 href="#problem"
                 onClick={(e) => {
                   e.preventDefault();
                   const el = document.getElementById("problem");
-                  if (el) {
+                  if (el)
                     window.scrollTo({
                       top: el.offsetTop - 68,
                       behavior: "smooth",
                     });
-                  }
                 }}
-                style={btnPrimary}
+                style={btnGhost}
               >
                 Read how I think
               </Link>
-              <a href="mailto:hello@sushanthp.com" style={btnGhost}>
-                Let's talk →
-              </a>
             </div>
           </div>
 
@@ -580,55 +509,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* ============================================================
-    STATS — moved below bridge
-============================================================ */}
-      <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: `0 ${px}`,
-          display: "flex",
-          gap: "3rem",
-          paddingTop: "2rem",
-          paddingBottom: "2rem",
-          borderTop: "1px solid var(--border)",
-          borderBottom: "1px solid var(--border)",
-          flexWrap: "wrap",
-        }}
-      >
-        {[
-          { num: "2", label: "Brands Built End-to-End" },
-          { num: "3X", label: "Organic Growth, TMCI" },
-          { num: "₹0", label: "Ad Spend to First Sales, Ever Sweet" },
-        ].map((s, i) => (
-          <div key={i}>
-            <div
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "2.4rem",
-                color: "var(--accent)",
-                letterSpacing: "0.02em",
-                lineHeight: 1,
-              }}
-            >
-              {s.num}
-            </div>
-            <div
-              style={{
-                fontSize: "0.72rem",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "var(--text-muted)",
-                marginTop: "0.3rem",
-              }}
-            >
-              {s.label}
-            </div>
-          </div>
-        ))}
-      </div>
 
       {/* ============================================================
     SECTION 3 — THE PROBLEM
@@ -815,85 +695,70 @@ export default function Home() {
             It's the most felt.
           </p>
 
+          {/* Single stat pull quote */}
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
-              borderTop: "1px solid var(--border)",
+              borderLeft: "3px solid var(--accent)",
+              paddingLeft: "2rem",
               marginBottom: "3rem",
             }}
           >
-            {[
-              {
-                stat: "95%",
-                desc: "of purchase decisions are made in the subconscious mind",
-                source: "Harvard Business School",
-                url: "https://www.library.hbs.edu/working-knowledge/the-subconscious-mind-of-the-consumer-and-how-to-reach-it",
-              },
-              {
-                stat: "64%",
-                desc: "of consumers say shared values are the main reason they stay loyal to a brand",
-                source: "Harvard Business Review",
-                url: "https://hbr.org/2012/05/three-myths-about-what-customers-want",
-              },
-              {
-                stat: "57%",
-                desc: "of consumers spend more with brands they feel emotionally connected to",
-                source: "Sprout Social",
-                url: "https://sproutsocial.com/insights/data/social-media-connection/",
-              },
-            ].map((s, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: "1.75rem",
-                  paddingLeft: !isMobile && i > 0 ? "2rem" : 0,
-                  borderRight:
-                    !isMobile && i < 2 ? "1px solid var(--border)" : "none",
-                  borderBottom:
-                    isMobile && i < 2 ? "1px solid var(--border)" : "none",
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: isMobile ? "2.5rem" : "3rem",
-                    color: "var(--accent)",
-                    fontWeight: 400,
-                    lineHeight: 1,
-                    marginBottom: "0.75rem",
-                    letterSpacing: "0.02em",
-                  }}
-                >
-                  {s.stat}
-                </p>
-                <p
-                  style={{
-                    fontSize: "0.85rem",
-                    color: "var(--text-secondary)",
-                    lineHeight: 1.75,
-                    marginBottom: "0.75rem",
-                    fontWeight: 300,
-                  }}
-                >
-                  {s.desc}
-                </p>
-                <a
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontSize: "0.7rem",
-                    color: "rgba(255,255,255,0.35)",
-                    fontFamily: "var(--font-sans)",
-                    textDecoration: "none",
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  {s.source} ↗
-                </a>
-              </div>
-            ))}
+            <p
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(3.5rem, 8vw, 6rem)",
+                color: "var(--accent)",
+                lineHeight: 1,
+                letterSpacing: "0.02em",
+                marginBottom: "1rem",
+              }}
+            >
+              95%
+            </p>
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "var(--white)",
+                lineHeight: 1.6,
+                marginBottom: "0.75rem",
+                fontFamily: "var(--font-serif)",
+                fontWeight: 400,
+                maxWidth: 480,
+              }}
+            >
+              of purchase decisions happen before your customer consciously
+              knows why.
+            </p>
+            <p
+              style={{
+                fontSize: "0.88rem",
+                color: "var(--accent)",
+                fontWeight: 400,
+                lineHeight: 1.6,
+                marginBottom: "1rem",
+                maxWidth: 480,
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              Your ad copy is arguing with the wrong part of their brain.
+            </p>
+            <a
+              href="https://www.library.hbs.edu/working-knowledge/the-subconscious-mind-of-the-consumer-and-how-to-reach-it"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: "0.68rem",
+                color: "rgba(255,255,255,0.25)",
+                fontFamily: "var(--font-sans)",
+                textDecoration: "none",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                borderBottom: "1px solid rgba(255,255,255,0.1)",
+                paddingBottom: "2px",
+              }}
+            >
+              Harvard Business School ↗
+            </a>
           </div>
 
           <p style={{ ...hookLine }}>
@@ -1206,87 +1071,72 @@ export default function Home() {
             for all three is the right instinct.
           </p>
 
-          {/* Stats */}
+          {/* Single stat pull quote */}
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
-              borderTop: "1px solid var(--border)",
-              borderBottom: "1px solid var(--border)",
+              borderLeft: "3px solid var(--accent)",
+              paddingLeft: "2rem",
               marginBottom: "3rem",
             }}
           >
-            {[
-              {
-                stat: "85%",
-                desc: "of marketing teams report frequently working toward different goals from each other",
-                source: "Mural / The Martec Group, 2025",
-                url: "https://www.carriermanagement.com/news/2025/05/28/275682.htm",
-              },
-              {
-                stat: "65%",
-                desc: "of marketers say working in silos directly reduces the clarity of their campaigns",
-                source: "Forbes",
-                url: "https://www.slashexperts.com/post/why-cross-functional-marketing-collaboration-fails-and-how-to-fix-it",
-              },
-              {
-                stat: "63%",
-                desc: "of businesses say sales and marketing are not working well together",
-                source: "The Marketing Centre",
-                url: "https://www.themarketingcentre.com/blog/sm-alignment-interview",
-              },
-            ].map((s, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: "1.75rem",
-                  paddingLeft: !isMobile && i > 0 ? "2rem" : 0,
-                  borderRight:
-                    !isMobile && i < 2 ? "1px solid var(--border)" : "none",
-                  borderBottom:
-                    isMobile && i < 2 ? "1px solid var(--border)" : "none",
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: isMobile ? "2.5rem" : "3rem",
-                    color: "var(--accent)",
-                    fontWeight: 400,
-                    lineHeight: 1,
-                    marginBottom: "0.75rem",
-                    letterSpacing: "0.02em",
-                  }}
-                >
-                  {s.stat}
-                </p>
-                <p
-                  style={{
-                    fontSize: "0.85rem",
-                    color: "var(--text-secondary)",
-                    lineHeight: 1.75,
-                    marginBottom: "0.75rem",
-                    fontWeight: 300,
-                  }}
-                >
-                  {s.desc}
-                </p>
-                <a
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontSize: "0.7rem",
-                    color: "rgba(255,255,255,0.35)",
-                    fontFamily: "var(--font-sans)",
-                    textDecoration: "none",
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  {s.source} ↗
-                </a>
-              </div>
-            ))}
+            <p
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(3.5rem, 8vw, 6rem)",
+                color: "var(--accent)",
+                lineHeight: 1,
+                letterSpacing: "0.02em",
+                marginBottom: "1rem",
+              }}
+            >
+              85%
+            </p>
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "var(--white)",
+                lineHeight: 1.6,
+                marginBottom: "0.75rem",
+                fontFamily: "var(--font-serif)",
+                fontWeight: 400,
+                maxWidth: 480,
+              }}
+            >
+              of businesses with separate marketing, sales, and strategy teams
+              report regularly working toward different goals — even when they
+              think they're aligned.
+            </p>
+            <p
+              style={{
+                fontSize: "0.88rem",
+                color: "var(--accent)",
+                fontWeight: 400,
+                lineHeight: 1.6,
+                marginBottom: "1rem",
+                maxWidth: 480,
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              Three vendors. Three definitions of success. One budget taking the
+              hit.
+            </p>
+            <a
+              href="https://www.carriermanagement.com/news/2025/05/28/275682.htm"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: "0.68rem",
+                color: "rgba(255,255,255,0.25)",
+                fontFamily: "var(--font-sans)",
+                textDecoration: "none",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                borderBottom: "1px solid rgba(255,255,255,0.1)",
+                paddingBottom: "2px",
+              }}
+            >
+              Mural / The Martec Group, 2025 ↗
+            </a>
           </div>
 
           <p
@@ -1599,126 +1449,10 @@ export default function Home() {
           </p>
         </div>
       </section>
-      {/* <section
-        style={{
-          background: "var(--surface)",
-          padding: `${sectionPy} ${px}`,
-          borderTop: "1px solid var(--border)",
-        }}
-      >
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <p style={eyebrow({})}>What I bring</p>
-          <h2 style={{ ...sectionTitle(isMobile), marginBottom: "0.75rem" }}>
-            Three things. One person.{" "}
-            <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
-              Zero handoff friction.
-            </em>
-          </h2>
-          <p
-            style={{
-              fontSize: "1rem",
-              color: "rgba(232,228,220,0.4)",
-              lineHeight: 1.85,
-              marginBottom: "3rem",
-              fontWeight: 300,
-              maxWidth: 560,
-            }}
-          >
-            Before any copy. Before any campaign. Before any content calendar —
-            there's a conversation most founders have never had:{" "}
-            <em style={{ color: "rgba(232,228,220,0.6)" }}>
-              Who exactly are you for? What do they feel? What do they need to
-              hear before they buy?
-            </em>
-          </p>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-              gap: "1.5rem",
-            }}
-          >
-            {services.map((s, i) => (
-              <div
-                key={i}
-                style={{
-                  background: "var(--bg)",
-                  border: "1px solid var(--border)",
-                  padding: "2rem",
-                  borderRadius: "4px",
-                  borderTop:
-                    i === 0
-                      ? "2px solid var(--accent)"
-                      : "2px solid rgba(184,240,60,0.2)",
-                  transition: "transform 0.2s, border-color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-3px)";
-                  e.currentTarget.style.borderColor = "#3a3a3a";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.borderColor = "var(--border)";
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "3.5rem",
-                    color: "rgba(184,240,60,0.08)",
-                    lineHeight: 1,
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  {s.num}
-                </div>
-                <p
-                  style={{
-                    fontSize: "0.95rem",
-                    fontWeight: 500,
-                    color: "var(--white)",
-                    marginBottom: "0.8rem",
-                    letterSpacing: "0.02em",
-                  }}
-                >
-                  {s.title}
-                </p>
-                <p
-                  style={{
-                    fontSize: "0.88rem",
-                    color: "var(--text-muted)",
-                    lineHeight: 1.65,
-                    marginBottom: "1.2rem",
-                  }}
-                >
-                  {s.desc}
-                </p>
-                <div
-                  style={{
-                    marginTop: "1.2rem",
-                    paddingTop: "1.2rem",
-                    borderTop: "1px solid var(--border)",
-                    fontSize: "0.75rem",
-                    color: "var(--accent)",
-                    letterSpacing: "0.06em",
-                  }}
-                >
-                  → {s.detail}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <p style={{ ...hookLine, marginTop: "4rem" }}>
-            The work isn't theory
-          </p>
-        </div>
-      </section> */}
 
       {/* ============================================================
-          SECTION 6 — CASE STUDIES
-      ============================================================ */}
+    SECTION 6 — CASE STUDIES
+============================================================ */}
       <section
         style={{
           background: "var(--bg)",
@@ -1761,45 +1495,70 @@ export default function Home() {
                 e.currentTarget.style.borderColor = "var(--border)";
               }}
             >
+              {/* Screenshot */}
               <div
                 style={{
-                  height: 180,
-                  background: "#0a0e1a",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  position: "relative",
+                  height: 200,
                   overflow: "hidden",
+                  position: "relative",
+                  borderBottom: "1px solid var(--border)",
                 }}
               >
-                <div
+                <img
+                  src="https://res.cloudinary.com/dtu64orvo/image/upload/v1779869522/Screenshot_2026-05-27_at_1.39.11_PM_nvzshk.png"
+                  alt="TMCI website — built and maintained by Sushanth P"
                   style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "5rem",
-                    letterSpacing: "0.05em",
-                    opacity: 0.1,
-                    color: "#4a9eff",
-                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "top center",
+                    display: "block",
                   }}
-                >
-                  TMCI
-                </div>
+                />
+                {/* Tag overlay */}
                 <div
                   style={{
-                    background: "var(--surface2)",
+                    position: "absolute",
+                    top: 12,
+                    left: 12,
+                    background: "rgba(14,14,14,0.85)",
                     border: "1px solid var(--border)",
-                    padding: "0.4rem 1rem",
+                    padding: "0.3rem 0.75rem",
                     borderRadius: "2px",
-                    fontSize: "0.72rem",
+                    fontSize: "0.68rem",
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: "#4a9eff",
-                    zIndex: 1,
+                    fontFamily: "var(--font-sans)",
                   }}
                 >
                   B2B Industrial
                 </div>
+                {/* Live site link */}
+                <a
+                  href="https://tmcitechnology.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    position: "absolute",
+                    bottom: 12,
+                    right: 12,
+                    background: "rgba(14,14,14,0.85)",
+                    border: "1px solid var(--border)",
+                    padding: "0.3rem 0.75rem",
+                    borderRadius: "2px",
+                    fontSize: "0.65rem",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "rgba(232,228,220,0.5)",
+                    fontFamily: "var(--font-sans)",
+                    textDecoration: "none",
+                  }}
+                >
+                  Visit site ↗
+                </a>
               </div>
+
               <div style={{ padding: "1.75rem" }}>
                 <p
                   style={{
@@ -1809,7 +1568,7 @@ export default function Home() {
                     marginBottom: "0.6rem",
                   }}
                 >
-                  TMCI — Bangalore-Based Manufacturer
+                  TMCI — Bangalore - Based Manufacturer
                 </p>
                 <p
                   style={{
@@ -1864,7 +1623,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Ever Sweet */}
+            {/* EVER SWEET */}
             <div
               style={{
                 background: "var(--surface)",
@@ -1882,45 +1641,89 @@ export default function Home() {
                 e.currentTarget.style.borderColor = "var(--border)";
               }}
             >
+              {/* Screenshot — portrait app, so we show it differently */}
               <div
                 style={{
-                  height: 180,
+                  height: 200,
+                  overflow: "hidden",
+                  position: "relative",
+                  borderBottom: "1px solid var(--border)",
                   background: "#0e0a05",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  position: "relative",
-                  overflow: "hidden",
+                  gap: "1rem",
                 }}
               >
+                {/* Phone mockup feel — centered portrait */}
                 <div
                   style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "5rem",
-                    letterSpacing: "0.05em",
-                    opacity: 0.1,
-                    color: "#f5a623",
-                    position: "absolute",
+                    height: 180,
+                    width: 90,
+                    border: "1.5px solid #2a2a2a",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    flexShrink: 0,
                   }}
                 >
-                  ES
+                  <img
+                    src="https://res.cloudinary.com/dtu64orvo/image/upload/v1779869637/Screenshot_2026-05-27_at_1.43.31_PM_ryupmc.png"
+                    alt="Ever Sweet ordering app — built by Sushanth P"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "top center",
+                      display: "block",
+                    }}
+                  />
                 </div>
+                {/* Second instance slightly offset for depth */}
                 <div
                   style={{
-                    background: "var(--surface2)",
+                    height: 160,
+                    width: 82,
+                    border: "1.5px solid #1e1e1e",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    flexShrink: 0,
+                    opacity: 0.5,
+                    marginTop: 20,
+                  }}
+                >
+                  <img
+                    src="https://res.cloudinary.com/dtu64orvo/image/upload/v1779869637/Screenshot_2026-05-27_at_1.43.31_PM_ryupmc.png"
+                    alt=""
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "top center",
+                      display: "block",
+                    }}
+                  />
+                </div>
+                {/* Tag overlay */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 12,
+                    left: 12,
+                    background: "rgba(14,14,14,0.85)",
                     border: "1px solid var(--border)",
-                    padding: "0.4rem 1rem",
+                    padding: "0.3rem 0.75rem",
                     borderRadius: "2px",
-                    fontSize: "0.72rem",
+                    fontSize: "0.68rem",
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: "#f5a623",
-                    zIndex: 1,
+                    fontFamily: "var(--font-sans)",
                   }}
                 >
                   D2C Artisan Food
                 </div>
               </div>
+
               <div style={{ padding: "1.75rem" }}>
                 <p
                   style={{
@@ -2335,10 +2138,10 @@ export default function Home() {
               letterSpacing: "-0.01em",
             }}
           >
-            {hp.ctaHeadline || "Your marketing should"}
-            <br />
-            feel like your{" "}
-            <span style={{ color: "var(--accent)" }}>product does.</span>
+            The business is alive. <br />
+            <span style={{ color: "var(--accent)" }}>
+              Let's make it unstoppable.
+            </span>
           </h2>
           <p
             style={{
@@ -2354,7 +2157,7 @@ export default function Home() {
               "If you've read this far, you already know whether this is the right fit. No forms, no discovery call decks. Just send me an email and we'll figure out the rest."}
           </p>
           <a
-            href="mailto:hello@sushanthp.com"
+            href="mailto:sushanthp.careers@gmail.com"
             style={{
               fontFamily: "var(--font-display)",
               fontSize: isMobile ? "1.1rem" : "1.4rem",
@@ -2366,7 +2169,7 @@ export default function Home() {
               wordBreak: "break-all",
             }}
           >
-            hello@sushanthp.com
+            sushanthp.careers@gmail.com
           </a>
         </div>
       </section>

@@ -14,7 +14,7 @@ export const metadata = {
   description:
     "Sushanth P is a marketing strategist for D2C and B2B founders. SEO, brand messaging, and ad copy built as one system — not separate deliverables.",
   keywords:
-    "Sushanth P, marketing strategist for founders, D2C marketing, brand messaging, SEO copywriter, ad copywriting, Bangalore marketing strategist",
+    "Sushanth P, marketing strategist for founders, D2C marketing, brand messaging, SEO copywriter, ad copywriting,  marketing strategist",
   alternates: {
     canonical: "https://sushanthp.com",
   },
@@ -78,7 +78,7 @@ const personSchema = {
   ],
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Bangalore",
+    addressLocality: "",
     addressRegion: "Karnataka",
     addressCountry: "IN",
   },

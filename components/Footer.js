@@ -48,14 +48,14 @@ export default function Footer() {
                 fontFamily: "var(--font-sans)",
               }}
             >
-              Bangalore / Kochi — Open to remote
+              / — Open to remote
             </p>
           </div>
           <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
             <Link href="/blog" style={footerLink}>
               Blog
             </Link>
-            <a href="mailto:hello@sushanthp.com" style={footerLink}>
+            <a href="mailto:sushanthp.careers@gmail.com" style={footerLink}>
               Contact
             </a>
           </div>
