@@ -8,13 +8,13 @@ export const metadata = {
   },
   title: {
     default:
-      "Sushanth P — Marketing Strategist for Founders | SEO, Brand Messaging & Ad Copy",
-    template: "%s — Sushanth P",
+      "Sushanth P · Marketing Strategist for Founders and Small Businesses",
+    template: "%s · Sushanth P",
   },
   description:
-    "Sushanth P is a marketing strategist for D2C and B2B founders. SEO, brand messaging, and ad copy built as one system — not separate deliverables.",
+    "Strategy without psychology is just guessing. I help founders understand their customer first — then build SEO, messaging, and ads that actually work.",
   keywords:
-    "Sushanth P, marketing strategist for founders, D2C marketing, brand messaging, SEO copywriter, ad copywriting,  marketing strategist",
+    "Sushanth P, marketing strategist for founders, marketing consultant for small business, D2C marketing, brand messaging, SEO copywriter, ad copywriting",
   alternates: {
     canonical: "https://sushanthp.com",
   },
@@ -22,11 +22,11 @@ export const metadata = {
     title:
       "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
     description:
-      "SEO, brand messaging, and ad copy built as one system. For founders who are done guessing.",
+      "Strategy without psychology is just guessing. I help founders understand their customer first — then build SEO, messaging, and ads that actually work.",
     url: "https://sushanthp.com",
     siteName: "Sushanth P",
     type: "website",
-    locale: "en_IN",
+    locale: "en_US",
     images: [
       {
         url: "https://sushanthp.com/og-image.jpg",
@@ -41,7 +41,7 @@ export const metadata = {
     title:
       "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
     description:
-      "SEO, brand messaging, and ad copy built as one system. For founders who are done guessing.",
+      "Strategy without psychology is just guessing. I help founders understand their customer first — then build SEO, messaging, and ads that actually work.",
     images: ["https://sushanthp.com/og-image.jpg"],
   },
   robots: {
@@ -63,7 +63,7 @@ const personSchema = {
   url: "https://sushanthp.com",
   jobTitle: "Marketing Strategist",
   description:
-    "Your product is better than your marketing suggests. I help founders fix the whole system - SEO, brand messaging, and ad copy working as one.",
+    "Strategy without psychology is just guessing. I help founders understand their customer first — then build SEO, messaging, and ads that actually work.",
   knowsAbout: [
     "Brand Messaging",
     "Copywriting",
@@ -76,12 +76,6 @@ const personSchema = {
     "Blog Writing",
     "Website Building",
   ],
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "",
-    addressRegion: "Karnataka",
-    addressCountry: "IN",
-  },
   sameAs: ["https://www.linkedin.com/in/sushanthp"],
 };
 
@@ -91,17 +85,15 @@ const websiteSchema = {
   name: "Sushanth P",
   url: "https://sushanthp.com",
   description:
-    "Your product is better than your marketing suggests. I help founders fix the whole system — SEO, brand messaging, and ad copy working as one.",
+    "Strategy without psychology is just guessing. I help founders understand their customer first — then build SEO, messaging, and ads that actually work.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <head>
-          <link rel="icon" type="image/png" sizes="96x96" href="/favicon.png" />
-          <link rel="apple-touch-icon" href="/apple-icon.png" />
-        </head>
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
       </head>
       <body>
         <Script
