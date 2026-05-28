@@ -90,6 +90,7 @@ const defaultHp = {
 
 export default function Home() {
   const [hp, setHpState] = useState(defaultHp);
+  const [posts, setPosts] = useState([]);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -105,6 +106,29 @@ export default function Home() {
       }
     }
     fetchHp();
+  }, []);
+
+  useEffect(() => {
+    async function fetchData() {
+      const { data: hpData } = await supabase
+        .from("settings")
+        .select("*")
+        .eq("key", "homepage");
+      if (hpData && hpData[0]) {
+        try {
+          setHpState((h) => ({ ...h, ...JSON.parse(hpData[0].value) }));
+        } catch {}
+      }
+
+      const { data: postsData } = await supabase
+        .from("posts")
+        .select("id, title, slug, tag, excerpt")
+        .eq("published", true)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (postsData) setPosts(postsData);
+    }
+    fetchData();
   }, []);
 
   const px = isMobile ? "1.25rem" : "2.5rem";
@@ -2007,8 +2031,8 @@ export default function Home() {
       </section>
 
       {/* ============================================================
-          SECTION 8 — BLOG GATEWAY
-      ============================================================ */}
+    SECTION 8 — BLOG GATEWAY
+============================================================ */}
       <section
         style={{
           background: "var(--bg)",
@@ -2019,17 +2043,18 @@ export default function Home() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <p style={eyebrow({})}>From the blog</p>
           <h2 style={{ ...sectionTitle(isMobile), marginBottom: "0.5rem" }}>
-            Still forming your question?
+            Marketing explained clearly.
           </h2>
           <p
             style={{
               fontSize: "0.88rem",
-              color: "var(--text-muted)",
+              color: "rgba(232,228,220,0.55)",
               marginBottom: "3rem",
               fontWeight: 300,
             }}
           >
-            Read how I think. If it resonates, we'll talk.
+            No frameworks. No fluff. Practical writing on brand messaging,
+            consumer psychology, SEO, and ad strategy.
           </p>
           <div
             style={{
@@ -2038,39 +2063,41 @@ export default function Home() {
                 ? "1fr"
                 : "repeat(auto-fill, minmax(260px, 1fr))",
               gap: 1,
-              background: "rgba(255,255,255,0.04)",
+              background: "#2a2a2a",
             }}
           >
-            {blogTeasers.map((b, i) => (
+            {posts.map((b, i) => (
               <Link
-                key={i}
+                key={b.id}
                 href={`/blog/${b.slug}`}
                 style={{
-                  background: "var(--surface)",
+                  background: "#1e1e1e",
                   padding: "1.75rem 1.5rem",
                   textDecoration: "none",
                   display: "block",
                   transition: "background 0.2s",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "var(--surface2)";
+                  e.currentTarget.style.background = "#252525";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "var(--surface)";
+                  e.currentTarget.style.background = "#1e1e1e";
                 }}
               >
-                <p
-                  style={{
-                    fontSize: "0.68rem",
-                    color: "var(--accent)",
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                    fontFamily: "var(--font-sans)",
-                    marginBottom: "0.75rem",
-                  }}
-                >
-                  {b.tag}
-                </p>
+                {b.tag && (
+                  <p
+                    style={{
+                      fontSize: "0.68rem",
+                      color: "var(--accent)",
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      fontFamily: "var(--font-sans)",
+                      marginBottom: "0.75rem",
+                    }}
+                  >
+                    {b.tag}
+                  </p>
+                )}
                 <p
                   style={{
                     fontFamily: "var(--font-serif)",
