@@ -98,9 +98,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.png" sizes="any" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
-        <link rel="apple-touch-icon" href="/apple-icon.png" />
+        <head>
+          <link rel="icon" type="image/png" sizes="96x96" href="/favicon.png" />
+          <link rel="apple-touch-icon" href="/apple-icon.png" />
+        </head>
       </head>
       <body>
         <Script
