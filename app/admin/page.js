@@ -46,6 +46,24 @@ const defaultHomepage = {
   ctaButton: "Work With Me →",
 };
 
+const emptyPost = {
+  title: "",
+  slug: "",
+  tag: "",
+  excerpt: "",
+  content: "",
+  published: false,
+  cover_image: "",
+  // SEO fields
+  meta_title: "",
+  meta_description: "",
+  keywords: "",
+  canonical_url: "",
+  reading_time: "",
+  date_modified: "",
+  faq_schema: "",
+};
+
 export default function AdminPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("Posts");
@@ -58,15 +76,7 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [homepage, setHomepage] = useState(defaultHomepage);
-  const [form, setForm] = useState({
-    title: "",
-    slug: "",
-    tag: "",
-    excerpt: "",
-    content: "",
-    published: false,
-    cover_image: "",
-  });
+  const [form, setForm] = useState(emptyPost);
 
   useEffect(() => {
     fetchPosts();
@@ -128,31 +138,42 @@ export default function AdminPage() {
   }
 
   function newPostForm() {
-    setForm({
-      title: "",
-      slug: "",
-      tag: "",
-      excerpt: "",
-      content: "",
-      published: false,
-      cover_image: "",
-    });
+    setForm(emptyPost);
     setEditingPost(null);
     setActiveTab("New Post");
   }
 
   function editPost(post) {
     setForm({
-      title: post.title,
-      slug: post.slug,
+      title: post.title || "",
+      slug: post.slug || "",
       tag: post.tag || "",
       excerpt: post.excerpt || "",
       content: post.content || "",
-      published: post.published,
+      published: post.published || false,
       cover_image: post.cover_image || "",
+      meta_title: post.meta_title || "",
+      meta_description: post.meta_description || "",
+      keywords: post.keywords || "",
+      canonical_url: post.canonical_url || "",
+      reading_time: post.reading_time ? String(post.reading_time) : "",
+      date_modified: post.date_modified || "",
+      faq_schema: post.faq_schema
+        ? JSON.stringify(post.faq_schema, null, 2)
+        : "",
     });
     setEditingPost(post.id);
     setActiveTab("New Post");
+  }
+
+  // Validate FAQ JSON — returns null if empty, parsed array if valid, false if invalid
+  function parseFaqSchema(str) {
+    if (!str || !str.trim()) return null;
+    try {
+      return JSON.parse(str);
+    } catch {
+      return false;
+    }
   }
 
   async function savePost() {
@@ -160,9 +181,32 @@ export default function AdminPage() {
       setMsg("Title is required.");
       return;
     }
+
+    const faqParsed = parseFaqSchema(form.faq_schema);
+    if (faqParsed === false) {
+      setMsg("FAQ Schema has invalid JSON. Fix it before saving.");
+      return;
+    }
+
     setSaving(true);
     const slug = form.slug || slugify(form.title);
-    const payload = { ...form, slug };
+    const payload = {
+      title: form.title,
+      slug,
+      tag: form.tag || null,
+      excerpt: form.excerpt || null,
+      content: form.content || null,
+      published: form.published,
+      cover_image: form.cover_image || null,
+      meta_title: form.meta_title || null,
+      meta_description: form.meta_description || null,
+      keywords: form.keywords || null,
+      canonical_url: form.canonical_url || null,
+      reading_time: form.reading_time ? parseInt(form.reading_time, 10) : null,
+      date_modified: form.date_modified || null,
+      faq_schema: faqParsed || null,
+    };
+
     let error;
     if (editingPost) {
       const res = await supabase
@@ -174,11 +218,13 @@ export default function AdminPage() {
       const res = await supabase.from("posts").insert([payload]);
       error = res.error;
     }
+
     setSaving(false);
     if (error) {
       setMsg("Error: " + error.message);
       return;
     }
+
     setMsg(editingPost ? "Post updated!" : "Post saved!");
     fetchPosts();
     setTimeout(() => {
@@ -227,7 +273,7 @@ export default function AdminPage() {
     window.location.href = "/admin/login";
   }
 
-  // Styles
+  // ── Styles ──────────────────────────────────────────────────
   const sideStyle = {
     width: 220,
     background: "var(--dark-2)",
@@ -257,8 +303,8 @@ export default function AdminPage() {
   const inputStyle = {
     width: "100%",
     background: "#fff",
-    border: "1px solid var(--border-light)",
-    color: "var(--text-primary)",
+    border: "1px solid #d0cbc4",
+    color: "#1a1814",
     padding: "10px 14px",
     fontSize: 14,
     fontFamily: "var(--font-sans)",
@@ -291,12 +337,31 @@ export default function AdminPage() {
     borderBottom: "1px solid var(--border-light)",
   };
 
+  const charHint = (val, max) => {
+    const len = (val || "").length;
+    const over = len > max;
+    return (
+      <span
+        style={{
+          fontSize: 11,
+          color: over ? "#E53935" : "#9a9690",
+          float: "right",
+          fontFamily: "var(--font-sans)",
+        }}
+      >
+        {len}/{max}
+      </span>
+    );
+  };
+
+  const faqStatus = parseFaqSchema(form.faq_schema);
+
   const hp = homepage;
   const setHp = (key, val) => setHomepage((h) => ({ ...h, [key]: val }));
 
   return (
     <div style={{ minHeight: "100vh", background: "#F0EDE6", display: "flex" }}>
-      {/* Sidebar */}
+      {/* ── Sidebar ─────────────────────────────────────────── */}
       <div style={sideStyle}>
         <div
           style={{
@@ -325,6 +390,7 @@ export default function AdminPage() {
             sushanthp.com
           </p>
         </div>
+
         {tabs.map((t) => (
           <button
             key={t}
@@ -332,15 +398,7 @@ export default function AdminPage() {
               setActiveTab(t);
               if (t === "New Post") {
                 setEditingPost(null);
-                setForm({
-                  title: "",
-                  slug: "",
-                  tag: "",
-                  excerpt: "",
-                  content: "",
-                  published: false,
-                  cover_image: "",
-                });
+                setForm(emptyPost);
               }
             }}
             style={tabStyle(activeTab === t)}
@@ -348,6 +406,7 @@ export default function AdminPage() {
             {t}
           </button>
         ))}
+
         <div
           style={{
             borderTop: "1px solid var(--border-dark)",
@@ -379,10 +438,7 @@ export default function AdminPage() {
               color: "#3A3830",
               fontFamily: "var(--font-sans)",
               background: "none",
-              borderTop: "none",
-              borderRight: "none",
-              borderBottom: "none",
-              borderLeft: "none",
+              border: "none",
               cursor: "pointer",
               letterSpacing: 0.5,
               width: "100%",
@@ -394,14 +450,14 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Main */}
+      {/* ── Main ────────────────────────────────────────────── */}
       <div style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
         {msg && (
           <div
             style={{
-              background: "#E8F5E9",
-              border: "1px solid #A5D6A7",
-              color: "#2E7D32",
+              background: msg.startsWith("Error") ? "#FFEBEE" : "#E8F5E9",
+              border: `1px solid ${msg.startsWith("Error") ? "#FFCDD2" : "#A5D6A7"}`,
+              color: msg.startsWith("Error") ? "#C62828" : "#2E7D32",
               padding: "10px 16px",
               borderRadius: 4,
               marginBottom: 24,
@@ -413,7 +469,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* POSTS LIST */}
+        {/* ── POSTS LIST ─────────────────────────────────────── */}
         {activeTab === "Posts" && (
           <div>
             <div
@@ -451,6 +507,7 @@ export default function AdminPage() {
                 + New Post
               </button>
             </div>
+
             {posts.length === 0 ? (
               <p
                 style={{
@@ -487,27 +544,49 @@ export default function AdminPage() {
                       <p
                         style={{
                           fontFamily: "var(--font-serif)",
-                          fontSize: 16,
+                          fontSize: 18,
                           color: "var(--text-primary)",
-                          marginBottom: 4,
+                          marginBottom: 6,
                         }}
                       >
                         {post.title}
                       </p>
                       <p
                         style={{
-                          fontSize: 12,
-                          color: "var(--text-muted)",
+                          fontSize: 13,
+                          color: "var(--text-secondary)",
                           fontFamily: "var(--font-sans)",
                         }}
                       >
                         /{post.slug} ·{" "}
                         {new Date(post.created_at).toLocaleDateString()}
+                        {post.reading_time &&
+                          ` · ${post.reading_time} min read`}
                       </p>
                     </div>
                     <div
                       style={{ display: "flex", gap: 8, alignItems: "center" }}
                     >
+                      <a
+                        href={`/blog/${post.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          padding: "6px 14px",
+                          fontSize: 12,
+                          fontFamily: "var(--font-sans)",
+                          background: "transparent",
+                          border: "1px solid var(--border-light)",
+                          cursor: "pointer",
+                          color: "var(--text-secondary)",
+                          textDecoration: "none",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 3,
+                        }}
+                      >
+                        View ↗
+                      </a>
                       <button
                         onClick={() => togglePublish(post)}
                         style={{
@@ -560,7 +639,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* NEW / EDIT POST */}
+        {/* ── NEW / EDIT POST ────────────────────────────────── */}
         {activeTab === "New Post" && (
           <div>
             <h1
@@ -574,7 +653,9 @@ export default function AdminPage() {
             >
               {editingPost ? "Edit Post" : "New Post"}
             </h1>
+
             <div style={{ maxWidth: 860 }}>
+              {/* ── Core fields ── */}
               <label style={labelStyle}>Title *</label>
               <input
                 value={form.title}
@@ -588,6 +669,7 @@ export default function AdminPage() {
                 placeholder="Post title"
                 style={inputStyle}
               />
+
               <div
                 style={{
                   display: "grid",
@@ -618,7 +700,21 @@ export default function AdminPage() {
                   />
                 </div>
               </div>
-              <label style={labelStyle}>Excerpt</label>
+
+              <label style={labelStyle}>
+                Excerpt{" "}
+                <span
+                  style={{
+                    color: "var(--text-muted)",
+                    fontWeight: 400,
+                    textTransform: "none",
+                    letterSpacing: 0,
+                  }}
+                >
+                  (shown on blog listing — used as meta description if meta
+                  description field is empty)
+                </span>
+              </label>
               <textarea
                 value={form.excerpt}
                 onChange={(e) =>
@@ -628,6 +724,7 @@ export default function AdminPage() {
                 rows={2}
                 style={textareaStyle}
               />
+
               <label style={labelStyle}>Cover Image URL</label>
               <input
                 value={form.cover_image}
@@ -650,17 +747,223 @@ export default function AdminPage() {
                   }}
                 />
               )}
+
               <label style={labelStyle}>Content *</label>
               <RichEditor
                 content={form.content}
                 onChange={(html) => setForm((f) => ({ ...f, content: html }))}
+                onMetaExtracted={(meta) => {
+                  setForm((f) => ({
+                    ...f,
+                    title: meta.metaTitle || f.title,
+                    slug: meta.slug || f.slug,
+                    tag: meta.tag || f.tag,
+                    excerpt: meta.metaDescription || f.excerpt,
+                    meta_title: meta.metaTitle || f.meta_title,
+                    meta_description:
+                      meta.metaDescription || f.meta_description,
+                    keywords: meta.keywords || f.keywords,
+                    canonical_url: meta.canonicalUrl || f.canonical_url,
+                    reading_time: meta.readingTime || f.reading_time,
+                    date_modified: meta.dateModified || f.date_modified,
+                    faq_schema: meta.faqSchema || f.faq_schema,
+                  }));
+                  setMsg("✓ Meta fields auto-populated from HTML file");
+                  setTimeout(() => setMsg(""), 3000);
+                }}
               />
+
+              {/* ── SEO & Metadata ── */}
+              <p style={sectionHeadStyle}>SEO & Metadata</p>
+
+              <label style={labelStyle}>
+                Meta Title {charHint(form.meta_title, 60)}
+              </label>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "#9a9690",
+                  marginBottom: 8,
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                Overrides the browser tab title. Leave blank to use the post
+                title. Keep under 60 chars.
+              </p>
+              <input
+                value={form.meta_title}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, meta_title: e.target.value }))
+                }
+                placeholder="How to Choose a Marketing Consultant (Without Getting Burned)"
+                style={inputStyle}
+                maxLength={80}
+              />
+
+              <label style={labelStyle}>
+                Meta Description {charHint(form.meta_description, 160)}
+              </label>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "#9a9690",
+                  marginBottom: 8,
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                Overrides the excerpt in Google search results. Leave blank to
+                use the excerpt. Keep under 160 chars.
+              </p>
+              <textarea
+                value={form.meta_description}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, meta_description: e.target.value }))
+                }
+                placeholder="Most small businesses hire a marketing consultant and end up with decks, reports, and the same revenue. Here's how to find one who actually moves the needle."
+                rows={2}
+                style={textareaStyle}
+                maxLength={200}
+              />
+
+              <label style={labelStyle}>Keywords</label>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "#9a9690",
+                  marginBottom: 8,
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                Comma-separated. Use the exact phrases your customer would
+                search.
+              </p>
+              <input
+                value={form.keywords}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, keywords: e.target.value }))
+                }
+                placeholder="how to choose a marketing consultant, marketing consultant small business"
+                style={inputStyle}
+              />
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: 16,
+                }}
+              >
+                <div>
+                  <label style={labelStyle}>Reading Time (mins)</label>
+                  <input
+                    type="number"
+                    value={form.reading_time}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, reading_time: e.target.value }))
+                    }
+                    placeholder="8"
+                    style={inputStyle}
+                    min={1}
+                    max={60}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Date Modified</label>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: "#9a9690",
+                      marginBottom: 8,
+                      fontFamily: "var(--font-sans)",
+                    }}
+                  >
+                    Set when you update an existing post.
+                  </p>
+                  <input
+                    type="date"
+                    value={form.date_modified}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, date_modified: e.target.value }))
+                    }
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Canonical URL</label>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: "#9a9690",
+                      marginBottom: 8,
+                      fontFamily: "var(--font-sans)",
+                    }}
+                  >
+                    Leave blank — auto-set to /blog/slug.
+                  </p>
+                  <input
+                    value={form.canonical_url}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, canonical_url: e.target.value }))
+                    }
+                    placeholder="Only fill if syndicating elsewhere"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              {/* ── FAQ Schema ── */}
+              <label style={labelStyle}>FAQ Schema</label>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "#9a9690",
+                  marginBottom: 8,
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                JSON array of {`{"q": "...", "a": "..."}`} objects. Google may
+                show these as expandable results. Leave blank if the post has no
+                FAQ section.
+              </p>
+              <textarea
+                value={form.faq_schema}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, faq_schema: e.target.value }))
+                }
+                placeholder={`[\n  {"q": "What does a marketing consultant do?", "a": "They find the gap between..."},\n  {"q": "How do I know if a consultant is good?", "a": "They ask about your customer first..."}\n]`}
+                rows={7}
+                style={{
+                  ...textareaStyle,
+                  fontFamily: "monospace",
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                }}
+              />
+              {form.faq_schema && form.faq_schema.trim() && (
+                <p
+                  style={{
+                    fontSize: 11,
+                    marginTop: -12,
+                    marginBottom: 16,
+                    fontFamily: "var(--font-sans)",
+                    color: faqStatus !== false ? "#2E7D32" : "#E53935",
+                  }}
+                >
+                  {faqStatus !== false
+                    ? "✓ Valid JSON — FAQ schema will be injected"
+                    : "✗ Invalid JSON — fix before saving"}
+                </p>
+              )}
+
+              {/* ── Publish / Save ── */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 24,
-                  marginTop: 24,
+                  marginTop: 32,
+                  paddingTop: 24,
+                  borderTop: "1px solid var(--border-light)",
                 }}
               >
                 <label
@@ -728,7 +1031,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* HOMEPAGE EDITOR */}
+        {/* ── HOMEPAGE EDITOR ─────────────────────────────────── */}
         {activeTab === "Homepage" && (
           <div>
             <div
@@ -780,7 +1083,6 @@ export default function AdminPage() {
             </p>
 
             <div style={{ maxWidth: 760 }}>
-              {/* HERO */}
               <p style={sectionHeadStyle}>Hero Section</p>
               <label style={labelStyle}>
                 Eyebrow text (small line above headline)
@@ -816,7 +1118,6 @@ export default function AdminPage() {
                 style={inputStyle}
               />
 
-              {/* DOUBT SECTION */}
               <p style={sectionHeadStyle}>Doubt Section</p>
               <label style={labelStyle}>Section Headline</label>
               <input
@@ -855,7 +1156,6 @@ export default function AdminPage() {
                 style={inputStyle}
               />
 
-              {/* PATH BUTTONS */}
               <p style={sectionHeadStyle}>Path Selector Buttons</p>
               <label style={labelStyle}>Label above buttons</label>
               <input
@@ -882,7 +1182,6 @@ export default function AdminPage() {
                 style={inputStyle}
               />
 
-              {/* WHAT I DO */}
               <p style={sectionHeadStyle}>What I Do Section</p>
               <label style={labelStyle}>Headline</label>
               <input
@@ -898,7 +1197,6 @@ export default function AdminPage() {
                 style={textareaStyle}
               />
 
-              {/* CTA */}
               <p style={sectionHeadStyle}>Final CTA Section</p>
               <label style={labelStyle}>Headline</label>
               <input
@@ -949,7 +1247,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* NAVIGATION */}
+        {/* ── NAVIGATION ──────────────────────────────────────── */}
         {activeTab === "Navigation" && (
           <div>
             <h1
@@ -1094,7 +1392,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* SETTINGS */}
+        {/* ── SETTINGS ────────────────────────────────────────── */}
         {activeTab === "Settings" && (
           <div>
             <h1

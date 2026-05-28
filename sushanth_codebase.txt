@@ -1,6 +1,6 @@
 ========================================
   TMCI CODEBASE DUMP
-  Generated: Thu May 21 15:27:43 IST 2026
+  Generated: Thu May 28 14:05:59 IST 2026
   Root: /Users/sushanthp/SushanthpWebstie/sushanthp
 ========================================
 
@@ -229,6 +229,24 @@ const defaultHomepage = {
   ctaButton: "Work With Me →",
 };
 
+const emptyPost = {
+  title: "",
+  slug: "",
+  tag: "",
+  excerpt: "",
+  content: "",
+  published: false,
+  cover_image: "",
+  // SEO fields
+  meta_title: "",
+  meta_description: "",
+  keywords: "",
+  canonical_url: "",
+  reading_time: "",
+  date_modified: "",
+  faq_schema: "",
+};
+
 export default function AdminPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("Posts");
@@ -241,15 +259,7 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [homepage, setHomepage] = useState(defaultHomepage);
-  const [form, setForm] = useState({
-    title: "",
-    slug: "",
-    tag: "",
-    excerpt: "",
-    content: "",
-    published: false,
-    cover_image: "",
-  });
+  const [form, setForm] = useState(emptyPost);
 
   useEffect(() => {
     fetchPosts();
@@ -311,31 +321,42 @@ export default function AdminPage() {
   }
 
   function newPostForm() {
-    setForm({
-      title: "",
-      slug: "",
-      tag: "",
-      excerpt: "",
-      content: "",
-      published: false,
-      cover_image: "",
-    });
+    setForm(emptyPost);
     setEditingPost(null);
     setActiveTab("New Post");
   }
 
   function editPost(post) {
     setForm({
-      title: post.title,
-      slug: post.slug,
+      title: post.title || "",
+      slug: post.slug || "",
       tag: post.tag || "",
       excerpt: post.excerpt || "",
       content: post.content || "",
-      published: post.published,
+      published: post.published || false,
       cover_image: post.cover_image || "",
+      meta_title: post.meta_title || "",
+      meta_description: post.meta_description || "",
+      keywords: post.keywords || "",
+      canonical_url: post.canonical_url || "",
+      reading_time: post.reading_time ? String(post.reading_time) : "",
+      date_modified: post.date_modified || "",
+      faq_schema: post.faq_schema
+        ? JSON.stringify(post.faq_schema, null, 2)
+        : "",
     });
     setEditingPost(post.id);
     setActiveTab("New Post");
+  }
+
+  // Validate FAQ JSON — returns null if empty, parsed array if valid, false if invalid
+  function parseFaqSchema(str) {
+    if (!str || !str.trim()) return null;
+    try {
+      return JSON.parse(str);
+    } catch {
+      return false;
+    }
   }
 
   async function savePost() {
@@ -343,9 +364,32 @@ export default function AdminPage() {
       setMsg("Title is required.");
       return;
     }
+
+    const faqParsed = parseFaqSchema(form.faq_schema);
+    if (faqParsed === false) {
+      setMsg("FAQ Schema has invalid JSON. Fix it before saving.");
+      return;
+    }
+
     setSaving(true);
     const slug = form.slug || slugify(form.title);
-    const payload = { ...form, slug };
+    const payload = {
+      title: form.title,
+      slug,
+      tag: form.tag || null,
+      excerpt: form.excerpt || null,
+      content: form.content || null,
+      published: form.published,
+      cover_image: form.cover_image || null,
+      meta_title: form.meta_title || null,
+      meta_description: form.meta_description || null,
+      keywords: form.keywords || null,
+      canonical_url: form.canonical_url || null,
+      reading_time: form.reading_time ? parseInt(form.reading_time, 10) : null,
+      date_modified: form.date_modified || null,
+      faq_schema: faqParsed || null,
+    };
+
     let error;
     if (editingPost) {
       const res = await supabase
@@ -357,11 +401,13 @@ export default function AdminPage() {
       const res = await supabase.from("posts").insert([payload]);
       error = res.error;
     }
+
     setSaving(false);
     if (error) {
       setMsg("Error: " + error.message);
       return;
     }
+
     setMsg(editingPost ? "Post updated!" : "Post saved!");
     fetchPosts();
     setTimeout(() => {
@@ -410,7 +456,7 @@ export default function AdminPage() {
     window.location.href = "/admin/login";
   }
 
-  // Styles
+  // ── Styles ──────────────────────────────────────────────────
   const sideStyle = {
     width: 220,
     background: "var(--dark-2)",
@@ -440,8 +486,8 @@ export default function AdminPage() {
   const inputStyle = {
     width: "100%",
     background: "#fff",
-    border: "1px solid var(--border-light)",
-    color: "var(--text-primary)",
+    border: "1px solid #d0cbc4",
+    color: "#1a1814",
     padding: "10px 14px",
     fontSize: 14,
     fontFamily: "var(--font-sans)",
@@ -474,12 +520,31 @@ export default function AdminPage() {
     borderBottom: "1px solid var(--border-light)",
   };
 
+  const charHint = (val, max) => {
+    const len = (val || "").length;
+    const over = len > max;
+    return (
+      <span
+        style={{
+          fontSize: 11,
+          color: over ? "#E53935" : "#9a9690",
+          float: "right",
+          fontFamily: "var(--font-sans)",
+        }}
+      >
+        {len}/{max}
+      </span>
+    );
+  };
+
+  const faqStatus = parseFaqSchema(form.faq_schema);
+
   const hp = homepage;
   const setHp = (key, val) => setHomepage((h) => ({ ...h, [key]: val }));
 
   return (
     <div style={{ minHeight: "100vh", background: "#F0EDE6", display: "flex" }}>
-      {/* Sidebar */}
+      {/* ── Sidebar ─────────────────────────────────────────── */}
       <div style={sideStyle}>
         <div
           style={{
@@ -508,6 +573,7 @@ export default function AdminPage() {
             sushanthp.com
           </p>
         </div>
+
         {tabs.map((t) => (
           <button
             key={t}
@@ -515,15 +581,7 @@ export default function AdminPage() {
               setActiveTab(t);
               if (t === "New Post") {
                 setEditingPost(null);
-                setForm({
-                  title: "",
-                  slug: "",
-                  tag: "",
-                  excerpt: "",
-                  content: "",
-                  published: false,
-                  cover_image: "",
-                });
+                setForm(emptyPost);
               }
             }}
             style={tabStyle(activeTab === t)}
@@ -531,6 +589,7 @@ export default function AdminPage() {
             {t}
           </button>
         ))}
+
         <div
           style={{
             borderTop: "1px solid var(--border-dark)",
@@ -562,10 +621,7 @@ export default function AdminPage() {
               color: "#3A3830",
               fontFamily: "var(--font-sans)",
               background: "none",
-              borderTop: "none",
-              borderRight: "none",
-              borderBottom: "none",
-              borderLeft: "none",
+              border: "none",
               cursor: "pointer",
               letterSpacing: 0.5,
               width: "100%",
@@ -577,14 +633,14 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Main */}
+      {/* ── Main ────────────────────────────────────────────── */}
       <div style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
         {msg && (
           <div
             style={{
-              background: "#E8F5E9",
-              border: "1px solid #A5D6A7",
-              color: "#2E7D32",
+              background: msg.startsWith("Error") ? "#FFEBEE" : "#E8F5E9",
+              border: `1px solid ${msg.startsWith("Error") ? "#FFCDD2" : "#A5D6A7"}`,
+              color: msg.startsWith("Error") ? "#C62828" : "#2E7D32",
               padding: "10px 16px",
               borderRadius: 4,
               marginBottom: 24,
@@ -596,7 +652,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* POSTS LIST */}
+        {/* ── POSTS LIST ─────────────────────────────────────── */}
         {activeTab === "Posts" && (
           <div>
             <div
@@ -634,6 +690,7 @@ export default function AdminPage() {
                 + New Post
               </button>
             </div>
+
             {posts.length === 0 ? (
               <p
                 style={{
@@ -670,27 +727,49 @@ export default function AdminPage() {
                       <p
                         style={{
                           fontFamily: "var(--font-serif)",
-                          fontSize: 16,
+                          fontSize: 18,
                           color: "var(--text-primary)",
-                          marginBottom: 4,
+                          marginBottom: 6,
                         }}
                       >
                         {post.title}
                       </p>
                       <p
                         style={{
-                          fontSize: 12,
-                          color: "var(--text-muted)",
+                          fontSize: 13,
+                          color: "var(--text-secondary)",
                           fontFamily: "var(--font-sans)",
                         }}
                       >
                         /{post.slug} ·{" "}
                         {new Date(post.created_at).toLocaleDateString()}
+                        {post.reading_time &&
+                          ` · ${post.reading_time} min read`}
                       </p>
                     </div>
                     <div
                       style={{ display: "flex", gap: 8, alignItems: "center" }}
                     >
+                      <a
+                        href={`/blog/${post.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          padding: "6px 14px",
+                          fontSize: 12,
+                          fontFamily: "var(--font-sans)",
+                          background: "transparent",
+                          border: "1px solid var(--border-light)",
+                          cursor: "pointer",
+                          color: "var(--text-secondary)",
+                          textDecoration: "none",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 3,
+                        }}
+                      >
+                        View ↗
+                      </a>
                       <button
                         onClick={() => togglePublish(post)}
                         style={{
@@ -743,7 +822,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* NEW / EDIT POST */}
+        {/* ── NEW / EDIT POST ────────────────────────────────── */}
         {activeTab === "New Post" && (
           <div>
             <h1
@@ -757,7 +836,9 @@ export default function AdminPage() {
             >
               {editingPost ? "Edit Post" : "New Post"}
             </h1>
+
             <div style={{ maxWidth: 860 }}>
+              {/* ── Core fields ── */}
               <label style={labelStyle}>Title *</label>
               <input
                 value={form.title}
@@ -771,6 +852,7 @@ export default function AdminPage() {
                 placeholder="Post title"
                 style={inputStyle}
               />
+
               <div
                 style={{
                   display: "grid",
@@ -801,7 +883,21 @@ export default function AdminPage() {
                   />
                 </div>
               </div>
-              <label style={labelStyle}>Excerpt</label>
+
+              <label style={labelStyle}>
+                Excerpt{" "}
+                <span
+                  style={{
+                    color: "var(--text-muted)",
+                    fontWeight: 400,
+                    textTransform: "none",
+                    letterSpacing: 0,
+                  }}
+                >
+                  (shown on blog listing — used as meta description if meta
+                  description field is empty)
+                </span>
+              </label>
               <textarea
                 value={form.excerpt}
                 onChange={(e) =>
@@ -811,6 +907,7 @@ export default function AdminPage() {
                 rows={2}
                 style={textareaStyle}
               />
+
               <label style={labelStyle}>Cover Image URL</label>
               <input
                 value={form.cover_image}
@@ -833,17 +930,223 @@ export default function AdminPage() {
                   }}
                 />
               )}
+
               <label style={labelStyle}>Content *</label>
               <RichEditor
                 content={form.content}
                 onChange={(html) => setForm((f) => ({ ...f, content: html }))}
+                onMetaExtracted={(meta) => {
+                  setForm((f) => ({
+                    ...f,
+                    title: meta.metaTitle || f.title,
+                    slug: meta.slug || f.slug,
+                    tag: meta.tag || f.tag,
+                    excerpt: meta.metaDescription || f.excerpt,
+                    meta_title: meta.metaTitle || f.meta_title,
+                    meta_description:
+                      meta.metaDescription || f.meta_description,
+                    keywords: meta.keywords || f.keywords,
+                    canonical_url: meta.canonicalUrl || f.canonical_url,
+                    reading_time: meta.readingTime || f.reading_time,
+                    date_modified: meta.dateModified || f.date_modified,
+                    faq_schema: meta.faqSchema || f.faq_schema,
+                  }));
+                  setMsg("✓ Meta fields auto-populated from HTML file");
+                  setTimeout(() => setMsg(""), 3000);
+                }}
               />
+
+              {/* ── SEO & Metadata ── */}
+              <p style={sectionHeadStyle}>SEO & Metadata</p>
+
+              <label style={labelStyle}>
+                Meta Title {charHint(form.meta_title, 60)}
+              </label>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "#9a9690",
+                  marginBottom: 8,
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                Overrides the browser tab title. Leave blank to use the post
+                title. Keep under 60 chars.
+              </p>
+              <input
+                value={form.meta_title}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, meta_title: e.target.value }))
+                }
+                placeholder="How to Choose a Marketing Consultant (Without Getting Burned)"
+                style={inputStyle}
+                maxLength={80}
+              />
+
+              <label style={labelStyle}>
+                Meta Description {charHint(form.meta_description, 160)}
+              </label>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "#9a9690",
+                  marginBottom: 8,
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                Overrides the excerpt in Google search results. Leave blank to
+                use the excerpt. Keep under 160 chars.
+              </p>
+              <textarea
+                value={form.meta_description}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, meta_description: e.target.value }))
+                }
+                placeholder="Most small businesses hire a marketing consultant and end up with decks, reports, and the same revenue. Here's how to find one who actually moves the needle."
+                rows={2}
+                style={textareaStyle}
+                maxLength={200}
+              />
+
+              <label style={labelStyle}>Keywords</label>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "#9a9690",
+                  marginBottom: 8,
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                Comma-separated. Use the exact phrases your customer would
+                search.
+              </p>
+              <input
+                value={form.keywords}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, keywords: e.target.value }))
+                }
+                placeholder="how to choose a marketing consultant, marketing consultant small business"
+                style={inputStyle}
+              />
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: 16,
+                }}
+              >
+                <div>
+                  <label style={labelStyle}>Reading Time (mins)</label>
+                  <input
+                    type="number"
+                    value={form.reading_time}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, reading_time: e.target.value }))
+                    }
+                    placeholder="8"
+                    style={inputStyle}
+                    min={1}
+                    max={60}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Date Modified</label>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: "#9a9690",
+                      marginBottom: 8,
+                      fontFamily: "var(--font-sans)",
+                    }}
+                  >
+                    Set when you update an existing post.
+                  </p>
+                  <input
+                    type="date"
+                    value={form.date_modified}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, date_modified: e.target.value }))
+                    }
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Canonical URL</label>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: "#9a9690",
+                      marginBottom: 8,
+                      fontFamily: "var(--font-sans)",
+                    }}
+                  >
+                    Leave blank — auto-set to /blog/slug.
+                  </p>
+                  <input
+                    value={form.canonical_url}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, canonical_url: e.target.value }))
+                    }
+                    placeholder="Only fill if syndicating elsewhere"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              {/* ── FAQ Schema ── */}
+              <label style={labelStyle}>FAQ Schema</label>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "#9a9690",
+                  marginBottom: 8,
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                JSON array of {`{"q": "...", "a": "..."}`} objects. Google may
+                show these as expandable results. Leave blank if the post has no
+                FAQ section.
+              </p>
+              <textarea
+                value={form.faq_schema}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, faq_schema: e.target.value }))
+                }
+                placeholder={`[\n  {"q": "What does a marketing consultant do?", "a": "They find the gap between..."},\n  {"q": "How do I know if a consultant is good?", "a": "They ask about your customer first..."}\n]`}
+                rows={7}
+                style={{
+                  ...textareaStyle,
+                  fontFamily: "monospace",
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                }}
+              />
+              {form.faq_schema && form.faq_schema.trim() && (
+                <p
+                  style={{
+                    fontSize: 11,
+                    marginTop: -12,
+                    marginBottom: 16,
+                    fontFamily: "var(--font-sans)",
+                    color: faqStatus !== false ? "#2E7D32" : "#E53935",
+                  }}
+                >
+                  {faqStatus !== false
+                    ? "✓ Valid JSON — FAQ schema will be injected"
+                    : "✗ Invalid JSON — fix before saving"}
+                </p>
+              )}
+
+              {/* ── Publish / Save ── */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 24,
-                  marginTop: 24,
+                  marginTop: 32,
+                  paddingTop: 24,
+                  borderTop: "1px solid var(--border-light)",
                 }}
               >
                 <label
@@ -911,7 +1214,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* HOMEPAGE EDITOR */}
+        {/* ── HOMEPAGE EDITOR ─────────────────────────────────── */}
         {activeTab === "Homepage" && (
           <div>
             <div
@@ -963,7 +1266,6 @@ export default function AdminPage() {
             </p>
 
             <div style={{ maxWidth: 760 }}>
-              {/* HERO */}
               <p style={sectionHeadStyle}>Hero Section</p>
               <label style={labelStyle}>
                 Eyebrow text (small line above headline)
@@ -999,7 +1301,6 @@ export default function AdminPage() {
                 style={inputStyle}
               />
 
-              {/* DOUBT SECTION */}
               <p style={sectionHeadStyle}>Doubt Section</p>
               <label style={labelStyle}>Section Headline</label>
               <input
@@ -1038,7 +1339,6 @@ export default function AdminPage() {
                 style={inputStyle}
               />
 
-              {/* PATH BUTTONS */}
               <p style={sectionHeadStyle}>Path Selector Buttons</p>
               <label style={labelStyle}>Label above buttons</label>
               <input
@@ -1065,7 +1365,6 @@ export default function AdminPage() {
                 style={inputStyle}
               />
 
-              {/* WHAT I DO */}
               <p style={sectionHeadStyle}>What I Do Section</p>
               <label style={labelStyle}>Headline</label>
               <input
@@ -1081,7 +1380,6 @@ export default function AdminPage() {
                 style={textareaStyle}
               />
 
-              {/* CTA */}
               <p style={sectionHeadStyle}>Final CTA Section</p>
               <label style={labelStyle}>Headline</label>
               <input
@@ -1132,7 +1430,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* NAVIGATION */}
+        {/* ── NAVIGATION ──────────────────────────────────────── */}
         {activeTab === "Navigation" && (
           <div>
             <h1
@@ -1277,7 +1575,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* SETTINGS */}
+        {/* ── SETTINGS ────────────────────────────────────────── */}
         {activeTab === "Settings" && (
           <div>
             <h1
@@ -1448,77 +1746,1076 @@ export async function GET() {
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/blog/[slug]/BlogRenderer.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// No "use client" — server-safe
+
+export function blocksToHtml(blocks) {
+  if (!blocks || !blocks.length) return "";
+  return blocks
+    .map((block) => {
+      switch (block.type) {
+        case "header":
+          return `<h${block.data.level}>${block.data.text}</h${block.data.level}>`;
+        case "paragraph":
+          return `<p>${block.data.text}</p>`;
+        case "list": {
+          const tag = block.data.style === "ordered" ? "ol" : "ul";
+          const items = block.data.items.map((i) => `<li>${i}</li>`).join("");
+          return `<${tag}>${items}</${tag}>`;
+        }
+        case "quote":
+          return `<blockquote>${block.data.text}</blockquote>`;
+        case "raw":
+          return block.data.html || "";
+        default:
+          return "";
+      }
+    })
+    .join("\n");
+}
+
+// Returns { type: "fullpage" | "html", content: string }
+export function renderContent(content) {
+  if (!content) return { type: "html", content: "" };
+
+  // Try EditorJS JSON blocks
+  try {
+    const parsed = JSON.parse(content);
+    if (parsed.blocks)
+      return { type: "html", content: blocksToHtml(parsed.blocks) };
+    if (Array.isArray(parsed))
+      return { type: "html", content: blocksToHtml(parsed) };
+  } catch (e) {}
+
+  // Full HTML document
+  if (
+    content.trim().startsWith("<!DOCTYPE") ||
+    content.trim().startsWith("<html")
+  ) {
+    const cleaned = prepareFullPageHtml(content);
+    return { type: "fullpage", content: cleaned };
+  }
+
+  return { type: "html", content };
+}
+
+function prepareFullPageHtml(html) {
+  // 1. Remove editor artifacts
+  html = html
+    .replace(/\s*contenteditable="[^"]*"/gi, "")
+    .replace(/\s*spellcheck="[^"]*"/gi, "");
+
+  // 2. Remove site nav section wrapper + any nav with nav-inner pattern
+  html = html.replace(
+    /<section[^>]*data-section="navigation"[^>]*>[\s\S]*?<\/section>/gi,
+    "",
+  );
+  html = html.replace(/<nav[^>]*>[\s\S]*?nav-inner[\s\S]*?<\/nav>/gi, "");
+
+  // 3. Remove progress bar div
+  html = html.replace(/<div[^>]*id="progress-bar"[^>]*>[\s\S]*?<\/div>/gi, "");
+  html = html.replace(/<div[^>]*id="progress-bar"[^>]*\/>/gi, "");
+
+  // 4. Remove hero section wrapper + any remaining <header>
+  html = html.replace(
+    /<section[^>]*data-section="hero"[^>]*>[\s\S]*?<\/section>/gi,
+    "",
+  );
+  html = html.replace(/<header[\s\S]*?<\/header>/gi, "");
+
+  // 5. Remove back link
+  html = html.replace(
+    /<a[^>]*class="[^"]*back-link[^"]*"[^>]*>[\s\S]*?<\/a>/gi,
+    "",
+  );
+
+  // 6. Remove footer
+  html = html.replace(/<footer[\s\S]*?<\/footer>/gi, "");
+
+  // 7. Remove progress bar script
+  html = html.replace(/<script>[\s\S]*?progress-bar[\s\S]*?<\/script>/gi, "");
+
+  // 8. Inject overrides before </head>
+  //    Key rules:
+  //    - body margin/padding 0 so no dark gap appears at top of iframe
+  //    - nav position static so TOC nav doesn't stick (but ONLY nav, not breaking anything else)
+  //    - #progress-bar hidden
+  //    - html/body height auto so iframe can measure full content height
+  //    - Do NOT use a blanket "nav { position: static }" as it could affect
+  //      the parent page — instead scope it tightly to known nav classes
+  const injectedStyles = `
+<style id="iframe-isolation">
+  /* Kill progress bar */
+  #progress-bar { display: none !important; }
+
+  /* Stop TOC nav from sticking inside iframe */
+  nav.toc,
+  nav[aria-label="Table of contents"] {
+    position: static !important;
+    top: auto !important;
+  }
+
+  /* Remove any top gap on body so iframe starts flush */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: unset !important;
+    overflow: visible !important;
+    background: #f9f7f4 !important;
+  }
+
+  /* Tighten post-body padding — Next.js hero shows the title, footer follows immediately */
+  .post-body {
+    padding-top: 3rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  /* Kill any fixed positioned elements that might ghost over content */
+  [style*="position: fixed"],
+  [style*="position:fixed"] {
+    position: static !important;
+  }
+</style>`;
+
+  html = html.replace(/<\/head>/i, injectedStyles + "\n</head>");
+
+  return html;
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/blog/[slug]/IframeContent.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"use client";
+import { useRef, useState, useEffect } from "react";
+
+export default function IframeContent({ content, title }) {
+  const iframeRef = useRef(null);
+  const [height, setHeight] = useState(800);
+
+  function measureHeight() {
+    try {
+      const iframe = iframeRef.current;
+      if (!iframe) return;
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc || !doc.body) return;
+      // Force layout before measuring
+      doc.body.style.overflow = "visible";
+      doc.documentElement.style.overflow = "visible";
+      const h = Math.max(
+        doc.body.scrollHeight,
+        doc.body.offsetHeight,
+        doc.documentElement.scrollHeight,
+        doc.documentElement.offsetHeight,
+      );
+      if (h > 200) setHeight(h);
+    } catch (e) {}
+  }
+
+  useEffect(() => {
+    const timers = [
+      setTimeout(measureHeight, 100),
+      setTimeout(measureHeight, 500),
+      setTimeout(measureHeight, 1200),
+      setTimeout(measureHeight, 2500),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [content]);
+
+  return (
+    <div style={{ width: "100%", background: "#f9f7f4" }}>
+      <iframe
+        ref={iframeRef}
+        srcDoc={content}
+        onLoad={() => {
+          measureHeight();
+          setTimeout(measureHeight, 300);
+          setTimeout(measureHeight, 1000);
+        }}
+        style={{
+          width: "100%",
+          border: "none",
+          display: "block",
+          height: `${height}px`,
+          // No overflow hidden — let the page scroll naturally
+        }}
+        title={title}
+        // No scrolling="no" — iframe itself shouldn't scroll, page should
+      />
+    </div>
+  );
+}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FILE: ./app/blog/[slug]/page.js
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-import { supabase } from '@/lib/supabase'
-import { notFound } from 'next/navigation'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
-import Link from 'next/link'
-
-export const revalidate = 60
+import { supabase } from "@/lib/supabase";
+import { notFound } from "next/navigation";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import Link from "next/link";
+import Script from "next/script";
+import "@/app/blog/blog-content.css";
+import { renderContent } from "./BlogRenderer";
+import IframeContent from "./IframeContent";
+export const revalidate = 60;
 
 export async function generateMetadata({ params }) {
-  const { data } = await supabase.from('posts').select('title, excerpt').eq('slug', params.slug).single()
-  if (!data) return { title: 'Post not found' }
-  return { title: `${data.title} — Sushanth P`, description: data.excerpt }
+  const { slug } = await params;
+  const { data } = await supabase
+    .from("posts")
+    .select(
+      "title, meta_title, excerpt, meta_description, keywords, cover_image, created_at, date_modified, canonical_url, slug",
+    )
+    .eq("slug", slug)
+    .single();
+
+  if (!data) return { title: "Post not found" };
+
+  const canonical =
+    data.canonical_url || `https://sushanthp.com/blog/${data.slug}`;
+  const title = data.meta_title || data.title;
+  const description = data.meta_description || data.excerpt;
+
+  return {
+    title,
+    description,
+    ...(data.keywords && { keywords: data.keywords }),
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: "article",
+      publishedTime: data.created_at,
+      modifiedTime: data.date_modified || data.created_at,
+      authors: ["Sushanth P"],
+      images: data.cover_image
+        ? [{ url: data.cover_image, width: 1200, height: 630 }]
+        : [{ url: "/og-image.jpg", width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: data.cover_image ? [data.cover_image] : ["/og-image.jpg"],
+    },
+  };
 }
 
 export default async function BlogPost({ params }) {
+  const { slug } = await params;
   const { data: post } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('slug', params.slug)
-    .eq('published', true)
-    .single()
+    .from("posts")
+    .select("*")
+    .eq("slug", slug)
+    .eq("published", true)
+    .single();
 
-  if (!post) notFound()
+  if (!post) notFound();
+
+  const canonical =
+    post.canonical_url || `https://sushanthp.com/blog/${post.slug}`;
+
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.meta_title || post.title,
+    description: post.meta_description || post.excerpt,
+    datePublished: post.created_at,
+    dateModified: post.date_modified || post.created_at,
+    author: {
+      "@type": "Person",
+      name: "Sushanth P",
+      url: "https://sushanthp.com",
+      sameAs: ["https://www.linkedin.com/in/sushanth-p"],
+    },
+    publisher: {
+      "@type": "Person",
+      name: "Sushanth P",
+      url: "https://sushanthp.com",
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": canonical,
+    },
+    url: canonical,
+    ...(post.cover_image && { image: post.cover_image }),
+    ...(post.keywords && { keywords: post.keywords }),
+  };
+
+  const faqSchema =
+    post.faq_schema && post.faq_schema.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: post.faq_schema.map(({ q, a }) => ({
+            "@type": "Question",
+            name: q,
+            acceptedAnswer: { "@type": "Answer", text: a },
+          })),
+        }
+      : null;
+
+  const rendered = renderContent(post.content);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--cream)' }}>
+    <div style={{ minHeight: "100vh", background: "var(--cream)" }}>
+      <Script
+        id="schema-article"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      {faqSchema && (
+        <Script
+          id="schema-faq"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
+
       <Navbar />
       <div style={{ paddingTop: 68 }}>
-        {/* Post header */}
-        <section style={{ background: 'var(--dark)', padding: '80px 32px 64px' }}>
-          <div style={{ maxWidth: 720, margin: '0 auto' }}>
-            <Link href="/blog" style={{ fontSize: 12, color: 'var(--text-light-muted)', fontFamily: 'var(--font-sans)', letterSpacing: 1, textTransform: 'uppercase', textDecoration: 'none', display: 'inline-block', marginBottom: 32 }}>
+        {/* ── Post header — always shown from DB fields ── */}
+        <section style={{ background: "#1a1814", padding: "80px 32px 64px" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto" }}>
+            <Link
+              href="/blog"
+              style={{
+                fontSize: 12,
+                color: "var(--text-light-muted)",
+                fontFamily: "var(--font-sans)",
+                letterSpacing: 1,
+                textTransform: "uppercase",
+                textDecoration: "none",
+                display: "inline-block",
+                marginBottom: 32,
+              }}
+            >
               ← All posts
             </Link>
+
             {post.tag && (
-              <p style={{ fontSize: 11, color: 'var(--amber)', letterSpacing: 3, textTransform: 'uppercase', fontFamily: 'var(--font-sans)', marginBottom: 20 }}>{post.tag}</p>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "var(--amber)",
+                  letterSpacing: 3,
+                  textTransform: "uppercase",
+                  fontFamily: "var(--font-sans)",
+                  marginBottom: 20,
+                }}
+              >
+                {post.tag}
+              </p>
             )}
-            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 400, color: 'var(--text-light)', lineHeight: 1.2, marginBottom: 24 }}>
+
+            <h1
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "clamp(28px, 4vw, 48px)",
+                fontWeight: 400,
+                color: "var(--text-light)",
+                lineHeight: 1.2,
+                marginBottom: 24,
+              }}
+            >
               {post.title}
             </h1>
-            <p style={{ fontSize: 13, color: 'var(--text-light-muted)', fontFamily: 'var(--font-sans)' }}>
-              {new Date(post.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-            </p>
-          </div>
-        </section>
 
-        {/* Post content */}
-        <section style={{ padding: '72px 32px 96px' }}>
-          <div style={{ maxWidth: 720, margin: '0 auto' }}>
-            {post.cover_image && (
-              <img src={post.cover_image} alt={post.title} style={{ width: '100%', height: 380, objectFit: 'cover', marginBottom: 56, borderRadius: 2 }} />
+            {post.excerpt && (
+              <p
+                style={{
+                  fontSize: 17,
+                  color: "rgba(232,228,220,0.65)",
+                  lineHeight: 1.7,
+                  fontWeight: 300,
+                  maxWidth: 580,
+                  marginBottom: 28,
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                {post.excerpt}
+              </p>
             )}
-            <div className="blog-content" dangerouslySetInnerHTML={{ __html: post.content }} />
 
-            <div style={{ marginTop: 72, paddingTop: 40, borderTop: '1px solid var(--border-light)', textAlign: 'center' }}>
-              <p style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-primary)', marginBottom: 16 }}>Found this useful?</p>
-              <p style={{ fontSize: 15, color: 'var(--text-muted)', marginBottom: 28 }}>Let's talk about what this means for your marketing.</p>
-              <a href="mailto:hello@sushanthp.com" style={{ background: 'var(--dark)', color: 'var(--text-light)', padding: '13px 28px', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', fontFamily: 'var(--font-sans)', textDecoration: 'none', display: 'inline-block' }}>
-                Work With Me →
-              </a>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                fontSize: 13,
+                color: "var(--text-light-muted)",
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              <span>
+                {new Date(post.created_at).toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </span>
+              {post.reading_time && (
+                <>
+                  <span style={{ opacity: 0.3 }}>·</span>
+                  <span>{post.reading_time} min read</span>
+                </>
+              )}
+              {post.date_modified && (
+                <>
+                  <span style={{ opacity: 0.3 }}>·</span>
+                  <span style={{ opacity: 0.5 }}>
+                    Updated{" "}
+                    {new Date(post.date_modified).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </section>
+
+        {/* ── Post content ── */}
+        {rendered.type === "fullpage" ? (
+          <IframeContent content={rendered.content} title={post.title} />
+        ) : (
+          <section style={{ padding: "72px 32px 96px", background: "#f9f7f4" }}>
+            <div style={{ maxWidth: 720, margin: "0 auto" }}>
+              {post.cover_image && (
+                <img
+                  src={post.cover_image}
+                  alt={post.title}
+                  style={{
+                    width: "100%",
+                    height: 380,
+                    objectFit: "cover",
+                    marginBottom: 56,
+                    borderRadius: 2,
+                  }}
+                />
+              )}
+              <div
+                className="blog-content"
+                dangerouslySetInnerHTML={{ __html: rendered.content }}
+              />
+              <div
+                style={{
+                  marginTop: 72,
+                  paddingTop: 40,
+                  borderTop: "1px solid var(--border-light)",
+                  textAlign: "center",
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: "var(--font-serif)",
+                    fontSize: 22,
+                    color: "var(--text-primary)",
+                    marginBottom: 16,
+                  }}
+                >
+                  Found this useful?
+                </p>
+                <p
+                  style={{
+                    fontSize: 15,
+                    color: "var(--text-muted)",
+                    marginBottom: 28,
+                  }}
+                >
+                  Let's talk about what this means for your marketing.
+                </p>
+                <a
+                  href="mailto:sushanthp.careers@gmail.com"
+                  style={{
+                    background: "var(--dark)",
+                    color: "var(--text-light)",
+                    padding: "13px 28px",
+                    fontSize: 12,
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                    fontFamily: "var(--font-sans)",
+                    textDecoration: "none",
+                    display: "inline-block",
+                  }}
+                >
+                  Work With Me →
+                </a>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
       <Footer />
     </div>
-  )
+  );
 }
 
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE: ./app/blog/blog-content.css
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/*
+  blog-content.css
+  Styles for custom blocks inside .blog-content posts.
+  Import this only in app/blog/[slug]/page.js
+
+  Available block classes for AI-generated posts:
+  .divider, .pull-quote, .callout, .callout-label,
+  .question-block, .red-flag, .red-flag-icon,
+  .post-cta, .post-cta-heading, .toc, .toc-label,
+  .faq-section, .faq-item, .faq-question, .faq-answer,
+  .illustration-wrap, .illustration-caption,
+  .author-bio, .author-bio-avatar, .author-bio-label, .author-bio-name
+*/
+
+/* ── DIVIDER ── */
+.blog-content .divider {
+  width: 48px;
+  height: 2px;
+  background: var(--border);
+  margin: 2.5rem 0;
+}
+
+/* ── PULL QUOTE ── */
+.blog-content .pull-quote {
+  border-left: 3px solid var(--text);
+  padding: 1.5rem 0 1.5rem 2rem;
+  margin: 2.5rem 0;
+}
+.blog-content .pull-quote p {
+  font-family: var(--font-serif) !important;
+  font-size: 1.25rem !important;
+  line-height: 1.6 !important;
+  color: var(--text) !important;
+  font-weight: 400 !important;
+  font-style: normal;
+  margin: 0 !important;
+}
+
+/* ── CALLOUT BOX ── */
+.blog-content .callout {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  padding: 1.75rem 2rem;
+  border-radius: 4px;
+  margin: 2.5rem 0;
+}
+.blog-content .callout-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+  font-family: var(--font-sans);
+  display: block;
+}
+.blog-content .callout p {
+  font-size: 1rem !important;
+  margin-bottom: 0 !important;
+}
+
+/* ── QUESTION BLOCK ── */
+.blog-content .question-block {
+  background: var(--surface2);
+  border-radius: 4px;
+  padding: 1.5rem 1.75rem;
+  margin: 1.5rem 0;
+  border-left: 3px solid var(--border);
+}
+.blog-content .question-block h3 {
+  margin-top: 0 !important;
+  margin-bottom: 0.75rem !important;
+  font-size: 1rem;
+  color: var(--text);
+}
+.blog-content .question-block p {
+  font-size: 1rem !important;
+  color: var(--text-secondary) !important;
+  margin-bottom: 0 !important;
+  line-height: 1.75 !important;
+}
+
+/* ── RED FLAG BLOCK ── */
+.blog-content .red-flag {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.blog-content .red-flag:last-child {
+  border-bottom: none;
+}
+.blog-content .red-flag-icon {
+  font-size: 0.6rem;
+  color: #c0392b;
+  margin-top: 0.45rem;
+  flex-shrink: 0;
+}
+.blog-content .red-flag h3 {
+  margin: 0 0 0.3rem !important;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.blog-content .red-flag p {
+  font-size: 1rem !important;
+  color: var(--text-secondary) !important;
+  margin: 0 !important;
+  line-height: 1.75 !important;
+}
+
+/* ── TABLE OF CONTENTS ── */
+.blog-content .toc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem 2rem;
+  margin: 0 0 3rem;
+}
+.blog-content .toc-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  font-family: var(--font-sans);
+  display: block;
+}
+.blog-content .toc ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: toc;
+}
+.blog-content .toc ol li {
+  counter-increment: toc;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.blog-content .toc ol li:last-child {
+  border-bottom: none;
+}
+.blog-content .toc ol li::before {
+  content: counter(toc, decimal-leading-zero);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  flex-shrink: 0;
+}
+.blog-content .toc ol li a {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  line-height: 1.5;
+  transition: color 0.2s;
+}
+.blog-content .toc ol li a:hover {
+  color: var(--text);
+}
+
+/* ── FAQ SECTION ── */
+.blog-content .faq-section {
+  margin: 3rem 0;
+}
+.blog-content .faq-item {
+  border-bottom: 1px solid var(--border);
+  padding: 1.25rem 0;
+}
+.blog-content .faq-item:last-child {
+  border-bottom: none;
+}
+.blog-content .faq-question {
+  font-family: var(--font-sans) !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  color: var(--text) !important;
+  margin-bottom: 0.5rem !important;
+}
+.blog-content .faq-answer {
+  font-size: 1rem !important;
+  color: var(--text-secondary) !important;
+  margin: 0 !important;
+  line-height: 1.75 !important;
+}
+
+/* ── POST CTA ── */
+.blog-content .post-cta {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 2.5rem;
+  margin-top: 4rem;
+  text-align: center;
+}
+.blog-content .post-cta-heading {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--text);
+  margin-bottom: 1rem !important;
+  font-weight: 400;
+}
+.blog-content .post-cta p {
+  color: var(--text-secondary) !important;
+  font-size: 0.95rem !important;
+  max-width: 460px;
+  margin: 0 auto 1.5rem !important;
+}
+.blog-content .post-cta a.email-link {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(184,240,60,0.4);
+  padding-bottom: 2px;
+}
+
+/* ── ILLUSTRATION WRAP ── */
+.blog-content .illustration-wrap {
+  margin: 3rem 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2rem;
+  overflow: hidden;
+}
+.blog-content .illustration-caption {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 1rem !important;
+  letter-spacing: 0.05em;
+  font-family: var(--font-sans);
+}
+
+/* ── STEP LIST ── */
+.blog-content .step-list {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.blog-content .step-item {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.blog-content .step-item:last-child {
+  border-bottom: none;
+}
+.blog-content .step-num {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+.blog-content .step-body strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+.blog-content .step-body p {
+  font-size: 0.9rem !important;
+  color: var(--text-secondary) !important;
+  margin: 0 !important;
+}
+
+/* ── STAT PULL ── */
+.blog-content .stat-pull {
+  text-align: center;
+  padding: 2.5rem 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin: 2.5rem 0;
+}
+.blog-content .stat-number {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+.blog-content .stat-claim {
+  font-family: var(--font-serif);
+  font-size: 1.1rem !important;
+  color: var(--text) !important;
+  margin-bottom: 0.5rem !important;
+}
+.blog-content .stat-sub {
+  font-size: 0.88rem !important;
+  color: var(--text-secondary) !important;
+  margin: 0 !important;
+}
+
+/* ── AUTHOR BIO ── */
+.blog-content .author-bio,
+.blog-content .author-bio-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.75rem 2rem;
+  margin-top: 3rem;
+}
+.blog-content .author-bio-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.blog-content .author-bio-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem !important;
+  font-family: var(--font-sans);
+  display: block;
+}
+.blog-content .author-bio-name {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--text);
+  margin-bottom: 0.5rem !important;
+}
+.blog-content .author-bio p,
+.blog-content .author-bio-block p {
+  font-size: 0.92rem !important;
+  color: var(--text-secondary) !important;
+  line-height: 1.7 !important;
+  margin-bottom: 0.75rem !important;
+}
+.blog-content .author-bio a,
+.blog-content .author-bio-block a {
+  font-size: 0.8rem;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(184,240,60,0.3);
+  padding-bottom: 1px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .blog-content .post-cta { padding: 2rem 1.5rem; }
+  .blog-content .pull-quote { padding-left: 1.25rem; }
+  .blog-content .author-bio,
+  .blog-content .author-bio-block { flex-direction: column; gap: 1rem; }
+  .blog-content .illustration-wrap { padding: 1.25rem; }
+}
+
+/* ── LIGHT THEME OVERRIDE FOR BLOG CONTENT AREA ── */
+
+/* Wrap the content section in a light card */
+.blog-content {
+  background: #f9f7f4;
+  padding: 3rem 2.5rem;
+  border-radius: 2px;
+}
+
+/* Base text */
+.blog-content p {
+  color: #2a2620 !important;
+}
+.blog-content h1,
+.blog-content h2,
+.blog-content h3,
+.blog-content h4 {
+  color: #1a1814 !important;
+}
+.blog-content strong {
+  color: #1a1814 !important;
+}
+.blog-content li {
+  color: #2a2620 !important;
+}
+.blog-content a {
+  color: #4a7c3f !important;
+}
+.blog-content blockquote {
+  color: #6b6560 !important;
+  border-left-color: #1a1814 !important;
+}
+
+/* Divider */
+.blog-content .divider,
+.blog-content .post-divider {
+  background: #e8e4dc !important;
+}
+
+/* Pull quote */
+.blog-content .pull-quote {
+  border-left-color: #1a1814 !important;
+}
+.blog-content .pull-quote p {
+  color: #1a1814 !important;
+}
+
+/* Callout */
+.blog-content .callout {
+  background: #ffffff !important;
+  border-color: #e8e4dc !important;
+  border-left-color: #1a1814 !important;
+}
+.blog-content .callout-label {
+  color: #9a9690 !important;
+}
+.blog-content .callout p {
+  color: #2a2620 !important;
+}
+
+/* Question block */
+.blog-content .question-block {
+  background: #f0ede6 !important;
+  border-color: #e8e4dc !important;
+}
+.blog-content .question-block h3 {
+  color: #1a1814 !important;
+}
+.blog-content .question-block p {
+  color: #6b6560 !important;
+}
+
+/* Red flag */
+.blog-content .red-flag {
+  border-bottom-color: #e8e4dc !important;
+}
+.blog-content .red-flag h3 {
+  color: #1a1814 !important;
+}
+.blog-content .red-flag p {
+  color: #6b6560 !important;
+}
+
+/* TOC */
+.blog-content .toc {
+  background: #ffffff !important;
+  border-color: #e8e4dc !important;
+}
+.blog-content .toc-label {
+  color: #9a9690 !important;
+}
+.blog-content .toc ol li {
+  border-bottom-color: #e8e4dc !important;
+}
+.blog-content .toc ol li::before {
+  color: #9a9690 !important;
+}
+.blog-content .toc ol li a {
+  color: #6b6560 !important;
+}
+.blog-content .toc ol li a:hover {
+  color: #1a1814 !important;
+}
+
+/* FAQ */
+.blog-content .faq-item {
+  border-bottom-color: #e8e4dc !important;
+}
+.blog-content .faq-question {
+  color: #1a1814 !important;
+}
+.blog-content .faq-answer {
+  color: #6b6560 !important;
+}
+
+/* Step list */
+.blog-content .step-item {
+  border-bottom-color: #e8e4dc !important;
+}
+.blog-content .step-num {
+  color: #1a1814 !important;
+}
+.blog-content .step-body strong {
+  color: #1a1814 !important;
+}
+.blog-content .step-body p {
+  color: #6b6560 !important;
+}
+
+/* Stat pull */
+.blog-content .stat-pull {
+  border-left-color: #1a1814 !important;
+}
+.blog-content .stat-number {
+  color: #1a1814 !important;
+}
+.blog-content .stat-claim {
+  color: #1a1814 !important;
+}
+.blog-content .stat-sub {
+  color: #6b6560 !important;
+}
+
+/* Illustration wrap */
+.blog-content .illustration-wrap {
+  background: #ffffff !important;
+  border-color: #e8e4dc !important;
+}
+.blog-content .illustration-caption {
+  color: #9a9690 !important;
+}
+
+/* Post CTA */
+.blog-content .post-cta {
+  background: #1a1814 !important;
+  border-top-color: #1a1814 !important;
+}
+
+/* Author bio */
+.blog-content .author-bio-block {
+  background: #ffffff !important;
+  border-color: #e8e4dc !important;
+}
+.blog-content .author-bio-label {
+  color: #9a9690 !important;
+}
+.blog-content .author-bio-name {
+  color: #1a1814 !important;
+}
+.blog-content .author-bio-block p {
+  color: #6b6560 !important;
+}
+.blog-content .author-bio-avatar {
+  background: #1a1814 !important;
+  border-color: #e8e4dc !important;
+  color: #b8f03c !important;
+}
+
+/* Prevent blog-content p styles from breaking illustration layouts */
+.blog-content .illustration-wrap p {
+  margin-bottom: 0 !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FILE: ./app/blog/page.js
@@ -1807,6 +3104,195 @@ body::after {
   color: var(--text) !important;
 }
 
+
+
+
+
+.blog-content .pull-quote {
+  border-left: 3px solid var(--accent);
+  padding: 1.5rem 0 1.5rem 2rem;
+  margin: 2.5rem 0;
+}
+.blog-content .pull-quote p {
+  font-family: var(--font-serif);
+  font-size: 1.25rem !important;
+  line-height: 1.6 !important;
+  color: var(--text) !important;
+  font-weight: 400 !important;
+  margin: 0 !important;
+}
+
+.blog-content .callout {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  padding: 1.75rem 2rem;
+  border-radius: 4px;
+  margin: 2.5rem 0;
+}
+.blog-content .callout-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  font-family: var(--font-sans);
+  display: block;
+}
+.blog-content .callout p:last-child { margin-bottom: 0 !important; }
+
+.blog-content .question-block {
+  background: var(--surface2);
+  border-radius: 4px;
+  padding: 1.5rem 1.75rem;
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+}
+.blog-content .question-block h3 {
+  margin-top: 0;
+  font-size: 1rem;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+.blog-content .question-block p {
+  font-size: 1rem !important;
+  color: var(--text-secondary) !important;
+  margin-bottom: 0 !important;
+  line-height: 1.75 !important;
+}
+
+.blog-content .red-flag {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.blog-content .red-flag:last-child { border-bottom: none; }
+.blog-content .red-flag-icon {
+  font-size: 0.6rem;
+  color: #e05555;
+  margin-top: 0.45rem;
+  flex-shrink: 0;
+  letter-spacing: 0.1em;
+}
+.blog-content .red-flag h3 { margin: 0 0 0.3rem; font-size: 0.95rem; color: var(--text); }
+.blog-content .red-flag p { font-size: 1rem !important; color: var(--text-secondary) !important; margin: 0 !important; line-height: 1.75 !important; }
+
+.blog-content .post-divider {
+  width: 48px;
+  height: 2px;
+  background: var(--border);
+  margin: 2.5rem 0;
+}
+
+.blog-content .step-list { display: flex; flex-direction: column; gap: 0; margin: 2rem 0; }
+.blog-content .step-item {
+  display: flex;
+  gap: 1.25rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.blog-content .step-item:last-child { border-bottom: none; }
+.blog-content .step-num {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  min-width: 28px;
+  padding-top: 2px;
+}
+.blog-content .step-body strong { display: block; font-size: 0.95rem; color: var(--text); margin-bottom: 0.25rem; }
+.blog-content .step-body p { font-size: 0.88rem !important; color: var(--text-muted) !important; margin: 0 !important; line-height: 1.6 !important; }
+
+.blog-content .stat-pull {
+  border-left: 3px solid var(--accent);
+  padding-left: 2rem;
+  margin: 2.5rem 0;
+}
+.blog-content .stat-number {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 8vw, 6rem);
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.75rem;
+}
+.blog-content .stat-claim { font-family: var(--font-serif); font-size: 1.1rem !important; color: var(--text) !important; line-height: 1.6 !important; margin-bottom: 0.5rem !important; }
+.blog-content .stat-sub { font-size: 0.88rem !important; color: var(--accent) !important; line-height: 1.6 !important; }
+
+.blog-content .toc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem 2rem;
+  margin: 0 0 3rem;
+}
+.blog-content .toc-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  font-family: var(--font-sans);
+  display: block;
+}
+.blog-content .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: toc; }
+.blog-content .toc ol li {
+  counter-increment: toc;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.blog-content .toc ol li:last-child { border-bottom: none; }
+.blog-content .toc ol li::before {
+  content: counter(toc, decimal-leading-zero);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  flex-shrink: 0;
+}
+.blog-content .toc ol li a { font-size: 0.95rem; color: var(--text-secondary); text-decoration: none; line-height: 1.5; }
+.blog-content .toc ol li a:hover { color: var(--accent); }
+
+.blog-content .faq-section { margin: 3rem 0; }
+.blog-content .faq-item { border-bottom: 1px solid var(--border); padding: 1.25rem 0; }
+.blog-content .faq-item:last-child { border-bottom: none; }
+.blog-content .faq-question { font-size: 0.95rem !important; font-weight: 500 !important; color: var(--text) !important; margin-bottom: 0.5rem !important; }
+.blog-content .faq-answer { font-size: 1rem !important; color: var(--text-secondary) !important; margin: 0 !important; line-height: 1.75 !important; }
+
+.blog-content .author-bio-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.75rem 2rem;
+  margin-top: 3rem;
+}
+.blog-content .author-bio-avatar {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+.blog-content .author-bio-label { font-size: 0.65rem !important; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted) !important; margin-bottom: 0.35rem !important; font-family: var(--font-sans); display: block; }
+.blog-content .author-bio-name { font-family: var(--font-serif); font-size: 1.05rem !important; color: var(--text) !important; margin-bottom: 0.5rem !important; }
+.blog-content .author-bio-block p { font-size: 0.92rem !important; color: var(--text-secondary) !important; line-height: 1.7 !important; margin-bottom: 0 !important; }
+
+
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FILE: ./app/layout.js
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1814,58 +3300,116 @@ import "./globals.css";
 import Script from "next/script";
 
 export const metadata = {
-  title: "Sushanth P — Marketing Strategist for Founders",
+  metadataBase: new URL("https://sushanthp.com"),
+  verification: {
+    google: "jGQ9xzNXExzZV2iSZu47Mo4GSOHfFrRcdWWaYV1y21A",
+  },
+  title: {
+    default:
+      "Sushanth P — Marketing Strategist for Founders | SEO, Brand Messaging & Ad Copy",
+    template: "%s — Sushanth P",
+  },
   description:
-    "Sushanth P is a marketing strategist for D2C and B2B founders. Brand messaging, ad copy, and SEO built as one system — not separate deliverables.",
+    "Sushanth P is a marketing strategist for D2C and B2B founders. SEO, brand messaging, and ad copy built as one system — not separate deliverables.",
   keywords:
-    "Sushanth P, Sushanth marketing strategist, marketing strategist for founders, D2C marketing, brand messaging, ad copywriting",
+    "Sushanth P, marketing strategist for founders, D2C marketing, brand messaging, SEO copywriter, ad copywriting,  marketing strategist",
   alternates: {
     canonical: "https://sushanthp.com",
   },
   openGraph: {
-    title: "Sushanth P — Marketing Strategist for Founders",
+    title:
+      "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
     description:
-      "Brand messaging, ad copy, and SEO built as one system. For founders who are done guessing.",
+      "SEO, brand messaging, and ad copy built as one system. For founders who are done guessing.",
     url: "https://sushanthp.com",
     siteName: "Sushanth P",
     type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: "https://sushanthp.com/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Sushanth P — Marketing Strategist for Founders",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sushanth P — Marketing Strategist for Founders",
-    description: "Brand messaging, ad copy, and SEO built as one system.",
+    title:
+      "Sushanth P — Your Product Is Better. Your Marketing Shouldn't Lose.",
+    description:
+      "SEO, brand messaging, and ad copy built as one system. For founders who are done guessing.",
+    images: ["https://sushanthp.com/og-image.jpg"],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
-const schema = {
+const personSchema = {
   "@context": "https://schema.org",
   "@type": "Person",
   name: "Sushanth P",
   url: "https://sushanthp.com",
   jobTitle: "Marketing Strategist",
   description:
-    "Marketing strategist for D2C and B2B founders. Brand messaging, ad copy, SEO, and web built as one system.",
+    "Your product is better than your marketing suggests. I help founders fix the whole system - SEO, brand messaging, and ad copy working as one.",
   knowsAbout: [
     "Brand Messaging",
     "Copywriting",
     "SEO",
     "Paid Advertising",
-    "Marketing Strategy for Founders",
+    "Marketing Strategy",
+    "Consumer Psychology",
+    "Website Optimization",
+    "Content Marketing",
+    "Blog Writing",
+    "Website Building",
   ],
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "",
+    addressRegion: "Karnataka",
+    addressCountry: "IN",
+  },
+  sameAs: ["https://www.linkedin.com/in/sushanthp"],
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Sushanth P",
+  url: "https://sushanthp.com",
+  description:
+    "Your product is better than your marketing suggests. I help founders fix the whole system — SEO, brand messaging, and ad copy working as one.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
+      </head>
       <body>
         <Script
           id="schema-person"
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+        />
+        <Script
+          id="schema-website"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
         {children}
       </body>
@@ -1902,27 +3446,6 @@ function useIsMobile() {
 /* ================================================================
    SECTION 0 — DATA & CONSTANTS
 ================================================================ */
-
-const stats = [
-  {
-    stat: "95%",
-    desc: "of buying decisions are made in the subconscious mind",
-    source: "Harvard Business School",
-    url: "https://www.library.hbs.edu/working-knowledge/the-subconscious-mind-of-the-consumer-and-how-to-reach-it",
-  },
-  {
-    stat: "64%",
-    desc: "of consumers cite shared values as the main reason they have a relationship with a brand",
-    source: "Harvard Business Review",
-    url: "https://hbr.org/2012/05/three-myths-about-what-customers-want",
-  },
-  {
-    stat: "71%",
-    desc: "of consumers who have had a good social media experience with a brand are likely to recommend it",
-    source: "Ambassador",
-    url: "https://www.ambassador.com/blog/word-of-mouth-statistics",
-  },
-];
 
 const blogTeasers = [
   {
@@ -1978,7 +3501,7 @@ const services = [
 ];
 
 const defaultHp = {
-  heroEyebrow: "Marketing strategist — for founders",
+  heroEyebrow: "",
   ctaHeadline: "That's a sign.",
   ctaBody:
     "The founders who reach out to me aren't looking for another vendor. They're looking for someone who will tell them the truth about why their marketing isn't working — and actually fix it.",
@@ -2038,7 +3561,7 @@ export default function Home() {
                 fontFamily: "var(--font-sans)",
               }}
             >
-              {hp.heroEyebrow || "Marketing Strategist — For Founders"}
+              Marketing Strategist — For Founders
             </p>
             <h1
               style={{
@@ -2050,14 +3573,9 @@ export default function Home() {
                 marginBottom: "1.25rem",
               }}
             >
-              You've seen
-              <br />
-              enough average.{" "}
-              <span style={{ color: "var(--accent)" }}>
-                Welcome to
-                <br />
-                the other side.
-              </span>
+              The business is alive.{" "}
+              <span style={{ color: "var(--accent)" }}>But every month</span>{" "}
+              feels like square one.
             </h1>
             <p
               style={{
@@ -2068,61 +3586,11 @@ export default function Home() {
                 fontFamily: "var(--font-sans)",
               }}
             >
-              One person. All of it connected.{" "}
+              You're starting to wonder if the product was ever good enough.{" "}
               <strong style={{ color: "var(--text)", fontWeight: 400 }}>
-                Strategy, copy, and execution that works as a system — not a
-                stack of separate deliverables.
+                It was. The marketing just never caught up.
               </strong>
             </p>
-          </div>
-
-          {/* ZONE 3 — Stats */}
-          <div
-            style={{
-              display: "flex",
-              borderTop: "1px solid #1a1a1a",
-              borderBottom: "1px solid #1a1a1a",
-            }}
-          >
-            {[
-              { num: "2", label: "Brands Built" },
-              { num: "3X", label: "Organic Growth" },
-              { num: "₹0", label: "Paid at Launch" },
-            ].map((s, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: 1,
-                  padding: "14px 0",
-                  textAlign: "center",
-                  borderLeft: i > 0 ? "1px solid #1a1a1a" : "none",
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "1.75rem",
-                    color: "var(--accent)",
-                    lineHeight: 1,
-                    letterSpacing: "0.03em",
-                  }}
-                >
-                  {s.num}
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.5rem",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "var(--text-muted)",
-                    marginTop: "0.25rem",
-                    fontFamily: "var(--font-sans)",
-                  }}
-                >
-                  {s.label}
-                </div>
-              </div>
-            ))}
           </div>
 
           {/* ZONE 4 — CTAs */}
@@ -2135,7 +3603,7 @@ export default function Home() {
             }}
           >
             <a
-              href="mailto:hello@sushanthp.com"
+              href="mailto:sushanthp.careers@gmail.com"
               style={{
                 background: "var(--accent)",
                 color: "#0e0e0e",
@@ -2153,7 +3621,16 @@ export default function Home() {
               Let's Talk →
             </a>
             <Link
-              href="/blog"
+              href="#problem"
+              onClick={(e) => {
+                e.preventDefault();
+                const el = document.getElementById("problem");
+                if (el)
+                  window.scrollTo({
+                    top: el.offsetTop - 68,
+                    behavior: "smooth",
+                  });
+              }}
               style={{
                 border: "1px solid #222",
                 color: "var(--text-muted)",
@@ -2257,7 +3734,7 @@ export default function Home() {
                 position: "absolute",
                 inset: 0,
                 background:
-                  "linear-gradient(to right, #0e0e0e 0%, rgba(14,14,14,0.65) 40%, rgba(14,14,14,0.05) 100%)",
+                  "linear-gradient(to right, #0e0e0e 0%, rgba(14,14,14,0.45) 30%, rgba(14,14,14,0.0) 100%)",
               }}
             />
             <div
@@ -2270,16 +3747,7 @@ export default function Home() {
                 background: "linear-gradient(to top, #0e0e0e, transparent)",
               }}
             />
-            <div
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 2,
-                background: "var(--accent)",
-              }}
-            />
+
             <p
               style={{
                 position: "absolute",
@@ -2310,9 +3778,7 @@ export default function Home() {
               width: "100%",
             }}
           >
-            <p style={eyebrow({})}>
-              {hp.heroEyebrow || "Sushanth P — Marketing Strategist, Bangalore"}
-            </p>
+            <p style={eyebrow({})}>Marketing Strategist — For Founders</p>
             <h1
               style={{
                 fontFamily: "var(--font-display)",
@@ -2324,49 +3790,10 @@ export default function Home() {
                 maxWidth: 700,
               }}
             >
-              You've seen enough average.{" "}
-              <span style={{ color: "var(--accent)" }}>
-                Welcome to the other side of it.
-              </span>
+              The business is alive.{" "}
+              <span style={{ color: "var(--accent)" }}>But every month</span>{" "}
+              feels like square one.
             </h1>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "0.6rem",
-                flexWrap: "wrap",
-                marginBottom: "2rem",
-              }}
-            >
-              {[
-                { label: "Brand Messaging", icon: "◈" },
-                { label: "Ad Strategy & Copy", icon: "◎" },
-                { label: "SEO & Web", icon: "⬡" },
-              ].map((skill) => (
-                <div
-                  key={skill.label}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    background: "rgba(184,240,60,0.06)",
-                    border: "1px solid rgba(184,240,60,0.2)",
-                    padding: "0.45rem 1rem",
-                    borderRadius: "2px",
-                    fontSize: "0.78rem",
-                    color: "var(--accent)",
-                    fontFamily: "var(--font-sans)",
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  <span style={{ fontSize: "0.65rem", opacity: 0.7 }}>
-                    {skill.icon}
-                  </span>
-                  {skill.label}
-                </div>
-              ))}
-            </div>
 
             <p
               style={{
@@ -2378,10 +3805,9 @@ export default function Home() {
                 fontWeight: 300,
               }}
             >
-              One person. All of it connected.{" "}
+              You're starting to wonder if the product was ever good enough.{" "}
               <strong style={{ color: "var(--text)", fontWeight: 400 }}>
-                Strategy, copy, and execution that works as a system — not a
-                stack of separate deliverables.
+                It was. The marketing just never caught up.
               </strong>
             </p>
 
@@ -2394,53 +3820,24 @@ export default function Home() {
                 marginBottom: "3rem",
               }}
             >
-              <a href="mailto:hello@sushanthp.com" style={btnPrimary}>
-                Let's talk →
+              <a href="mailto:sushanthp.careers@gmail.com" style={btnPrimary}>
+                Let's Talk →
               </a>
-              <Link href="/blog" style={btnGhost}>
+              <Link
+                href="#problem"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const el = document.getElementById("problem");
+                  if (el)
+                    window.scrollTo({
+                      top: el.offsetTop - 68,
+                      behavior: "smooth",
+                    });
+                }}
+                style={btnGhost}
+              >
                 Read how I think
               </Link>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "3rem",
-                paddingTop: "2rem",
-                borderTop: "1px solid var(--border)",
-                flexWrap: "wrap",
-              }}
-            >
-              {[
-                { num: "2", label: "Brands Built End-to-End" },
-                { num: "3X", label: "Organic Growth, TMCI" },
-                { num: "₹0", label: "Ad Spend to First Sales, Ever Sweet" },
-              ].map((s, i) => (
-                <div key={i}>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "2.4rem",
-                      color: "var(--accent)",
-                      letterSpacing: "0.02em",
-                      lineHeight: 1,
-                    }}
-                  >
-                    {s.num}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.72rem",
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: "var(--text-muted)",
-                      marginTop: "0.3rem",
-                    }}
-                  >
-                    {s.label}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -2474,11 +3871,73 @@ export default function Home() {
           </div>
         </section>
       )}
+      {/* ============================================================
+    BRIDGE SECTION — It's not the product
+============================================================ */}
+      <section
+        style={{
+          background: "var(--bg)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: "0 auto",
+          }}
+        >
+          <div style={{ maxWidth: 580 }}>
+            <p style={eyebrow({})}>Before we go further</p>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: isMobile
+                  ? "clamp(1.6rem, 7vw, 2.2rem)"
+                  : "clamp(1.8rem, 3.5vw, 3rem)",
+                lineHeight: 1.15,
+                color: "var(--white)",
+                marginBottom: "1.5rem",
+                fontWeight: 400,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              It&apos;s not the product.
+            </h2>
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "#b5b0a8",
+                fontWeight: 300,
+                lineHeight: 1.8,
+                marginBottom: "1.5rem",
+              }}
+            >
+              The people who find you love what you made. The product works.
+              What isn&apos;t working is how it reaches them — and that&apos;s a
+              completely different problem with a completely different fix.
+            </p>
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "rgba(232,228,220,0.5)",
+                fontWeight: 300,
+                lineHeight: 1.8,
+              }}
+            >
+              The doubt you feel about your product is real. But it&apos;s
+              borrowed — it came from marketing that isn&apos;t doing its job,
+              not from anything wrong with what you built.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* ============================================================
-          SECTION 3 — PROBLEM
-      ============================================================ */}
+    SECTION 3 — THE PROBLEM
+============================================================ */}
       <section
+        id="problem"
         style={{
           background: "var(--surface)",
           padding: `${sectionPy} ${px}`,
@@ -2495,12 +3954,10 @@ export default function Home() {
             alignItems: "start",
           }}
         >
-          {/* LEFT */}
           <div>
             <p style={eyebrow({})}>The problem</p>
             <h2 style={sectionTitle(isMobile)}>
-              You're putting time and money
-              <br />
+              You're putting time and money{" "}
               <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
                 into marketing.
               </em>
@@ -2532,7 +3989,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* RIGHT */}
           <div
             style={{
               background: "var(--bg)",
@@ -2585,9 +4041,7 @@ export default function Home() {
                 succeeding just enough to keep second-guessing everything.
               </p>
             </div>
-
             <div style={{ height: 1, background: "var(--border)" }} />
-
             <div>
               <p
                 style={{
@@ -2630,83 +4084,12 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        {/* Stats row */}
-        <div
-          style={{
-            maxWidth: 1100,
-            margin: "4rem auto 0",
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
-            borderTop: "1px solid var(--border)",
-          }}
-        >
-          {stats.map((s, i) => (
-            <div
-              key={i}
-              style={{
-                padding: "1.75rem",
-                paddingLeft: !isMobile && i > 0 ? "2rem" : isMobile ? 0 : 0,
-                borderRight:
-                  !isMobile && i < 2 ? "1px solid var(--border)" : "none",
-                borderBottom:
-                  isMobile && i < 2 ? "1px solid var(--border)" : "none",
-                paddingTop: isMobile && i > 0 ? "1.75rem" : "1.75rem",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: isMobile ? "2.5rem" : "3rem",
-                  color: "var(--accent)",
-                  fontWeight: 400,
-                  lineHeight: 1,
-                  marginBottom: "0.75rem",
-                  letterSpacing: "0.02em",
-                }}
-              >
-                {s.stat}
-              </p>
-              <p
-                style={{
-                  fontSize: "0.85rem",
-                  color: "var(--text-secondary)",
-                  lineHeight: 1.75,
-                  marginBottom: "0.75rem",
-                  fontWeight: 300,
-                }}
-              >
-                {s.desc}
-              </p>
-              <a
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontSize: "0.7rem",
-                  color: "rgba(255,255,255,0.35)",
-                  fontFamily: "var(--font-sans)",
-                  textDecoration: "none",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                {s.source} ↗
-              </a>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ maxWidth: 1100, margin: "3rem auto 0" }}>
-          <p style={hookLine}>
-            Here's what working with me actually looks like
-          </p>
-        </div>
       </section>
 
       {/* ============================================================
-          SECTION 4 — WHY MARKETING FAILS
-      ============================================================ */}
-      {/* <section
+    SECTION 4A — WHY IT HAPPENS (PSYCHOLOGY)
+============================================================ */}
+      <section
         style={{
           background: "var(--bg)",
           padding: `${sectionPy} ${px}`,
@@ -2714,355 +4097,632 @@ export default function Home() {
         }}
       >
         <div style={{ maxWidth: 760, margin: "0 auto" }}>
-          <p style={eyebrow({})}>The real reason</p>
+          <p style={eyebrow({})}>Why it happens</p>
           <h2 style={sectionTitle(isMobile)}>
-            Most marketing fails for one reason.
+            Your customer doesn't buy with their brain.
           </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "3rem",
+              maxWidth: 620,
+            }}
+          >
+            Most marketing is built for the logical mind — features,
+            comparisons, price points. But buying decisions don't happen there.
+            They happen faster, deeper, and mostly without the customer
+            realising it. The marketing that wins isn't the most informative.
+            It's the most felt.
+          </p>
+
+          {/* Single stat pull quote */}
+          <div
+            style={{
+              borderLeft: "3px solid var(--accent)",
+              paddingLeft: "2rem",
+              marginBottom: "3rem",
+            }}
+          >
+            <p
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(3.5rem, 8vw, 6rem)",
+                color: "var(--accent)",
+                lineHeight: 1,
+                letterSpacing: "0.02em",
+                marginBottom: "1rem",
+              }}
+            >
+              95%
+            </p>
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "var(--white)",
+                lineHeight: 1.6,
+                marginBottom: "0.75rem",
+                fontFamily: "var(--font-serif)",
+                fontWeight: 400,
+                maxWidth: 480,
+              }}
+            >
+              of purchase decisions happen before your customer consciously
+              knows why.
+            </p>
+            <p
+              style={{
+                fontSize: "0.88rem",
+                color: "var(--accent)",
+                fontWeight: 400,
+                lineHeight: 1.6,
+                marginBottom: "1rem",
+                maxWidth: 480,
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              Your ad copy is arguing with the wrong part of their brain.
+            </p>
+            <a
+              href="https://www.library.hbs.edu/working-knowledge/the-subconscious-mind-of-the-consumer-and-how-to-reach-it"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: "0.68rem",
+                color: "rgba(255,255,255,0.25)",
+                fontFamily: "var(--font-sans)",
+                textDecoration: "none",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                borderBottom: "1px solid rgba(255,255,255,0.1)",
+                paddingBottom: "2px",
+              }}
+            >
+              Harvard Business School ↗
+            </a>
+          </div>
+
+          <p style={{ ...hookLine }}>
+            So the fix is a great copywriter, right?
+          </p>
+        </div>
+      </section>
+
+      {/* ============================================================
+    SECTION 4B — PARTIAL SOLUTION 1: COPYWRITER
+============================================================ */}
+      <section
+        style={{
+          background: "var(--surface)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <p style={eyebrow({})}>Partial solution — and why it's partial</p>
+          <h2 style={sectionTitle(isMobile)}>
+            A great copywriter changes everything.{" "}
+            <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+              For the people already on your site.
+            </em>
+          </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "2rem",
+              maxWidth: 620,
+            }}
+          >
+            A copywriter who truly understands consumer psychology — awareness
+            levels, emotional state, what the customer was thinking before they
+            landed — can turn a page that gets ignored into one that converts.
+            That's real. That matters.
+          </p>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "3rem",
+              maxWidth: 620,
+            }}
+          >
+            But here's the problem nobody says out loud: a copywriter optimises
+            for the person who's already there. They don't get people there in
+            the first place. If nobody is finding your website, the best copy in
+            the world converts zero visitors into zero customers. Beautifully.
+          </p>
+
+          <div
+            style={{
+              background: "var(--bg)",
+              border: "1px solid var(--border)",
+              borderLeft: "3px solid var(--accent)",
+              padding: isMobile ? "1.75rem" : "2.5rem",
+              borderRadius: "4px",
+              marginBottom: "3rem",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "0.68rem",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "var(--accent)",
+                fontFamily: "var(--font-sans)",
+                marginBottom: "1rem",
+                opacity: 0.7,
+              }}
+            >
+              The real question
+            </p>
+            <p
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "1.1rem",
+                lineHeight: 1.65,
+                color: "var(--white)",
+                marginBottom: "0.75rem",
+              }}
+            >
+              How does your customer find you in the first place?
+            </p>
+            <p
+              style={{
+                fontSize: "0.92rem",
+                color: "rgba(232,228,220,0.65)",
+                lineHeight: 1.75,
+                fontWeight: 300,
+              }}
+            >
+              They either stumble on you through social media — a post, a share,
+              a recommendation. Or they go looking for something on Google and
+              you show up. Or you don't. One of those two paths brought every
+              customer you've ever had. And only one of them scales without you
+              personally posting every day.
+            </p>
+          </div>
+
+          <p style={{ ...hookLine }}>That's where SEO comes in</p>
+        </div>
+      </section>
+
+      {/* ============================================================
+    SECTION 4C — THE SEO PROBLEM
+============================================================ */}
+      <section
+        style={{
+          background: "var(--bg)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <p style={eyebrow({})}>The traffic problem</p>
+          <h2 style={sectionTitle(isMobile)}>
+            SEO gets people to your site.{" "}
+            <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+              It doesn't make them stay.
+            </em>
+          </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "2rem",
+              maxWidth: 620,
+            }}
+          >
+            An SEO specialist knows how to make Google understand your website.
+            Keywords, structure, backlinks, technical signals — the language of
+            algorithms. Get this right and you show up when your customer is
+            searching. That's not nothing. That's actually everything for
+            sustainable growth.
+          </p>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "3rem",
+              maxWidth: 620,
+            }}
+          >
+            But an SEO specialist speaks the language of Google. Not the
+            language of your customer. They'll optimise your page for search
+            terms that rank. They won't optimise it for the person who just
+            arrived carrying a specific frustration, a specific hope, and about
+            eight seconds of patience. That's a copywriter's job. And most SEO
+            people will tell you that themselves.
+          </p>
+
           <div
             style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
               gap: 1,
               background: "rgba(255,255,255,0.04)",
-              marginTop: "3rem",
+              marginBottom: "3rem",
             }}
           >
             {[
               {
-                icon: "◉",
-                title: "It talks to everyone",
-                body: "When you write for everyone, you resonate with no one. A message built for a 28-year-old SaaS founder and a 52-year-old operations director lands with neither.",
+                label: "What SEO optimises for",
+                who: "Google",
+                points: [
+                  "Search volume and keyword intent",
+                  "Page structure and technical signals",
+                  "Backlinks and domain authority",
+                  "Rankings on terms people search",
+                  "Crawlability and site speed",
+                ],
               },
               {
-                icon: "◈",
-                title: "Humans don't buy logically",
-                body: "Your customer doesn't compare features in a spreadsheet. They feel something — or they don't. The brand that wins is rarely the best product. It's the one that made the right person feel understood.",
+                label: "What copywriting optimises for",
+                who: "Your customer",
+                points: [
+                  "The emotion the visitor arrives with",
+                  "Their awareness of the problem",
+                  "The exact words that make them feel seen",
+                  "Trust built sentence by sentence",
+                  "The moment they decide to act",
+                ],
+              },
+            ].map((col, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "var(--surface)",
+                  padding: isMobile ? "1.75rem 1.5rem" : "2rem",
+                  borderTop: `2px solid ${i === 0 ? "rgba(184,240,60,0.4)" : "rgba(184,240,60,0.15)"}`,
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "0.68rem",
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    color: "var(--accent)",
+                    fontFamily: "var(--font-sans)",
+                    marginBottom: "0.4rem",
+                    opacity: 0.8,
+                  }}
+                >
+                  {col.label}
+                </p>
+                <p
+                  style={{
+                    fontSize: "0.78rem",
+                    color: "var(--text-muted)",
+                    fontFamily: "var(--font-sans)",
+                    marginBottom: "1.25rem",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  Speaks to:{" "}
+                  <span style={{ color: "var(--accent)", opacity: 0.9 }}>
+                    {col.who}
+                  </span>
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.75rem",
+                  }}
+                >
+                  {col.points.map((point, j) => (
+                    <div
+                      key={j}
+                      style={{
+                        display: "flex",
+                        gap: "0.75rem",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: "var(--accent)",
+                          fontSize: "0.65rem",
+                          marginTop: "0.25rem",
+                          opacity: 0.5,
+                          flexShrink: 0,
+                        }}
+                      >
+                        ◆
+                      </span>
+                      <p
+                        style={{
+                          fontSize: "0.88rem",
+                          color: "var(--text-muted)",
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        {point}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ ...hookLine }}>So just hire both, right?</p>
+        </div>
+      </section>
+
+      {/* ============================================================
+    SECTION 4D — WHY HIRING ALL THREE IS YES AND NO
+============================================================ */}
+      <section
+        style={{
+          background: "var(--surface)",
+          padding: `${sectionPy} ${px}`,
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <p style={eyebrow({})}>The obvious answer</p>
+          <h2 style={sectionTitle(isMobile)}>
+            Hire a strategist, a copywriter, and an SEO.{" "}
+            <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
+              Yes. And no.
+            </em>
+          </h2>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "#b5b0a8",
+              fontWeight: 300,
+              lineHeight: 1.8,
+              marginBottom: "3rem",
+              maxWidth: 620,
+            }}
+          >
+            Yes — because you do need all three things to happen. Strategy,
+            copy, and search visibility are not optional. A business that has
+            all three working well is genuinely hard to compete with. So hiring
+            for all three is the right instinct.
+          </p>
+
+          {/* Single stat pull quote */}
+          <div
+            style={{
+              borderLeft: "3px solid var(--accent)",
+              paddingLeft: "2rem",
+              marginBottom: "3rem",
+            }}
+          >
+            <p
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(3.5rem, 8vw, 6rem)",
+                color: "var(--accent)",
+                lineHeight: 1,
+                letterSpacing: "0.02em",
+                marginBottom: "1rem",
+              }}
+            >
+              85%
+            </p>
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "var(--white)",
+                lineHeight: 1.6,
+                marginBottom: "0.75rem",
+                fontFamily: "var(--font-serif)",
+                fontWeight: 400,
+                maxWidth: 480,
+              }}
+            >
+              of businesses with separate marketing, sales, and strategy teams
+              report regularly working toward different goals — even when they
+              think they're aligned.
+            </p>
+            <p
+              style={{
+                fontSize: "0.88rem",
+                color: "var(--accent)",
+                fontWeight: 400,
+                lineHeight: 1.6,
+                marginBottom: "1rem",
+                maxWidth: 480,
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              Three vendors. Three definitions of success. One budget taking the
+              hit.
+            </p>
+            <a
+              href="https://www.carriermanagement.com/news/2025/05/28/275682.htm"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: "0.68rem",
+                color: "rgba(255,255,255,0.25)",
+                fontFamily: "var(--font-sans)",
+                textDecoration: "none",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                borderBottom: "1px solid rgba(255,255,255,0.1)",
+                paddingBottom: "2px",
+              }}
+            >
+              Mural / The Martec Group, 2025 ↗
+            </a>
+          </div>
+
+          <p
+            style={{
+              fontSize: "0.72rem",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "var(--accent)",
+              fontFamily: "var(--font-sans)",
+              marginBottom: "1.5rem",
+              opacity: 0.8,
+            }}
+          >
+            But here's what actually happens
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "1px",
+              background: "rgba(255,255,255,0.04)",
+              marginBottom: "3rem",
+            }}
+          >
+            {[
+              {
+                problem: "Nobody owns the outcome",
+                detail:
+                  "When results don't come, the SEO says the copy isn't converting. The copywriter says the traffic is unqualified. Everyone is doing their job. Nobody is responsible for whether it works together.",
+              },
+              {
+                problem: "SEO and copy pulling in opposite directions",
+                detail:
+                  "The SEO wants the headline to contain the keyword. The copywriter wants the headline to land emotionally. Without someone who understands both deeply, you compromise both. You rank adequately and convert poorly.",
               },
             ].map((item, i) => (
               <div
                 key={i}
                 style={{
-                  background: "var(--surface)",
-                  padding: isMobile ? "2rem 1.5rem" : "2.5rem 2rem",
+                  background: "var(--bg)",
+                  padding: isMobile ? "1.75rem 1.5rem" : "2rem 2.5rem",
                 }}
               >
                 <p
                   style={{
-                    fontSize: "1.2rem",
-                    color: "var(--accent)",
-                    marginBottom: "1rem",
+                    fontSize: "0.92rem",
+                    fontWeight: 500,
+                    color: "var(--white)",
+                    marginBottom: "0.6rem",
+                    fontFamily: "var(--font-sans)",
                   }}
                 >
-                  {item.icon}
-                </p>
-                <p
-                  style={{
-                    fontFamily: "var(--font-serif)",
-                    fontSize: "1.1rem",
-                    color: "var(--text-light)",
-                    marginBottom: "0.75rem",
-                  }}
-                >
-                  {item.title}
+                  {item.problem}
                 </p>
                 <p
                   style={{
                     fontSize: "0.88rem",
-                    color: "rgba(232,228,220,0.5)",
-                    lineHeight: 1.85,
+                    color: "rgba(232,228,220,0.55)",
+                    lineHeight: 1.75,
                     fontWeight: 300,
                   }}
                 >
-                  {item.body}
+                  {item.detail}
                 </p>
               </div>
             ))}
           </div>
-        </div>
-      </section> */}
-<section style={{
-  background: "var(--bg)",
-  padding: `${sectionPy} ${px}`,
-  borderTop: "1px solid var(--border)",
-}}>
-  <div style={{ maxWidth: 760, margin: "0 auto" }}>
-    <p style={eyebrow({})}>Why it happens</p>
-    <h2 style={sectionTitle(isMobile)}>
-      Your customer doesn't buy with their brain.
-    </h2>
-    <p style={{
-      fontSize: "1rem",
-      color: "#b5b0a8",
-      fontWeight: 300,
-      lineHeight: 1.8,
-      marginBottom: "3rem",
-      maxWidth: 620,
-    }}>
-      Most marketing is built for the logical mind — features, comparisons, price points. But buying decisions don't happen there. They happen faster, deeper, and mostly without the customer realising it. The marketing that wins isn't the most informative. It's the most felt.
-    </p>
 
-    {/* Stats as proof */}
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
-      borderTop: "1px solid var(--border)",
-      marginBottom: "3rem",
-    }}>
-      {[
-        {
-          stat: "95%",
-          desc: "of purchase decisions are made in the subconscious mind",
-          source: "Harvard Business School",
-          url: "https://www.library.hbs.edu/working-knowledge/the-subconscious-mind-of-the-consumer-and-how-to-reach-it",
-        },
-        {
-          stat: "64%",
-          desc: "of consumers say shared values are the main reason they stay loyal to a brand",
-          source: "Harvard Business Review",
-          url: "https://hbr.org/2012/05/three-myths-about-what-customers-want",
-        },
-        {
-          stat: "57%",
-          desc: "of consumers spend more with brands they feel emotionally connected to",
-          source: "Sprout Social",
-          url: "https://sproutsocial.com/insights/data/social-media-connection/",
-        },
-      ].map((s, i) => (
-        <div key={i} style={{
-          padding: "1.75rem",
-          paddingLeft: !isMobile && i > 0 ? "2rem" : 0,
-          borderRight: !isMobile && i < 2 ? "1px solid var(--border)" : "none",
-          borderBottom: isMobile && i < 2 ? "1px solid var(--border)" : "none",
-          paddingTop: "1.75rem",
-        }}>
-          <p style={{
-            fontFamily: "var(--font-display)",
-            fontSize: isMobile ? "2.5rem" : "3rem",
-            color: "var(--accent)",
-            fontWeight: 400,
-            lineHeight: 1,
-            marginBottom: "0.75rem",
-            letterSpacing: "0.02em",
-          }}>
-            {s.stat}
-          </p>
-          <p style={{
-            fontSize: "0.85rem",
-            color: "var(--text-secondary)",
-            lineHeight: 1.75,
-            marginBottom: "0.75rem",
-            fontWeight: 300,
-          }}>
-            {s.desc}
-          </p>
-          
-            href={s.url}
-            target="_blank"
-            rel="noopener noreferrer"
+          <p style={{ ...hookLine }}>There is a better way</p>
+        </div>
+      </section>
+
+      {/* ============================================================
+    SECTION 4E — THE FOURTH WALL / PROOF CALLOUT
+============================================================ */}
+      <section
+        style={{
+          background: "var(--bg)",
+          padding: isMobile ? "4rem 1.25rem" : "6rem 2.5rem",
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 680,
+            margin: "0 auto",
+            textAlign: "center",
+          }}
+        >
+          <p
             style={{
-              fontSize: "0.7rem",
-              color: "rgba(255,255,255,0.35)",
+              fontSize: "0.72rem",
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              color: "var(--accent)",
               fontFamily: "var(--font-sans)",
-              textDecoration: "none",
-              letterSpacing: "0.5px",
+              marginBottom: "2rem",
+              opacity: 0.7,
             }}
           >
-            {s.source} ↗
-          </a>
+            A small observation
+          </p>
+          <p
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: isMobile ? "1.3rem" : "1.7rem",
+              lineHeight: 1.55,
+              color: "var(--white)",
+              marginBottom: "1.5rem",
+            }}
+          >
+            If you've read this far, you didn't stumble here by accident.
+          </p>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "rgba(232,228,220,0.55)",
+              lineHeight: 1.8,
+              fontWeight: 300,
+              marginBottom: "1.5rem",
+            }}
+          >
+            The copy on this page made you keep reading. That's not an accident
+            — that's consumer psychology applied deliberately. Every section was
+            written to speak to a specific feeling you already had before you
+            arrived.
+          </p>
+
+          <div
+            style={{
+              display: "inline-block",
+              border: "1px solid rgba(184,240,60,0.25)",
+              borderLeft: "3px solid var(--accent)",
+              padding: "1.25rem 2rem",
+              borderRadius: "4px",
+              textAlign: "left",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "0.88rem",
+                color: "rgba(232,228,220,0.6)",
+                lineHeight: 1.75,
+                fontWeight: 300,
+              }}
+            >
+              The balance between SEO and copywriting — writing for Google and
+              writing for humans at the same time — is something very few people
+              know how to do well. I may not be the best in the world at it yet.{" "}
+              <span style={{ color: "var(--text)", fontWeight: 400 }}>
+                But I'm working towards it. And this page is the current
+                evidence.
+              </span>
+            </p>
+          </div>
         </div>
-      ))}
-    </div>
-
-    {/* Two root causes */}
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-      gap: 1,
-      background: "rgba(255,255,255,0.04)",
-    }}>
-      {[
-        {
-          icon: "◉",
-          title: "It talks to everyone",
-          body: "When you write for everyone, you resonate with no one. A message built for a 28-year-old SaaS founder and a 52-year-old operations director lands with neither. Most marketing fails before a single rupee is spent on ads.",
-        },
-        {
-          icon: "◈",
-          title: "It speaks to the wrong part of the brain",
-          body: "Your customer doesn't compare features in a spreadsheet. They feel something — or they don't. The brand that wins is rarely the best product. It's the one that made the right person feel understood.",
-        },
-      ].map((item, i) => (
-        <div key={i} style={{
-          background: "var(--surface)",
-          padding: isMobile ? "2rem 1.5rem" : "2.5rem 2rem",
-        }}>
-          <p style={{
-            fontSize: "1.2rem",
-            color: "var(--accent)",
-            marginBottom: "1rem",
-          }}>
-            {item.icon}
-          </p>
-          <p style={{
-            fontFamily: "var(--font-serif)",
-            fontSize: "1.1rem",
-            color: "var(--text-light)",
-            marginBottom: "0.75rem",
-          }}>
-            {item.title}
-          </p>
-          <p style={{
-            fontSize: "0.88rem",
-            color: "rgba(232,228,220,0.5)",
-            lineHeight: 1.85,
-            fontWeight: 300,
-          }}>
-            {item.body}
-          </p>
-        </div>
-      ))}
-    </div>
-
-    <p style={{ ...hookLine, marginTop: "3rem" }}>
-      So what's the fix?
-    </p>
-  </div>
-</section>
-
-
-
+      </section>
       {/* ============================================================
           SECTION 5 — SERVICES
       ============================================================ */}
 
-      <section style={{
-  background: "var(--surface)",
-  padding: `${sectionPy} ${px}`,
-  borderTop: "1px solid var(--border)",
-}}>
-  <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-    <p style={eyebrow({})}>The solution</p>
-    <h2 style={{ ...sectionTitle(isMobile), marginBottom: "0.75rem" }}>
-      Stop buying pieces.{" "}
-      <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
-        Own the whole system.
-      </em>
-    </h2>
-    <p style={{
-      fontSize: "1rem",
-      color: "rgba(232,228,220,0.5)",
-      lineHeight: 1.85,
-      marginBottom: "1.5rem",
-      fontWeight: 300,
-      maxWidth: 600,
-    }}>
-      The reason your marketing feels disconnected is because it is. You hired separate people for strategy, copy, and ads — and nobody is responsible for how it all fits together.
-    </p>
-    <p style={{
-      fontSize: "1rem",
-      color: "rgba(232,228,220,0.6)",
-      lineHeight: 1.85,
-      marginBottom: "3rem",
-      fontWeight: 300,
-      maxWidth: 600,
-    }}>
-      The fix isn't another vendor. It's one person who starts with who your customer actually is, what they feel, and what they need to hear — then builds everything from that foundation.
-    </p>
-
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-      gap: "1.5rem",
-    }}>
-      {[
-        {
-          num: "01",
-          title: "Brand Messaging",
-          desc: 'The words that make your right customer say "this is exactly for me."',
-          detail: "2–3 week engagement. Positioning, tone, and a messaging doc your whole team can use.",
-        },
-        {
-          num: "02",
-          title: "Ad Strategy & Copy",
-          desc: "Campaigns built on psychology, not best practices from 2019.",
-          detail: "Starts with audience research. Ends with ad copy you can run the same week.",
-        },
-        {
-          num: "03",
-          title: "Marketing Audit",
-          desc: "Find exactly where your marketing is leaking before spending another dollar.",
-          detail: "One focused session. You leave with a ranked list of what to fix first.",
-        },
-      ].map((s, i) => (
-        <div
-          key={i}
-          style={{
-            background: "var(--bg)",
-            border: "1px solid var(--border)",
-            padding: "2rem",
-            borderRadius: "4px",
-            borderTop: i === 0
-              ? "2px solid var(--accent)"
-              : "2px solid rgba(184,240,60,0.2)",
-            transition: "transform 0.2s, border-color 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-3px)";
-            e.currentTarget.style.borderTopColor = "var(--accent)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.borderTopColor = i === 0
-              ? "var(--accent)"
-              : "rgba(184,240,60,0.2)";
-          }}
-        >
-          <div style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "3.5rem",
-            color: "rgba(184,240,60,0.08)",
-            lineHeight: 1,
-            marginBottom: "0.5rem",
-          }}>
-            {s.num}
-          </div>
-          <p style={{
-            fontSize: "0.95rem",
-            fontWeight: 500,
-            color: "var(--white)",
-            marginBottom: "0.8rem",
-            letterSpacing: "0.02em",
-          }}>
-            {s.title}
-          </p>
-          <p style={{
-            fontSize: "0.88rem",
-            color: "var(--text-muted)",
-            lineHeight: 1.65,
-            marginBottom: "1.2rem",
-          }}>
-            {s.desc}
-          </p>
-          <div style={{
-            marginTop: "1.2rem",
-            paddingTop: "1.2rem",
-            borderTop: "1px solid var(--border)",
-            fontSize: "0.75rem",
-            color: "var(--accent)",
-            letterSpacing: "0.06em",
-          }}>
-            → {s.detail}
-          </div>
-        </div>
-      ))}
-    </div>
-
-    <p style={{ ...hookLine, marginTop: "4rem" }}>
-      But why should you trust me to do this?
-    </p>
-  </div>
-</section>
-      {/* <section
+      <section
         style={{
           background: "var(--surface)",
           padding: `${sectionPy} ${px}`,
@@ -3070,29 +4730,40 @@ export default function Home() {
         }}
       >
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <p style={eyebrow({})}>What I bring</p>
+          <p style={eyebrow({})}>The solution</p>
           <h2 style={{ ...sectionTitle(isMobile), marginBottom: "0.75rem" }}>
-            Three things. One person.{" "}
+            Stop buying pieces.{" "}
             <em style={{ fontStyle: "normal", color: "var(--accent)" }}>
-              Zero handoff friction.
+              Own the whole system.
             </em>
           </h2>
           <p
             style={{
               fontSize: "1rem",
-              color: "rgba(232,228,220,0.4)",
+              color: "rgba(232,228,220,0.5)",
+              lineHeight: 1.85,
+              marginBottom: "1.5rem",
+              fontWeight: 300,
+              maxWidth: 600,
+            }}
+          >
+            The reason your marketing feels disconnected is because it is. You
+            hired separate people for strategy, copy, and ads — and nobody is
+            responsible for how it all fits together.
+          </p>
+          <p
+            style={{
+              fontSize: "1rem",
+              color: "rgba(232,228,220,0.6)",
               lineHeight: 1.85,
               marginBottom: "3rem",
               fontWeight: 300,
-              maxWidth: 560,
+              maxWidth: 600,
             }}
           >
-            Before any copy. Before any campaign. Before any content calendar —
-            there's a conversation most founders have never had:{" "}
-            <em style={{ color: "rgba(232,228,220,0.6)" }}>
-              Who exactly are you for? What do they feel? What do they need to
-              hear before they buy?
-            </em>
+            The fix isn't another vendor. It's one person who starts with who
+            your customer actually is, what they feel, and what they need to
+            hear — then builds everything from that foundation.
           </p>
 
           <div
@@ -3102,7 +4773,29 @@ export default function Home() {
               gap: "1.5rem",
             }}
           >
-            {services.map((s, i) => (
+            {[
+              {
+                num: "01",
+                title: "Brand Messaging",
+                desc: 'The words that make your right customer say "this is exactly for me."',
+                detail:
+                  "2–3 week engagement. Positioning, tone, and a messaging doc your whole team can use.",
+              },
+              {
+                num: "02",
+                title: "Ad Strategy & Copy",
+                desc: "Campaigns built on psychology, not best practices from 2019.",
+                detail:
+                  "Starts with audience research. Ends with ad copy you can run the same week.",
+              },
+              {
+                num: "03",
+                title: "Marketing Audit",
+                desc: "Find exactly where your marketing is leaking before spending another dollar.",
+                detail:
+                  "One focused session. You leave with a ranked list of what to fix first.",
+              },
+            ].map((s, i) => (
               <div
                 key={i}
                 style={{
@@ -3118,11 +4811,12 @@ export default function Home() {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-3px)";
-                  e.currentTarget.style.borderColor = "#3a3a3a";
+                  e.currentTarget.style.borderTopColor = "var(--accent)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.borderColor = "var(--border)";
+                  e.currentTarget.style.borderTopColor =
+                    i === 0 ? "var(--accent)" : "rgba(184,240,60,0.2)";
                 }}
               >
                 <div
@@ -3174,14 +4868,14 @@ export default function Home() {
           </div>
 
           <p style={{ ...hookLine, marginTop: "4rem" }}>
-            The work isn't theory
+            But why should you trust me to do this?
           </p>
         </div>
-      </section> */}
+      </section>
 
       {/* ============================================================
-          SECTION 6 — CASE STUDIES
-      ============================================================ */}
+    SECTION 6 — CASE STUDIES
+============================================================ */}
       <section
         style={{
           background: "var(--bg)",
@@ -3224,45 +4918,70 @@ export default function Home() {
                 e.currentTarget.style.borderColor = "var(--border)";
               }}
             >
+              {/* Screenshot */}
               <div
                 style={{
-                  height: 180,
-                  background: "#0a0e1a",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  position: "relative",
+                  height: 200,
                   overflow: "hidden",
+                  position: "relative",
+                  borderBottom: "1px solid var(--border)",
                 }}
               >
-                <div
+                <img
+                  src="https://res.cloudinary.com/dtu64orvo/image/upload/v1779869522/Screenshot_2026-05-27_at_1.39.11_PM_nvzshk.png"
+                  alt="TMCI website — built and maintained by Sushanth P"
                   style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "5rem",
-                    letterSpacing: "0.05em",
-                    opacity: 0.1,
-                    color: "#4a9eff",
-                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "top center",
+                    display: "block",
                   }}
-                >
-                  TMCI
-                </div>
+                />
+                {/* Tag overlay */}
                 <div
                   style={{
-                    background: "var(--surface2)",
+                    position: "absolute",
+                    top: 12,
+                    left: 12,
+                    background: "rgba(14,14,14,0.85)",
                     border: "1px solid var(--border)",
-                    padding: "0.4rem 1rem",
+                    padding: "0.3rem 0.75rem",
                     borderRadius: "2px",
-                    fontSize: "0.72rem",
+                    fontSize: "0.68rem",
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: "#4a9eff",
-                    zIndex: 1,
+                    fontFamily: "var(--font-sans)",
                   }}
                 >
                   B2B Industrial
                 </div>
+                {/* Live site link */}
+                <a
+                  href="https://tmcitechnology.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    position: "absolute",
+                    bottom: 12,
+                    right: 12,
+                    background: "rgba(14,14,14,0.85)",
+                    border: "1px solid var(--border)",
+                    padding: "0.3rem 0.75rem",
+                    borderRadius: "2px",
+                    fontSize: "0.65rem",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "rgba(232,228,220,0.5)",
+                    fontFamily: "var(--font-sans)",
+                    textDecoration: "none",
+                  }}
+                >
+                  Visit site ↗
+                </a>
               </div>
+
               <div style={{ padding: "1.75rem" }}>
                 <p
                   style={{
@@ -3272,7 +4991,7 @@ export default function Home() {
                     marginBottom: "0.6rem",
                   }}
                 >
-                  TMCI — Bangalore-Based Manufacturer
+                  TMCI — Bangalore - Based Manufacturer
                 </p>
                 <p
                   style={{
@@ -3327,7 +5046,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Ever Sweet */}
+            {/* EVER SWEET */}
             <div
               style={{
                 background: "var(--surface)",
@@ -3345,45 +5064,89 @@ export default function Home() {
                 e.currentTarget.style.borderColor = "var(--border)";
               }}
             >
+              {/* Screenshot — portrait app, so we show it differently */}
               <div
                 style={{
-                  height: 180,
+                  height: 200,
+                  overflow: "hidden",
+                  position: "relative",
+                  borderBottom: "1px solid var(--border)",
                   background: "#0e0a05",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  position: "relative",
-                  overflow: "hidden",
+                  gap: "1rem",
                 }}
               >
+                {/* Phone mockup feel — centered portrait */}
                 <div
                   style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "5rem",
-                    letterSpacing: "0.05em",
-                    opacity: 0.1,
-                    color: "#f5a623",
-                    position: "absolute",
+                    height: 180,
+                    width: 90,
+                    border: "1.5px solid #2a2a2a",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    flexShrink: 0,
                   }}
                 >
-                  ES
+                  <img
+                    src="https://res.cloudinary.com/dtu64orvo/image/upload/v1779869637/Screenshot_2026-05-27_at_1.43.31_PM_ryupmc.png"
+                    alt="Ever Sweet ordering app — built by Sushanth P"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "top center",
+                      display: "block",
+                    }}
+                  />
                 </div>
+                {/* Second instance slightly offset for depth */}
                 <div
                   style={{
-                    background: "var(--surface2)",
+                    height: 160,
+                    width: 82,
+                    border: "1.5px solid #1e1e1e",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    flexShrink: 0,
+                    opacity: 0.5,
+                    marginTop: 20,
+                  }}
+                >
+                  <img
+                    src="https://res.cloudinary.com/dtu64orvo/image/upload/v1779869637/Screenshot_2026-05-27_at_1.43.31_PM_ryupmc.png"
+                    alt=""
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "top center",
+                      display: "block",
+                    }}
+                  />
+                </div>
+                {/* Tag overlay */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 12,
+                    left: 12,
+                    background: "rgba(14,14,14,0.85)",
                     border: "1px solid var(--border)",
-                    padding: "0.4rem 1rem",
+                    padding: "0.3rem 0.75rem",
                     borderRadius: "2px",
-                    fontSize: "0.72rem",
+                    fontSize: "0.68rem",
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: "#f5a623",
-                    zIndex: 1,
+                    fontFamily: "var(--font-sans)",
                   }}
                 >
                   D2C Artisan Food
                 </div>
               </div>
+
               <div style={{ padding: "1.75rem" }}>
                 <p
                   style={{
@@ -3798,10 +5561,10 @@ export default function Home() {
               letterSpacing: "-0.01em",
             }}
           >
-            {hp.ctaHeadline || "Your marketing should"}
-            <br />
-            feel like your{" "}
-            <span style={{ color: "var(--accent)" }}>product does.</span>
+            The business is alive. <br />
+            <span style={{ color: "var(--accent)" }}>
+              Let's make it unstoppable.
+            </span>
           </h2>
           <p
             style={{
@@ -3817,7 +5580,7 @@ export default function Home() {
               "If you've read this far, you already know whether this is the right fit. No forms, no discovery call decks. Just send me an email and we'll figure out the rest."}
           </p>
           <a
-            href="mailto:hello@sushanthp.com"
+            href="mailto:sushanthp.careers@gmail.com"
             style={{
               fontFamily: "var(--font-display)",
               fontSize: isMobile ? "1.1rem" : "1.4rem",
@@ -3829,7 +5592,7 @@ export default function Home() {
               wordBreak: "break-all",
             }}
           >
-            hello@sushanthp.com
+            sushanthp.careers@gmail.com
           </a>
         </div>
       </section>
@@ -3904,64 +5667,216 @@ const btnGhost = {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FILE: ./app/pricing/page.js
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: 'Pricing — Sushanth P',
-  description: 'Transparent pricing for marketing strategy and copywriting.'
-}
+  title: "Pricing — Sushanth P",
+  description: "Transparent pricing for marketing strategy and copywriting.",
+};
 
 export default function PricingPage() {
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--cream)' }}>
+    <div style={{ minHeight: "100vh", background: "var(--cream)" }}>
       <Navbar />
       <div style={{ paddingTop: 68 }}>
-        <section style={{ background: 'var(--dark)', padding: '80px 32px' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto' }}>
-            <p style={{ fontSize: 11, color: 'var(--amber)', letterSpacing: 3, textTransform: 'uppercase', fontFamily: 'var(--font-sans)', marginBottom: 20 }}>Pricing</p>
-            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 400, color: 'var(--text-light)', lineHeight: 1.15 }}>
-              Straightforward.<br />
-              <span style={{ color: 'var(--amber)' }}>No surprises.</span>
+        <section style={{ background: "var(--dark)", padding: "80px 32px" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+            <p
+              style={{
+                fontSize: 11,
+                color: "var(--amber)",
+                letterSpacing: 3,
+                textTransform: "uppercase",
+                fontFamily: "var(--font-sans)",
+                marginBottom: 20,
+              }}
+            >
+              Pricing
+            </p>
+            <h1
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "clamp(32px, 4vw, 52px)",
+                fontWeight: 400,
+                color: "var(--text-light)",
+                lineHeight: 1.15,
+              }}
+            >
+              Straightforward.
+              <br />
+              <span style={{ color: "var(--amber)" }}>No surprises.</span>
             </h1>
           </div>
         </section>
 
-        <section style={{ padding: '80px 32px' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 1, background: 'var(--border-light)' }}>
+        <section style={{ padding: "80px 32px" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                gap: 1,
+                background: "var(--border-light)",
+              }}
+            >
               {[
-                { name: 'Marketing Audit', price: '$299', desc: 'A full review of your current marketing. What\'s working, what\'s not, and exactly what to fix first.', includes: ['Full funnel review', 'Messaging analysis', 'Written report + recommendations', '1 hour call'] },
-                { name: 'Brand Messaging', price: '$799', desc: 'Your complete messaging foundation — who you\'re for, what you say, and how you say it.', includes: ['Customer insight work', 'Core messaging document', 'Taglines + headline variants', 'Positioning statement'] },
-                { name: 'Done-With-You Strategy', price: '$1,499', desc: 'Monthly engagement. I work alongside you to build and refine your marketing strategy.', includes: ['Weekly 1:1 calls', 'Copy reviews', 'Campaign strategy', 'Ongoing messaging support'] },
+                {
+                  name: "Marketing Audit",
+                  price: "$299",
+                  desc: "A full review of your current marketing. What's working, what's not, and exactly what to fix first.",
+                  includes: [
+                    "Full funnel review",
+                    "Messaging analysis",
+                    "Written report + recommendations",
+                    "1 hour call",
+                  ],
+                },
+                {
+                  name: "Brand Messaging",
+                  price: "$799",
+                  desc: "Your complete messaging foundation — who you're for, what you say, and how you say it.",
+                  includes: [
+                    "Customer insight work",
+                    "Core messaging document",
+                    "Taglines + headline variants",
+                    "Positioning statement",
+                  ],
+                },
+                {
+                  name: "Done-With-You Strategy",
+                  price: "$1,499",
+                  desc: "Monthly engagement. I work alongside you to build and refine your marketing strategy.",
+                  includes: [
+                    "Weekly 1:1 calls",
+                    "Copy reviews",
+                    "Campaign strategy",
+                    "Ongoing messaging support",
+                  ],
+                },
               ].map((plan, i) => (
-                <div key={i} style={{ background: i === 1 ? 'var(--dark)' : 'var(--cream-2)', padding: '40px 28px' }}>
-                  {i === 1 && <p style={{ fontSize: 11, color: 'var(--amber)', letterSpacing: 2, fontFamily: 'var(--font-sans)', marginBottom: 12 }}>MOST POPULAR</p>}
-                  <p style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: i === 1 ? 'var(--text-light)' : 'var(--text-primary)', marginBottom: 8 }}>{plan.name}</p>
-                  <p style={{ fontFamily: 'var(--font-serif)', fontSize: 36, color: 'var(--amber)', marginBottom: 16 }}>{plan.price}</p>
-                  <p style={{ fontSize: 14, color: i === 1 ? 'var(--text-light-muted)' : 'var(--text-muted)', lineHeight: 1.7, marginBottom: 24 }}>{plan.desc}</p>
-                  <ul style={{ listStyle: 'none', padding: 0, marginBottom: 32 }}>
+                <div
+                  key={i}
+                  style={{
+                    background: i === 1 ? "var(--dark)" : "var(--cream-2)",
+                    padding: "40px 28px",
+                  }}
+                >
+                  {i === 1 && (
+                    <p
+                      style={{
+                        fontSize: 11,
+                        color: "var(--amber)",
+                        letterSpacing: 2,
+                        fontFamily: "var(--font-sans)",
+                        marginBottom: 12,
+                      }}
+                    >
+                      MOST POPULAR
+                    </p>
+                  )}
+                  <p
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: 20,
+                      color:
+                        i === 1 ? "var(--text-light)" : "var(--text-primary)",
+                      marginBottom: 8,
+                    }}
+                  >
+                    {plan.name}
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: 36,
+                      color: "var(--amber)",
+                      marginBottom: 16,
+                    }}
+                  >
+                    {plan.price}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 14,
+                      color:
+                        i === 1
+                          ? "var(--text-light-muted)"
+                          : "var(--text-muted)",
+                      lineHeight: 1.7,
+                      marginBottom: 24,
+                    }}
+                  >
+                    {plan.desc}
+                  </p>
+                  <ul
+                    style={{ listStyle: "none", padding: 0, marginBottom: 32 }}
+                  >
                     {plan.includes.map((item, j) => (
-                      <li key={j} style={{ fontSize: 13, color: i === 1 ? 'var(--text-light-muted)' : 'var(--text-secondary)', padding: '6px 0', borderBottom: `1px solid ${i === 1 ? '#2A2A26' : 'var(--border-light)'}`, display: 'flex', gap: 10 }}>
-                        <span style={{ color: 'var(--amber)' }}>✓</span> {item}
+                      <li
+                        key={j}
+                        style={{
+                          fontSize: 13,
+                          color:
+                            i === 1
+                              ? "var(--text-light-muted)"
+                              : "var(--text-secondary)",
+                          padding: "6px 0",
+                          borderBottom: `1px solid ${i === 1 ? "#2A2A26" : "var(--border-light)"}`,
+                          display: "flex",
+                          gap: 10,
+                        }}
+                      >
+                        <span style={{ color: "var(--amber)" }}>✓</span> {item}
                       </li>
                     ))}
                   </ul>
-                  <a href="mailto:hello@sushanthp.com" style={{ background: i === 1 ? 'var(--amber)' : 'transparent', color: i === 1 ? 'var(--dark)' : 'var(--text-primary)', border: i === 1 ? 'none' : '1px solid var(--border-light)', padding: '12px 24px', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', fontFamily: 'var(--font-sans)', textDecoration: 'none', display: 'inline-block' }}>
+                  <a
+                    href="mailto:sushanthp.careers@gmail.com"
+                    style={{
+                      background: i === 1 ? "var(--amber)" : "transparent",
+                      color: i === 1 ? "var(--dark)" : "var(--text-primary)",
+                      border:
+                        i === 1 ? "none" : "1px solid var(--border-light)",
+                      padding: "12px 24px",
+                      fontSize: 12,
+                      letterSpacing: 2,
+                      textTransform: "uppercase",
+                      fontFamily: "var(--font-sans)",
+                      textDecoration: "none",
+                      display: "inline-block",
+                    }}
+                  >
                     Get Started →
                   </a>
                 </div>
               ))}
             </div>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', marginTop: 40, fontStyle: 'italic', fontFamily: 'var(--font-serif)' }}>
-              Not sure which is right? <a href="mailto:hello@sushanthp.com" style={{ color: 'var(--amber)', textDecoration: 'none' }}>Send me a message</a> and we'll figure it out.
+            <p
+              style={{
+                fontSize: 13,
+                color: "var(--text-muted)",
+                textAlign: "center",
+                marginTop: 40,
+                fontStyle: "italic",
+                fontFamily: "var(--font-serif)",
+              }}
+            >
+              Not sure which is right?{" "}
+              <a
+                href="mailto:sushanthp.careers@gmail.com"
+                style={{ color: "var(--amber)", textDecoration: "none" }}
+              >
+                Send me a message
+              </a>{" "}
+              and we'll figure it out.
             </p>
           </div>
         </section>
       </div>
       <Footer />
     </div>
-  )
+  );
 }
 
 
@@ -4018,14 +5933,14 @@ export default function Footer() {
                 fontFamily: "var(--font-sans)",
               }}
             >
-              Bangalore / Kochi — Open to remote
+              / — Open to remote
             </p>
           </div>
           <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
             <Link href="/blog" style={footerLink}>
               Blog
             </Link>
-            <a href="mailto:hello@sushanthp.com" style={footerLink}>
+            <a href="mailto:sushanthp.careers@gmail.com" style={footerLink}>
               Contact
             </a>
           </div>
@@ -4179,7 +6094,7 @@ export default function Navbar() {
                 </Link>
               ))}
             </div>
-            <a href="mailto:hello@sushanthp.com" style={ctaStyle}>
+            <a href="mailto:sushanthp.careers@gmail.com" style={ctaStyle}>
               Let's Talk
             </a>
           </div>
@@ -4286,7 +6201,7 @@ export default function Navbar() {
               </Link>
             ))}
             <a
-              href="mailto:hello@sushanthp.com"
+              href="mailto:sushanthp.careers@gmail.com"
               onClick={() => setMenuOpen(false)}
               style={{
                 marginTop: "1.25rem",
@@ -4893,231 +6808,1156 @@ export default function PathInfographic({ activePath }) {
 FILE: ./components/RichEditor.js
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 "use client";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import Underline from "@tiptap/extension-underline";
-import TextAlign from "@tiptap/extension-text-align";
-import Placeholder from "@tiptap/extension-placeholder";
-import { useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 
-const btn = (active, onClick, title, content) => (
-  <button
-    key={title}
-    onMouseDown={(e) => {
-      e.preventDefault();
-      onClick();
-    }}
-    title={title}
-    style={{
-      background: active ? "#2A2A26" : "transparent",
-      border: "none",
-      color: active ? "var(--amber)" : "var(--text-muted)",
-      padding: "6px 10px",
-      cursor: "pointer",
-      fontSize: 13,
-      borderRadius: 3,
-      fontFamily: "var(--font-sans)",
-      minWidth: 32,
-    }}
-  >
-    {content}
-  </button>
-);
+const SECTIONS = [
+  { key: "navigation", num: "01", label: "Navigation Bar" },
+  { key: "hero", num: "02", label: "Hero Header" },
+  { key: "table-of-contents", num: "03", label: "Table of Contents" },
+  { key: "intro", num: "04", label: "Introduction" },
+  { key: "why-hires-go-wrong", num: "05", label: "Why Hires Go Wrong" },
+  {
+    key: "what-good-consultant-does",
+    num: "06",
+    label: "What Good Looks Like",
+  },
+  { key: "questions-to-ask", num: "07", label: "Questions to Ask" },
+  { key: "red-flags", num: "08", label: "Red Flags" },
+  { key: "in-practice", num: "09", label: "In Practice" },
+  { key: "faq", num: "10", label: "FAQ" },
+  { key: "closing", num: "11", label: "Closing" },
+  { key: "cta", num: "12", label: "Call to Action" },
+  { key: "author-bio", num: "13", label: "Author Bio" },
+];
 
-export default function RichEditor({ content, onChange }) {
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: [
-      StarterKit,
-      Underline,
-      Image.configure({ inline: false }),
-      Link.configure({ openOnClick: false }),
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Placeholder.configure({ placeholder: "Start writing your post..." }),
-    ],
-    content,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+function extractSections(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const result = {};
+  doc.querySelectorAll("[data-section]").forEach((el) => {
+    result[el.getAttribute("data-section")] = el.innerHTML;
   });
+  return result;
+}
 
-  const addImage = useCallback(() => {
-    const url = window.prompt("Image URL:");
-    if (url && editor) editor.chain().focus().setImage({ src: url }).run();
-  }, [editor]);
+function extractStyles(html) {
+  const match = html.match(/<style>([\s\S]*?)<\/style>/);
+  return match ? match[1] : "";
+}
 
-  const setLink = useCallback(() => {
-    const prev = editor.getAttributes("link").href;
-    const url = window.prompt("URL:", prev);
-    if (url === null) return;
-    if (url === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
-      return;
+function patchSection(fullHtml, sectionKey, newInnerHtml) {
+  const regex = new RegExp(
+    `(<section[^>]*data-section="${sectionKey}"[^>]*>)([\\s\\S]*?)(<\\/section>)`,
+    "i",
+  );
+  return fullHtml.replace(regex, `$1\n${newInnerHtml}\n$3`);
+}
+
+function buildIframeDoc(sectionKey, sectionHtml, articleStyles) {
+  const isHero = sectionKey === "hero";
+  const isNav = sectionKey === "navigation";
+  const bodyBg = isHero ? "#1a1814" : "#f9f7f4";
+  const bodyPad = isNav ? "0" : "2rem 2.5rem";
+  const safeKey = sectionKey.replace(/`/g, "\\`");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+${articleStyles}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:${bodyBg};}
+body{padding:${bodyPad};}
+nav{position:static!important;}
+[contenteditable]{outline:none;cursor:text;}
+[contenteditable]:hover{box-shadow:inset 0 0 0 1.5px rgba(74,124,63,0.35);border-radius:2px;}
+[contenteditable]:focus{box-shadow:inset 0 0 0 2px rgba(74,124,63,0.6);border-radius:2px;}
+</style>
+</head>
+<body>
+${sectionHtml}
+<script>
+(function(){
+  var KEY = "${safeKey}";
+  var savedRange = null;
+  var sel = ["p","h1","h2","h3","h4","li","blockquote",
+    ".post-excerpt",".post-tag",".callout-label",
+    ".faq-question",".faq-answer",".author-bio-name",
+    ".toc-label",".post-cta-heading"];
+  document.querySelectorAll(sel.join(",")).forEach(function(el){
+    el.contentEditable = "true";
+    el.spellcheck = true;
+  });
+  document.addEventListener("input", function(){
+    window.parent.postMessage({type:"sectionChanged", key:KEY, html:document.body.innerHTML}, "*");
+  });
+  document.addEventListener("mouseup", function(){
+    setTimeout(function(){
+      var s = window.getSelection();
+      if(s && s.rangeCount > 0 && s.toString().trim()){
+        savedRange = s.getRangeAt(0).cloneRange();
+        var r = savedRange.getBoundingClientRect();
+        window.parent.postMessage({
+          type:"textSelected",
+          rect:{top:r.top, left:r.left, width:r.width, bottom:r.bottom, height:r.height}
+        }, "*");
+      } else {
+        savedRange = null;
+        window.parent.postMessage({type:"selectionCleared"}, "*");
+      }
+    }, 10);
+  });
+  function restore(){
+    if(!savedRange) return false;
+    var s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(savedRange);
+    return true;
+  }
+  window.addEventListener("message", function(e){
+    if(!e.data || e.data.type !== "execCmd") return;
+    var cmd = e.data.cmd;
+    var val = e.data.val || null;
+    restore();
+    if(cmd === "createLink"){
+      if(val) document.execCommand("createLink", false, val);
+    } else {
+      document.execCommand(cmd, false, val);
     }
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
-  }, [editor]);
+    var s = window.getSelection();
+    if(s && s.rangeCount > 0) savedRange = s.getRangeAt(0).cloneRange();
+    window.parent.postMessage({type:"sectionChanged", key:KEY, html:document.body.innerHTML}, "*");
+  });
+  function sendH(){
+    window.parent.postMessage({type:"iframeHeight", height: document.body.scrollHeight + 40}, "*");
+  }
+  sendH();
+  setTimeout(sendH, 800);
+  new ResizeObserver(sendH).observe(document.body);
+})();
+<\/script>
+</body>
+</html>`;
+}
 
-  if (!editor) return null;
+export function extractMeta(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const getMeta = (n) =>
+    doc.querySelector(`meta[name="${n}"]`)?.getAttribute("content") || "";
+  const getOg = (p) =>
+    doc.querySelector(`meta[property="${p}"]`)?.getAttribute("content") || "";
+  const rawTitle = doc.querySelector("title")?.textContent || "";
+  const metaTitle = rawTitle.replace(/\s*\|.*$/, "").trim();
+  const metaDescription =
+    getMeta("description") || getOg("og:description") || "";
+  const keywords = getMeta("keywords") || "";
+  const canonicalUrl =
+    doc.querySelector("link[rel='canonical']")?.getAttribute("href") || "";
+  const bodyText = doc.body?.textContent || "";
+  const readingTimeMatch = bodyText.match(/(\d+)\s*min\s*read/i);
+  const readingTime = readingTimeMatch ? readingTimeMatch[1] : "";
+  const datePublished =
+    doc
+      .querySelector("meta[property='article:published_time']")
+      ?.getAttribute("content")
+      ?.slice(0, 10) || "";
+  let faqSchema = "";
+  doc
+    .querySelectorAll('script[type="application/ld+json"]')
+    .forEach((script) => {
+      try {
+        const data = JSON.parse(script.textContent);
+        if (data["@type"] === "FAQPage" && data.mainEntity) {
+          faqSchema = JSON.stringify(
+            data.mainEntity.map((item) => ({
+              q: item.name,
+              a: item.acceptedAnswer?.text || "",
+            })),
+            null,
+            2,
+          );
+        }
+      } catch (e) {}
+    });
+  let slug = "";
+  if (canonicalUrl)
+    slug = canonicalUrl.replace(/.*\/blog\//, "").replace(/\/$/, "");
+  const tag =
+    doc
+      .querySelector("meta[property='article:tag']")
+      ?.getAttribute("content") ||
+    doc
+      .querySelector("meta[property='article:section']")
+      ?.getAttribute("content") ||
+    "";
+  return {
+    metaTitle,
+    metaDescription,
+    keywords,
+    canonicalUrl,
+    readingTime,
+    dateModified: datePublished,
+    faqSchema,
+    slug,
+    tag,
+  };
+}
 
-  const e = editor;
+export function blocksToHtml(blocks) {
+  if (!blocks || !blocks.length) return "";
+  return blocks
+    .map((b) => {
+      switch (b.type) {
+        case "header":
+          return `<h${b.data.level}>${b.data.text}</h${b.data.level}>`;
+        case "paragraph":
+          return `<p>${b.data.text}</p>`;
+        case "list":
+          const t = b.data.style === "ordered" ? "ol" : "ul";
+          return `<${t}>${b.data.items.map((i) => `<li>${i}</li>`).join("")}</${t}>`;
+        case "quote":
+          return `<blockquote>${b.data.text}</blockquote>`;
+        case "raw":
+          return b.data.html || "";
+        default:
+          return "";
+      }
+    })
+    .join("\n");
+}
+
+export function renderContent(content) {
+  if (!content) return "";
+  try {
+    const parsed = JSON.parse(content);
+    if (parsed.blocks) return blocksToHtml(parsed.blocks);
+    if (Array.isArray(parsed)) return blocksToHtml(parsed);
+  } catch (e) {}
+  return content;
+}
+
+// ── Code Panel ────────────────────────────────────────────────────────────────
+function CodePanel({ html, onClose, onSave }) {
+  const [code, setCode] = useState(html);
+  useEffect(() => setCode(html), [html]);
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 10000,
+        background: "rgba(0,0,0,0.65)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          width: "min(900px,96vw)",
+          maxHeight: "88vh",
+          background: "#0f0d0c",
+          borderRadius: 8,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          style={{
+            padding: "12px 20px",
+            background: "#1a1814",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexShrink: 0,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 11,
+              color: "#b8f03c",
+              fontFamily: "DM Sans,sans-serif",
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+            }}
+          >
+            SECTION HTML — {html.length} chars
+          </span>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setCode(html)} style={smallBtn}>
+              Reset
+            </button>
+            <button
+              onClick={() => onSave(code)}
+              style={{
+                ...smallBtn,
+                background: "#b8f03c",
+                color: "#1a1814",
+                fontWeight: 700,
+                borderColor: "#b8f03c",
+              }}
+            >
+              Apply Changes
+            </button>
+            <button onClick={onClose} style={smallBtn}>
+              ✕ Close
+            </button>
+          </div>
+        </div>
+        <textarea
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          spellCheck={false}
+          style={{
+            flex: 1,
+            background: "#0f0d0c",
+            color: "#7ec8a0",
+            border: "none",
+            padding: "20px 24px",
+            fontFamily: "monospace",
+            fontSize: 12.5,
+            lineHeight: 1.7,
+            resize: "none",
+            outline: "none",
+            overflowY: "auto",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+const smallBtn = {
+  background: "transparent",
+  border: "1px solid rgba(255,255,255,0.15)",
+  color: "#9a9690",
+  padding: "5px 14px",
+  borderRadius: 4,
+  fontSize: 12,
+  cursor: "pointer",
+  fontFamily: "DM Sans,sans-serif",
+};
+
+// ── Floating Toolbar ──────────────────────────────────────────────────────────
+function FloatingToolbar({
+  iframeRef,
+  execCmd,
+  visible,
+  rect,
+  linkState,
+  setLinkState,
+}) {
+  const inputRef = useRef(null);
+  useEffect(() => {
+    if (linkState.open && inputRef.current) inputRef.current.focus();
+  }, [linkState.open]);
+
+  if (!visible || !rect) return null;
+  const fr = iframeRef.current?.getBoundingClientRect();
+  if (!fr) return null;
+
+  const top = Math.max(8, fr.top + rect.top - 46);
+  const left = Math.max(8, fr.left + rect.left + rect.width / 2 - 190);
+
+  const tb = {
+    background: "transparent",
+    border: "none",
+    color: "#f5f2ec",
+    padding: "5px 9px",
+    cursor: "pointer",
+    fontSize: 13,
+    borderRadius: 3,
+    fontFamily: "DM Sans,sans-serif",
+  };
+  const sep = (
+    <span
+      style={{
+        width: 1,
+        height: 16,
+        background: "rgba(255,255,255,0.18)",
+        display: "inline-block",
+        verticalAlign: "middle",
+        margin: "0 3px",
+      }}
+    />
+  );
+
+  function cmd(c, v) {
+    execCmd(c, v || null);
+  }
 
   return (
     <div
       style={{
-        border: "1px solid var(--border-light)",
-        borderRadius: 4,
-        overflow: "hidden",
-        background: "#fff",
+        position: "fixed",
+        top,
+        left,
+        zIndex: 9999,
+        background: "#1a1814",
+        borderRadius: 6,
+        padding: "3px 5px",
+        display: "flex",
+        alignItems: "center",
+        gap: 0,
+        boxShadow: "0 6px 24px rgba(0,0,0,0.4)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        pointerEvents: "all",
       }}
     >
-      {/* Toolbar */}
+      {linkState.open ? (
+        <>
+          <span style={{ fontSize: 11, color: "#9a9690", padding: "0 6px" }}>
+            URL:
+          </span>
+          <input
+            ref={inputRef}
+            type="url"
+            placeholder="https://..."
+            value={linkState.val}
+            onChange={(e) =>
+              setLinkState((l) => ({ ...l, val: e.target.value }))
+            }
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (linkState.val) cmd("createLink", linkState.val);
+                setLinkState({ open: false, val: "" });
+              }
+              if (e.key === "Escape") setLinkState({ open: false, val: "" });
+            }}
+            style={{
+              background: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              color: "#fff",
+              padding: "4px 10px",
+              borderRadius: 4,
+              fontSize: 12,
+              outline: "none",
+              width: 210,
+              fontFamily: "DM Sans,sans-serif",
+            }}
+          />
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              if (linkState.val) cmd("createLink", linkState.val);
+              setLinkState({ open: false, val: "" });
+            }}
+            style={{
+              ...tb,
+              background: "#b8f03c",
+              color: "#1a1814",
+              fontWeight: 700,
+              marginLeft: 5,
+              padding: "4px 12px",
+            }}
+          >
+            Apply
+          </button>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setLinkState({ open: false, val: "" });
+            }}
+            style={{ ...tb, color: "#9a9690" }}
+          >
+            ✕
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              cmd("bold");
+            }}
+            style={tb}
+            title="Bold"
+          >
+            <b>B</b>
+          </button>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              cmd("italic");
+            }}
+            style={tb}
+            title="Italic"
+          >
+            <i>I</i>
+          </button>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              cmd("underline");
+            }}
+            style={tb}
+            title="Underline"
+          >
+            <u>U</u>
+          </button>
+          {sep}
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              cmd("formatBlock", "<h2>");
+            }}
+            style={{ ...tb, fontSize: 11 }}
+            title="Heading 2"
+          >
+            H2
+          </button>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              cmd("formatBlock", "<h3>");
+            }}
+            style={{ ...tb, fontSize: 11 }}
+            title="Heading 3"
+          >
+            H3
+          </button>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              cmd("formatBlock", "<p>");
+            }}
+            style={{ ...tb, fontSize: 11 }}
+            title="Paragraph"
+          >
+            ¶
+          </button>
+          {sep}
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setLinkState({ open: true, val: "" });
+            }}
+            style={tb}
+            title="Add Link"
+          >
+            🔗
+          </button>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              cmd("unlink");
+            }}
+            style={{ ...tb, fontSize: 11 }}
+            title="Remove Link"
+          >
+            ✕lnk
+          </button>
+          {sep}
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              cmd("undo");
+            }}
+            style={tb}
+            title="Undo"
+          >
+            ↩
+          </button>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              cmd("redo");
+            }}
+            style={tb}
+            title="Redo"
+          >
+            ↪
+          </button>
+          {sep}
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              cmd("removeFormat");
+            }}
+            style={{ ...tb, fontSize: 10 }}
+            title="Clear formatting"
+          >
+            Clear
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Main Editor ───────────────────────────────────────────────────────────────
+export default function RichEditor({ content, onChange, onMetaExtracted }) {
+  const fileInputRef = useRef(null);
+  const iframeRef = useRef(null);
+
+  const [fullHtml, setFullHtml] = useState("");
+  const [sectionMap, setSectionMap] = useState({});
+  const [articleStyles, setArticleStyles] = useState("");
+  const [activeSection, setActiveSection] = useState("intro");
+  const [hasFile, setHasFile] = useState(false);
+  const [iframeHeight, setIframeHeight] = useState(500);
+  const [unsaved, setUnsaved] = useState(new Set());
+  const [saveStatus, setSaveStatus] = useState("");
+  const [toolbarVisible, setToolbarVisible] = useState(false);
+  const [toolbarRect, setToolbarRect] = useState(null);
+  const [linkState, setLinkState] = useState({ open: false, val: "" });
+  const [showCode, setShowCode] = useState(false);
+  const [iframeVersion, setIframeVersion] = useState(0);
+
+  // ── Auto-initialize from existing content prop (edit mode) ──────────────────
+  useEffect(() => {
+    if (!content) return;
+    if (
+      !content.trim().startsWith("<!DOCTYPE") &&
+      !content.trim().startsWith("<html")
+    )
+      return;
+    if (hasFile) return; // already initialized, don't overwrite
+
+    const sections = extractSections(content);
+    setFullHtml(content);
+    setSectionMap(sections);
+    setArticleStyles(extractStyles(content));
+    setHasFile(true);
+
+    const first = SECTIONS.find((s) => sections[s.key] !== undefined);
+    if (first) setActiveSection(first.key);
+  }, [content]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Listen to iframe messages
+  useEffect(() => {
+    function onMsg(e) {
+      if (!e.data) return;
+      switch (e.data.type) {
+        case "sectionChanged":
+          setSectionMap((prev) => ({ ...prev, [e.data.key]: e.data.html }));
+          setUnsaved((prev) => new Set([...prev, e.data.key]));
+          break;
+        case "iframeHeight":
+          setIframeHeight(Math.max(300, e.data.height));
+          break;
+        case "textSelected":
+          setToolbarRect(e.data.rect);
+          setToolbarVisible(true);
+          setLinkState({ open: false, val: "" });
+          break;
+        case "selectionCleared":
+          setToolbarVisible(false);
+          break;
+      }
+    }
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, []);
+
+  function execCmd(cmd, val) {
+    const iwin = iframeRef.current?.contentWindow;
+    if (!iwin) return;
+    iwin.postMessage({ type: "execCmd", cmd, val: val || null }, "*");
+  }
+
+  function handleFileUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const raw = ev.target.result;
+      const sections = extractSections(raw);
+      setFullHtml(raw);
+      setSectionMap(sections);
+      setArticleStyles(extractStyles(raw));
+      setHasFile(true);
+      setUnsaved(new Set());
+      setSaveStatus("");
+      const first = SECTIONS.find((s) => sections[s.key] !== undefined);
+      if (first) setActiveSection(first.key);
+      if (onMetaExtracted) onMetaExtracted(extractMeta(raw));
+      onChange(raw);
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
+  function handleSaveAll() {
+    if (!fullHtml) return;
+    setSaveStatus("saving");
+    let updated = fullHtml;
+    Object.entries(sectionMap).forEach(([key, html]) => {
+      updated = patchSection(updated, key, html);
+    });
+    onChange(updated);
+    setFullHtml(updated);
+    setUnsaved(new Set());
+    setTimeout(() => setSaveStatus("saved"), 200);
+    setTimeout(() => setSaveStatus(""), 2500);
+  }
+
+  function handleCodeSave(newHtml) {
+    setSectionMap((prev) => ({ ...prev, [activeSection]: newHtml }));
+    setUnsaved((prev) => new Set([...prev, activeSection]));
+    setIframeVersion((v) => v + 1);
+    setShowCode(false);
+  }
+
+  const availableSections = SECTIONS.filter(
+    (s) => sectionMap[s.key] !== undefined,
+  );
+  const iframeSrcDoc =
+    hasFile && sectionMap[activeSection] !== undefined
+      ? buildIframeDoc(activeSection, sectionMap[activeSection], articleStyles)
+      : null;
+
+  const tbStyle = {
+    background: "transparent",
+    border: "none",
+    color: "#3a3530",
+    padding: "5px 11px",
+    cursor: "pointer",
+    fontSize: 13,
+    borderRadius: 3,
+    fontFamily: "inherit",
+  };
+
+  return (
+    <div style={{ fontFamily: "'DM Sans',sans-serif", height: "100%" }}>
+      {showCode && (
+        <CodePanel
+          html={sectionMap[activeSection] || ""}
+          onClose={() => setShowCode(false)}
+          onSave={handleCodeSave}
+        />
+      )}
+
+      <FloatingToolbar
+        iframeRef={iframeRef}
+        execCmd={execCmd}
+        visible={toolbarVisible}
+        rect={toolbarRect}
+        linkState={linkState}
+        setLinkState={setLinkState}
+      />
+
+      {/* Top bar */}
       <div
         style={{
           display: "flex",
-          flexWrap: "wrap",
-          gap: 2,
-          padding: "8px 12px",
-          background: "#F9F6F0",
-          borderBottom: "1px solid var(--border-light)",
           alignItems: "center",
+          gap: 8,
+          padding: "0 0 12px",
+          borderBottom: "1px solid #e8e4dc",
+          flexWrap: "wrap",
         }}
       >
-        {btn(
-          e.isActive("bold"),
-          () => e.chain().focus().toggleBold().run(),
-          "Bold",
-          <b>B</b>,
-        )}
-        {btn(
-          e.isActive("italic"),
-          () => e.chain().focus().toggleItalic().run(),
-          "Italic",
-          <i>I</i>,
-        )}
-        {btn(
-          e.isActive("underline"),
-          () => e.chain().focus().toggleUnderline().run(),
-          "Underline",
-          <u>U</u>,
-        )}
-        {btn(
-          e.isActive("strike"),
-          () => e.chain().focus().toggleStrike().run(),
-          "Strike",
-          <s>S</s>,
-        )}
-        <div
+        <button
+          onClick={() => fileInputRef.current?.click()}
           style={{
-            width: 1,
-            height: 20,
-            background: "var(--border-light)",
-            margin: "0 4px",
+            background: "#1a1814",
+            color: "#b8f03c",
+            border: "none",
+            padding: "8px 16px",
+            borderRadius: 4,
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: "pointer",
+            letterSpacing: "0.04em",
           }}
+        >
+          ↑ {hasFile ? "Replace HTML" : "Upload HTML"}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".html,.htm"
+          onChange={handleFileUpload}
+          style={{ display: "none" }}
         />
-        {btn(
-          e.isActive("heading", { level: 1 }),
-          () => e.chain().focus().toggleHeading({ level: 1 }).run(),
-          "H1",
-          "H1",
+
+        {hasFile && (
+          <>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0,
+                background: "#f5f2ec",
+                borderRadius: 5,
+                padding: "2px 4px",
+              }}
+            >
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  execCmd("bold");
+                }}
+                style={{ ...tbStyle, fontWeight: 700 }}
+                title="Bold"
+              >
+                B
+              </button>
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  execCmd("italic");
+                }}
+                style={{ ...tbStyle, fontStyle: "italic" }}
+                title="Italic"
+              >
+                I
+              </button>
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  execCmd("underline");
+                }}
+                style={{ ...tbStyle, textDecoration: "underline" }}
+                title="Underline"
+              >
+                U
+              </button>
+              <span
+                style={{
+                  width: 1,
+                  height: 16,
+                  background: "#e0dbd4",
+                  display: "inline-block",
+                  margin: "0 3px",
+                  verticalAlign: "middle",
+                }}
+              />
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setLinkState({ open: true, val: "" });
+                  setToolbarVisible(true);
+                  setToolbarRect({ top: 40, left: 80, width: 0, height: 0 });
+                }}
+                style={tbStyle}
+                title="Link"
+              >
+                🔗
+              </button>
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  execCmd("unlink");
+                }}
+                style={{ ...tbStyle, fontSize: 11 }}
+                title="Remove link"
+              >
+                ✕lnk
+              </button>
+              <span
+                style={{
+                  width: 1,
+                  height: 16,
+                  background: "#e0dbd4",
+                  display: "inline-block",
+                  margin: "0 3px",
+                  verticalAlign: "middle",
+                }}
+              />
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  execCmd("undo");
+                }}
+                style={tbStyle}
+                title="Undo ⌘Z"
+              >
+                ↩
+              </button>
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  execCmd("redo");
+                }}
+                style={tbStyle}
+                title="Redo ⌘Y"
+              >
+                ↪
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowCode(true)}
+              style={{
+                background: "transparent",
+                border: "1px solid #e8e4dc",
+                color: "#6b6560",
+                padding: "6px 14px",
+                borderRadius: 4,
+                fontSize: 12,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
+              <span style={{ fontFamily: "monospace", fontSize: 12 }}>
+                &lt;/&gt;
+              </span>{" "}
+              Section HTML
+            </button>
+
+            {unsaved.size > 0 && (
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "#b8832a",
+                  background: "#fff8ee",
+                  border: "1px solid #f0d090",
+                  padding: "4px 10px",
+                  borderRadius: 20,
+                }}
+              >
+                {unsaved.size} unsaved
+              </span>
+            )}
+
+            <button
+              onClick={handleSaveAll}
+              style={{
+                marginLeft: "auto",
+                background: saveStatus === "saved" ? "#4a7c3f" : "#1a1814",
+                color: saveStatus === "saved" ? "#fff" : "#b8f03c",
+                border: "none",
+                padding: "8px 20px",
+                borderRadius: 4,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "background 0.3s",
+              }}
+            >
+              {saveStatus === "saving"
+                ? "Saving..."
+                : saveStatus === "saved"
+                  ? "✓ Saved"
+                  : "Save All"}
+            </button>
+          </>
         )}
-        {btn(
-          e.isActive("heading", { level: 2 }),
-          () => e.chain().focus().toggleHeading({ level: 2 }).run(),
-          "H2",
-          "H2",
-        )}
-        {btn(
-          e.isActive("heading", { level: 3 }),
-          () => e.chain().focus().toggleHeading({ level: 3 }).run(),
-          "H3",
-          "H3",
-        )}
-        <div
-          style={{
-            width: 1,
-            height: 20,
-            background: "var(--border-light)",
-            margin: "0 4px",
-          }}
-        />
-        {btn(
-          e.isActive("bulletList"),
-          () => e.chain().focus().toggleBulletList().run(),
-          "Bullet list",
-          "• List",
-        )}
-        {btn(
-          e.isActive("orderedList"),
-          () => e.chain().focus().toggleOrderedList().run(),
-          "Numbered list",
-          "1. List",
-        )}
-        {btn(
-          e.isActive("blockquote"),
-          () => e.chain().focus().toggleBlockquote().run(),
-          "Blockquote",
-          '" "',
-        )}
-        {btn(
-          e.isActive("codeBlock"),
-          () => e.chain().focus().toggleCodeBlock().run(),
-          "Code block",
-          "</>",
-        )}
-        <div
-          style={{
-            width: 1,
-            height: 20,
-            background: "var(--border-light)",
-            margin: "0 4px",
-          }}
-        />
-        {btn(
-          e.isActive({ textAlign: "left" }),
-          () => e.chain().focus().setTextAlign("left").run(),
-          "Align left",
-          "⬅",
-        )}
-        {btn(
-          e.isActive({ textAlign: "center" }),
-          () => e.chain().focus().setTextAlign("center").run(),
-          "Align center",
-          "↔",
-        )}
-        {btn(
-          e.isActive({ textAlign: "right" }),
-          () => e.chain().focus().setTextAlign("right").run(),
-          "Align right",
-          "➡",
-        )}
-        <div
-          style={{
-            width: 1,
-            height: 20,
-            background: "var(--border-light)",
-            margin: "0 4px",
-          }}
-        />
-        {btn(e.isActive("link"), setLink, "Link", "🔗")}
-        {btn(false, addImage, "Image", "🖼")}
-        {btn(
-          false,
-          () => e.chain().focus().setHorizontalRule().run(),
-          "Divider",
-          "—",
-        )}
-        <div
-          style={{
-            width: 1,
-            height: 20,
-            background: "var(--border-light)",
-            margin: "0 4px",
-          }}
-        />
-        {btn(false, () => e.chain().focus().undo().run(), "Undo", "↩")}
-        {btn(false, () => e.chain().focus().redo().run(), "Redo", "↪")}
       </div>
-      <EditorContent editor={editor} style={{ minHeight: 400 }} />
+
+      {/* Empty state */}
+      {!hasFile ? (
+        <div
+          style={{
+            border: "2px dashed #e8e4dc",
+            borderRadius: 8,
+            padding: "64px 40px",
+            textAlign: "center",
+            background: "#faf8f5",
+            marginTop: 12,
+          }}
+        >
+          <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.3 }}>📄</div>
+          <p
+            style={{
+              fontSize: 16,
+              color: "#6b6560",
+              marginBottom: 8,
+              fontFamily: "'DM Serif Display',Georgia,serif",
+            }}
+          >
+            Upload your article HTML file
+          </p>
+          <p
+            style={{
+              fontSize: 13,
+              color: "#9a9690",
+              maxWidth: 360,
+              margin: "0 auto 28px",
+            }}
+          >
+            Splits into sections. Click any section on the left, edit live on
+            the right.
+          </p>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              background: "#1a1814",
+              color: "#b8f03c",
+              border: "none",
+              padding: "11px 28px",
+              borderRadius: 4,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Upload HTML File
+          </button>
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            marginTop: 10,
+            border: "1px solid #e8e4dc",
+            borderRadius: 8,
+            overflow: "hidden",
+            height: "calc(100vh - 195px)",
+            minHeight: 600,
+          }}
+        >
+          {/* Sidebar */}
+          <div
+            style={{
+              width: 175,
+              flexShrink: 0,
+              background: "#f5f2ec",
+              borderRight: "1px solid #e8e4dc",
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
+            }}
+          >
+            <div
+              style={{
+                padding: "10px 14px",
+                borderBottom: "1px solid #e8e4dc",
+                flexShrink: 0,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  color: "#9a9690",
+                }}
+              >
+                Sections
+              </span>
+            </div>
+            {availableSections.map((sec) => {
+              const isActive = sec.key === activeSection;
+              const isDirty = unsaved.has(sec.key);
+              return (
+                <button
+                  key={sec.key}
+                  onClick={() => {
+                    setActiveSection(sec.key);
+                    setToolbarVisible(false);
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    width: "100%",
+                    padding: "10px 12px",
+                    background: isActive ? "#1a1814" : "transparent",
+                    border: "none",
+                    borderBottom: "1px solid #ebe8e2",
+                    cursor: "pointer",
+                    textAlign: "left",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 10,
+                      color: isActive ? "#b8f03c" : "#b0a898",
+                      fontWeight: 700,
+                      minWidth: 20,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {sec.num}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      color: isActive ? "#f5f2ec" : "#3a3530",
+                      flex: 1,
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {sec.label}
+                  </span>
+                  {isDirty && (
+                    <span
+                      style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: "50%",
+                        background: "#b8832a",
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Preview pane */}
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                padding: "8px 18px",
+                borderBottom: "1px solid #e8e4dc",
+                background: "#fff",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flexShrink: 0,
+              }}
+            >
+              <span style={{ fontSize: 11, color: "#9a9690" }}>
+                {availableSections.find((s) => s.key === activeSection)?.num}
+              </span>
+              <span
+                style={{
+                  fontSize: 13,
+                  color: "#1a1814",
+                  fontFamily: "'DM Serif Display',Georgia,serif",
+                }}
+              >
+                {availableSections.find((s) => s.key === activeSection)?.label}
+              </span>
+              <span
+                style={{ marginLeft: "auto", fontSize: 11, color: "#9a9690" }}
+              >
+                Select text → formatting toolbar appears
+              </span>
+            </div>
+            <div style={{ flex: 1, overflow: "auto", background: "#f9f7f4" }}>
+              {iframeSrcDoc && (
+                <iframe
+                  key={`${activeSection}-${iframeVersion}`}
+                  ref={iframeRef}
+                  srcDoc={iframeSrcDoc}
+                  style={{
+                    width: "100%",
+                    height: iframeHeight,
+                    minHeight: "100%",
+                    border: "none",
+                    display: "block",
+                  }}
+                  title={`Section: ${activeSection}`}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -5142,7 +7982,6 @@ import { NextResponse } from "next/server";
 export function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  // Only protect admin UI pages, not the API routes
   if (
     pathname.startsWith("/admin") &&
     !pathname.startsWith("/admin/login") &&
@@ -5177,30 +8016,21 @@ import "./.next/dev/types/routes.d.ts";
 FILE: ./next.config.js
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const nextConfig = {
-  turbopack: {
-    root: __dirname,
-  },
   images: {
-    remotePatterns: [
-      { protocol: 'https', hostname: '**' },
-    ],
+    remotePatterns: [{ protocol: "https", hostname: "**" }],
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/sitemap.xml',
+        destination: '/api/sitemap',
+      },
+    ]
   },
 }
 module.exports = nextConfig
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FILE: ./next.config.ts
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default nextConfig;
-
-
 ========================================
-  TOTAL FILES: 23
-  TOTAL LINES:     5201
+  TOTAL FILES: 25
+  TOTAL LINES:     8031
 ========================================

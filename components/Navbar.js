@@ -64,8 +64,7 @@ export default function Navbar() {
           left: 0,
           right: 0,
           zIndex: 200,
-          background:
-            scrolled || menuOpen ? "rgba(14,14,14,0.98)" : "rgba(14,14,14,0.7)",
+          background: "rgba(14,14,14,0.98)",
           borderBottom: "1px solid #2a2a2a",
           backdropFilter: "blur(12px)",
           transition: "background 0.3s ease",
