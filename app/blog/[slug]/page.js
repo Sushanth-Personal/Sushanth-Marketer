@@ -6,7 +6,6 @@ import Link from "next/link";
 import Script from "next/script";
 import "@/app/blog/blog-content.css";
 import { renderContent } from "./BlogRenderer";
-import IframeContent from "./IframeContent";
 export const revalidate = 60;
 
 export async function generateMetadata({ params }) {
@@ -125,7 +124,6 @@ export default async function BlogPost({ params }) {
 
       <Navbar />
       <div style={{ paddingTop: 68 }}>
-        {/* ── Post header — always shown from DB fields ── */}
         <section style={{ background: "#1a1814", padding: "80px 32px 64px" }}>
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
             <Link
@@ -228,76 +226,71 @@ export default async function BlogPost({ params }) {
           </div>
         </section>
 
-        {/* ── Post content ── */}
-        {rendered.type === "fullpage" ? (
-          <IframeContent content={rendered.content} title={post.title} />
-        ) : (
-          <section style={{ padding: "72px 32px 96px", background: "#f9f7f4" }}>
-            <div style={{ maxWidth: 720, margin: "0 auto" }}>
-              {post.cover_image && (
-                <img
-                  src={post.cover_image}
-                  alt={post.title}
-                  style={{
-                    width: "100%",
-                    height: 380,
-                    objectFit: "cover",
-                    marginBottom: 56,
-                    borderRadius: 2,
-                  }}
-                />
-              )}
-              <div
-                className="blog-content"
-                dangerouslySetInnerHTML={{ __html: rendered.content }}
-              />
-              <div
+        <section style={{ padding: "72px 32px 96px", background: "#f9f7f4" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto" }}>
+            {post.cover_image && (
+              <img
+                src={post.cover_image}
+                alt={post.title}
                 style={{
-                  marginTop: 72,
-                  paddingTop: 40,
-                  borderTop: "1px solid var(--border-light)",
-                  textAlign: "center",
+                  width: "100%",
+                  height: 380,
+                  objectFit: "cover",
+                  marginBottom: 56,
+                  borderRadius: 2,
+                }}
+              />
+            )}
+            <div
+              className="blog-content"
+              dangerouslySetInnerHTML={{ __html: rendered.content }}
+            />
+            <div
+              style={{
+                marginTop: 72,
+                paddingTop: 40,
+                borderTop: "1px solid var(--border-light)",
+                textAlign: "center",
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: 22,
+                  color: "var(--text-primary)",
+                  marginBottom: 16,
                 }}
               >
-                <p
-                  style={{
-                    fontFamily: "var(--font-serif)",
-                    fontSize: 22,
-                    color: "var(--text-primary)",
-                    marginBottom: 16,
-                  }}
-                >
-                  Found this useful?
-                </p>
-                <p
-                  style={{
-                    fontSize: 15,
-                    color: "var(--text-muted)",
-                    marginBottom: 28,
-                  }}
-                >
-                  Let's talk about what this means for your marketing.
-                </p>
-                <a
-                  href="mailto:sushanthp.careers@gmail.com"
-                  style={{
-                    background: "var(--dark)",
-                    color: "var(--text-light)",
-                    padding: "13px 28px",
-                    fontSize: 12,
-                    letterSpacing: 2,
-                    textTransform: "uppercase",
-                    fontFamily: "var(--font-sans)",
-                    textDecoration: "none",
-                    display: "inline-block",
-                  }}
-                >
-                  Work With Me →
-                </a>
-              </div>
+                Found this useful?
+              </p>
+              <p
+                style={{
+                  fontSize: 15,
+                  color: "var(--text-muted)",
+                  marginBottom: 28,
+                }}
+              >
+                Let's talk about what this means for your marketing.
+              </p>
+              <a
+                href="mailto:sushanthp.careers@gmail.com"
+                style={{
+                  background: "var(--dark)",
+                  color: "var(--text-light)",
+                  padding: "13px 28px",
+                  fontSize: 12,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  fontFamily: "var(--font-sans)",
+                  textDecoration: "none",
+                  display: "inline-block",
+                }}
+              >
+              {"Work With Me →"}
+              </a>
             </div>
-          </section>
-        )}
+          </div>
+        </section>
       </div>
       <Footer />
     </div>

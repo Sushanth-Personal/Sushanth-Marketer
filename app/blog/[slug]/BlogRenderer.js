@@ -25,7 +25,6 @@ export function blocksToHtml(blocks) {
     .join("\n");
 }
 
-// Returns { type: "fullpage" | "html", content: string }
 export function renderContent(content) {
   if (!content) return { type: "html", content: "" };
 
@@ -38,13 +37,15 @@ export function renderContent(content) {
       return { type: "html", content: blocksToHtml(parsed) };
   } catch (e) {}
 
-  // Full HTML document
+  // Full HTML document — extract body content and render inline
   if (
     content.trim().startsWith("<!DOCTYPE") ||
     content.trim().startsWith("<html")
   ) {
     const cleaned = prepareFullPageHtml(content);
-    return { type: "fullpage", content: cleaned };
+    const bodyMatch = cleaned.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    const bodyContent = bodyMatch ? bodyMatch[1] : cleaned;
+    return { type: "html", content: bodyContent };
   }
 
   return { type: "html", content };
