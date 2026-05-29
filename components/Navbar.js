@@ -1,19 +1,31 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [navSettings, setNavSettings] = useState({
     blog: true,
     pricing: false,
   });
+  const [visible, setVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
+  // Hide on scroll down, show on scroll up
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", handleScroll);
+    function handleScroll() {
+      const current = window.scrollY;
+      if (current < 80) {
+        setVisible(true); // always show near top
+      } else if (current > lastScrollY.current) {
+        setVisible(false); // scrolling down
+      } else {
+        setVisible(true); // scrolling up
+      }
+      lastScrollY.current = current;
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -67,7 +79,8 @@ export default function Navbar() {
           background: "rgba(14,14,14,0.98)",
           borderBottom: "1px solid #2a2a2a",
           backdropFilter: "blur(12px)",
-          transition: "background 0.3s ease",
+          transform: visible ? "translateY(0)" : "translateY(-100%)",
+          transition: "transform 0.3s ease",
         }}
       >
         <div
@@ -101,11 +114,7 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 36,
-            }}
+            style={{ display: "flex", alignItems: "center", gap: 36 }}
             className="desktop-nav"
           >
             <div style={{ display: "flex", gap: 32 }}>
@@ -120,7 +129,7 @@ export default function Navbar() {
             </a>
           </div>
 
-          {/* Hamburger — mobile only */}
+          {/* Hamburger */}
           <button
             onClick={() => setMenuOpen((o) => !o)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -135,7 +144,6 @@ export default function Navbar() {
             className="hamburger-btn"
           >
             {menuOpen ? (
-              /* X */
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                 <line
                   x1="4"
@@ -157,7 +165,6 @@ export default function Navbar() {
                 />
               </svg>
             ) : (
-              /* Hamburger */
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                 <line
                   x1="3"
@@ -191,7 +198,7 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile dropdown menu */}
+        {/* Mobile menu */}
         {menuOpen && (
           <div
             style={{
@@ -214,7 +221,6 @@ export default function Navbar() {
                   textDecoration: "none",
                   padding: "0.85rem 0",
                   borderBottom: "1px solid var(--border)",
-                  letterSpacing: "0.02em",
                   display: "block",
                 }}
               >
@@ -245,7 +251,6 @@ export default function Navbar() {
         )}
       </nav>
 
-      {/* Responsive styles injected as a style tag */}
       <style>{`
         @media (max-width: 767px) {
           .desktop-nav { display: none !important; }

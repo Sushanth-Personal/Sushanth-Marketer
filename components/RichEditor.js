@@ -1,26 +1,7 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
 
-const SECTIONS = [
-  { key: "navigation", num: "01", label: "Navigation Bar" },
-  { key: "hero", num: "02", label: "Hero Header" },
-  { key: "table-of-contents", num: "03", label: "Table of Contents" },
-  { key: "intro", num: "04", label: "Introduction" },
-  { key: "why-hires-go-wrong", num: "05", label: "Why Hires Go Wrong" },
-  {
-    key: "what-good-consultant-does",
-    num: "06",
-    label: "What Good Looks Like",
-  },
-  { key: "questions-to-ask", num: "07", label: "Questions to Ask" },
-  { key: "red-flags", num: "08", label: "Red Flags" },
-  { key: "in-practice", num: "09", label: "In Practice" },
-  { key: "faq", num: "10", label: "FAQ" },
-  { key: "closing", num: "11", label: "Closing" },
-  { key: "cta", num: "12", label: "Call to Action" },
-  { key: "author-bio", num: "13", label: "Author Bio" },
-];
-
+// Returns { key -> innerHTML } map
 function extractSections(html) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
@@ -29,6 +10,26 @@ function extractSections(html) {
     result[el.getAttribute("data-section")] = el.innerHTML;
   });
   return result;
+}
+
+// Returns ordered array of { key, num, label } from the actual file
+function extractSectionList(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const list = [];
+  let i = 1;
+  doc.querySelectorAll("[data-section]").forEach((el) => {
+    const key = el.getAttribute("data-section");
+    // Derive a human label: find first heading, fall back to prettifying the key
+    const heading = el.querySelector("h1, h2, h3");
+    let label = heading
+      ? heading.textContent.trim().slice(0, 40)
+      : key.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const num = String(i).padStart(2, "0");
+    list.push({ key, num, label });
+    i++;
+  });
+  return list;
 }
 
 function extractStyles(html) {
@@ -44,11 +45,14 @@ function patchSection(fullHtml, sectionKey, newInnerHtml) {
   return fullHtml.replace(regex, `$1\n${newInnerHtml}\n$3`);
 }
 
+// Build the iframe HTML - NO sandbox so postMessage works freely
 function buildIframeDoc(sectionKey, sectionHtml, articleStyles) {
   const isHero = sectionKey === "hero";
   const isNav = sectionKey === "navigation";
   const bodyBg = isHero ? "#1a1814" : "#f9f7f4";
   const bodyPad = isNav ? "0" : "2rem 2.5rem";
+
+  // Escape backticks in sectionKey for template literal safety
   const safeKey = sectionKey.replace(/`/g, "\\`");
 
   return `<!DOCTYPE html>
@@ -74,6 +78,8 @@ ${sectionHtml}
 (function(){
   var KEY = "${safeKey}";
   var savedRange = null;
+
+  // Make text elements editable
   var sel = ["p","h1","h2","h3","h4","li","blockquote",
     ".post-excerpt",".post-tag",".callout-label",
     ".faq-question",".faq-answer",".author-bio-name",
@@ -82,9 +88,13 @@ ${sectionHtml}
     el.contentEditable = "true";
     el.spellcheck = true;
   });
+
+  // Report content changes
   document.addEventListener("input", function(){
     window.parent.postMessage({type:"sectionChanged", key:KEY, html:document.body.innerHTML}, "*");
   });
+
+  // Save selection and report it to parent for toolbar positioning
   document.addEventListener("mouseup", function(){
     setTimeout(function(){
       var s = window.getSelection();
@@ -101,6 +111,8 @@ ${sectionHtml}
       }
     }, 10);
   });
+
+  // Restore saved selection
   function restore(){
     if(!savedRange) return false;
     var s = window.getSelection();
@@ -108,6 +120,8 @@ ${sectionHtml}
     s.addRange(savedRange);
     return true;
   }
+
+  // Receive commands from parent toolbar
   window.addEventListener("message", function(e){
     if(!e.data || e.data.type !== "execCmd") return;
     var cmd = e.data.cmd;
@@ -118,10 +132,13 @@ ${sectionHtml}
     } else {
       document.execCommand(cmd, false, val);
     }
+    // Re-save selection after command
     var s = window.getSelection();
     if(s && s.rangeCount > 0) savedRange = s.getRangeAt(0).cloneRange();
     window.parent.postMessage({type:"sectionChanged", key:KEY, html:document.body.innerHTML}, "*");
   });
+
+  // Report height
   function sendH(){
     window.parent.postMessage({type:"iframeHeight", height: document.body.scrollHeight + 40}, "*");
   }
@@ -347,6 +364,9 @@ function FloatingToolbar({
   setLinkState,
 }) {
   const inputRef = useRef(null);
+  const [showColors, setShowColors] = useState(false);
+  const [showFonts, setShowFonts] = useState(false);
+
   useEffect(() => {
     if (linkState.open && inputRef.current) inputRef.current.focus();
   }, [linkState.open]);
@@ -356,13 +376,13 @@ function FloatingToolbar({
   if (!fr) return null;
 
   const top = Math.max(8, fr.top + rect.top - 46);
-  const left = Math.max(8, fr.left + rect.left + rect.width / 2 - 190);
+  const left = Math.max(8, fr.left + rect.left + rect.width / 2 - 210);
 
   const tb = {
     background: "transparent",
     border: "none",
     color: "#f5f2ec",
-    padding: "5px 9px",
+    padding: "5px 8px",
     cursor: "pointer",
     fontSize: 13,
     borderRadius: 3,
@@ -376,14 +396,33 @@ function FloatingToolbar({
         background: "rgba(255,255,255,0.18)",
         display: "inline-block",
         verticalAlign: "middle",
-        margin: "0 3px",
+        margin: "0 2px",
       }}
     />
   );
 
   function cmd(c, v) {
     execCmd(c, v || null);
+    setShowColors(false);
+    setShowFonts(false);
   }
+
+  const COLORS = [
+    { hex: "#1a1814", label: "Black" },
+    { hex: "#6b6560", label: "Muted" },
+    { hex: "#4a7c3f", label: "Green" },
+    { hex: "#b8832a", label: "Amber" },
+    { hex: "#c0392b", label: "Red" },
+    { hex: "#2563eb", label: "Blue" },
+    { hex: "#b8f03c", label: "Lime" },
+    { hex: "#f5f2ec", label: "White" },
+  ];
+
+  const FONTS = [
+    { label: "Sans", value: "'DM Sans', sans-serif" },
+    { label: "Serif", value: "'DM Serif Display', Georgia, serif" },
+    { label: "Mono", value: "monospace" },
+  ];
 
   return (
     <div
@@ -401,6 +440,8 @@ function FloatingToolbar({
         boxShadow: "0 6px 24px rgba(0,0,0,0.4)",
         border: "1px solid rgba(255,255,255,0.08)",
         pointerEvents: "all",
+        flexWrap: "wrap",
+        maxWidth: 460,
       }}
     >
       {linkState.open ? (
@@ -419,7 +460,9 @@ function FloatingToolbar({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                if (linkState.val) cmd("createLink", linkState.val);
+                if (linkState.val) {
+                  cmd("createLink", linkState.val);
+                }
                 setLinkState({ open: false, val: "" });
               }
               if (e.key === "Escape") setLinkState({ open: false, val: "" });
@@ -459,6 +502,94 @@ function FloatingToolbar({
               setLinkState({ open: false, val: "" });
             }}
             style={{ ...tb, color: "#9a9690" }}
+          >
+            ✕
+          </button>
+        </>
+      ) : showColors ? (
+        <>
+          <span
+            style={{
+              fontSize: 10,
+              color: "#9a9690",
+              padding: "0 6px",
+              letterSpacing: "0.1em",
+            }}
+          >
+            COLOR
+          </span>
+          {COLORS.map((c) => (
+            <button
+              key={c.hex}
+              title={c.label}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                cmd("foreColor", c.hex);
+                setShowColors(false);
+              }}
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                background: c.hex,
+                border:
+                  c.hex === "#f5f2ec"
+                    ? "1px solid #555"
+                    : "2px solid transparent",
+                cursor: "pointer",
+                margin: "0 2px",
+                flexShrink: 0,
+              }}
+            />
+          ))}
+          {sep}
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setShowColors(false);
+            }}
+            style={{ ...tb, fontSize: 12, color: "#9a9690" }}
+          >
+            ✕
+          </button>
+        </>
+      ) : showFonts ? (
+        <>
+          <span
+            style={{
+              fontSize: 10,
+              color: "#9a9690",
+              padding: "0 6px",
+              letterSpacing: "0.1em",
+            }}
+          >
+            FONT
+          </span>
+          {FONTS.map((f) => (
+            <button
+              key={f.value}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                cmd("fontName", f.value);
+                setShowFonts(false);
+              }}
+              style={{
+                ...tb,
+                fontSize: 11,
+                fontFamily: f.value,
+                padding: "4px 8px",
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+          {sep}
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setShowFonts(false);
+            }}
+            style={{ ...tb, fontSize: 12, color: "#9a9690" }}
           >
             ✕
           </button>
@@ -530,6 +661,36 @@ function FloatingToolbar({
           <button
             onMouseDown={(e) => {
               e.preventDefault();
+              setShowColors(true);
+            }}
+            style={{ ...tb, fontSize: 12 }}
+            title="Text Color"
+          >
+            <span
+              style={{
+                display: "inline-block",
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg,#c0392b,#2563eb,#4a7c3f)",
+                verticalAlign: "middle",
+              }}
+            />
+          </button>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setShowFonts(true);
+            }}
+            style={{ ...tb, fontSize: 11 }}
+            title="Font Style"
+          >
+            Ff
+          </button>
+          {sep}
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
               setLinkState({ open: true, val: "" });
             }}
             style={tb}
@@ -592,6 +753,7 @@ export default function RichEditor({ content, onChange, onMetaExtracted }) {
 
   const [fullHtml, setFullHtml] = useState("");
   const [sectionMap, setSectionMap] = useState({});
+  const [sectionList, setSectionList] = useState([]);
   const [articleStyles, setArticleStyles] = useState("");
   const [activeSection, setActiveSection] = useState("intro");
   const [hasFile, setHasFile] = useState(false);
@@ -602,26 +764,25 @@ export default function RichEditor({ content, onChange, onMetaExtracted }) {
   const [toolbarRect, setToolbarRect] = useState(null);
   const [linkState, setLinkState] = useState({ open: false, val: "" });
   const [showCode, setShowCode] = useState(false);
-  const [iframeVersion, setIframeVersion] = useState(0);
+  const [iframeVersion, setIframeVersion] = useState(0); // force reload after code edit
 
-  // ── Auto-initialize from existing content prop (edit mode) ──────────────────
+  // Auto-initialize when editing an existing post — load content prop into editor
   useEffect(() => {
     if (!content) return;
-    if (
-      !content.trim().startsWith("<!DOCTYPE") &&
-      !content.trim().startsWith("<html")
-    )
+    const trimmed = content.trim();
+    if (!trimmed.startsWith("<!DOCTYPE") && !trimmed.startsWith("<html"))
       return;
-    if (hasFile) return; // already initialized, don't overwrite
 
+    // Always re-initialize when content prop changes (e.g. switching between posts)
     const sections = extractSections(content);
+    const list = extractSectionList(content);
     setFullHtml(content);
     setSectionMap(sections);
+    setSectionList(list);
     setArticleStyles(extractStyles(content));
     setHasFile(true);
-
-    const first = SECTIONS.find((s) => sections[s.key] !== undefined);
-    if (first) setActiveSection(first.key);
+    if (list.length > 0) setActiveSection(list[0].key);
+    setUnsaved(new Set());
   }, [content]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Listen to iframe messages
@@ -650,6 +811,7 @@ export default function RichEditor({ content, onChange, onMetaExtracted }) {
     return () => window.removeEventListener("message", onMsg);
   }, []);
 
+  // Send command directly into iframe contentWindow — avoids sandbox postMessage issues
   function execCmd(cmd, val) {
     const iwin = iframeRef.current?.contentWindow;
     if (!iwin) return;
@@ -662,15 +824,15 @@ export default function RichEditor({ content, onChange, onMetaExtracted }) {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const raw = ev.target.result;
-      const sections = extractSections(raw);
       setFullHtml(raw);
-      setSectionMap(sections);
+      setSectionMap(extractSections(raw));
       setArticleStyles(extractStyles(raw));
       setHasFile(true);
       setUnsaved(new Set());
       setSaveStatus("");
-      const first = SECTIONS.find((s) => sections[s.key] !== undefined);
-      if (first) setActiveSection(first.key);
+      const list = extractSectionList(raw);
+      setSectionList(list);
+      if (list.length > 0) setActiveSection(list[0].key);
       if (onMetaExtracted) onMetaExtracted(extractMeta(raw));
       onChange(raw);
     };
@@ -695,13 +857,11 @@ export default function RichEditor({ content, onChange, onMetaExtracted }) {
   function handleCodeSave(newHtml) {
     setSectionMap((prev) => ({ ...prev, [activeSection]: newHtml }));
     setUnsaved((prev) => new Set([...prev, activeSection]));
-    setIframeVersion((v) => v + 1);
+    setIframeVersion((v) => v + 1); // force iframe reload with new HTML
     setShowCode(false);
   }
 
-  const availableSections = SECTIONS.filter(
-    (s) => sectionMap[s.key] !== undefined,
-  );
+  const availableSections = sectionList;
   const iframeSrcDoc =
     hasFile && sectionMap[activeSection] !== undefined
       ? buildIframeDoc(activeSection, sectionMap[activeSection], articleStyles)
@@ -762,7 +922,7 @@ export default function RichEditor({ content, onChange, onMetaExtracted }) {
             letterSpacing: "0.04em",
           }}
         >
-          ↑ {hasFile ? "Replace HTML" : "Upload HTML"}
+          ↑ Upload HTML
         </button>
         <input
           ref={fileInputRef}
@@ -774,6 +934,7 @@ export default function RichEditor({ content, onChange, onMetaExtracted }) {
 
         {hasFile && (
           <>
+            {/* Formatting toolbar */}
             <div
               style={{
                 display: "flex",

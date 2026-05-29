@@ -287,7 +287,7 @@ export default function AdminPage() {
     display: "block",
     padding: "10px 24px",
     fontSize: 13,
-    color: active ? "var(--amber)" : "var(--text-light-muted)",
+    color: active ? "var(--amber)" : "#9a9690",
     background: active ? "rgba(200,169,110,0.08)" : "transparent",
     borderTop: "none",
     borderRight: "none",
@@ -382,7 +382,7 @@ export default function AdminPage() {
           <p
             style={{
               fontSize: 11,
-              color: "#3A3830",
+              color: "#c8c4bc",
               fontFamily: "var(--font-sans)",
               marginTop: 4,
             }}
@@ -421,7 +421,7 @@ export default function AdminPage() {
               display: "block",
               padding: "8px 24px",
               fontSize: 12,
-              color: "#3A3830",
+              color: "#c8c4bc",
               fontFamily: "var(--font-sans)",
               textDecoration: "none",
               letterSpacing: 0.5,
@@ -435,7 +435,7 @@ export default function AdminPage() {
               display: "block",
               padding: "8px 24px",
               fontSize: 12,
-              color: "#3A3830",
+              color: "#c8c4bc",
               fontFamily: "var(--font-sans)",
               background: "none",
               border: "none",
@@ -484,7 +484,7 @@ export default function AdminPage() {
                 style={{
                   fontFamily: "var(--font-serif)",
                   fontSize: 28,
-                  color: "var(--text-primary)",
+                  color: "#1a1814",
                   fontWeight: 400,
                 }}
               >
@@ -545,7 +545,7 @@ export default function AdminPage() {
                         style={{
                           fontFamily: "var(--font-serif)",
                           fontSize: 18,
-                          color: "var(--text-primary)",
+                          color: "#1a1814",
                           marginBottom: 6,
                         }}
                       >
@@ -554,7 +554,7 @@ export default function AdminPage() {
                       <p
                         style={{
                           fontSize: 13,
-                          color: "var(--text-secondary)",
+                          color: "#6b6560",
                           fontFamily: "var(--font-sans)",
                         }}
                       >
@@ -578,7 +578,7 @@ export default function AdminPage() {
                           background: "transparent",
                           border: "1px solid var(--border-light)",
                           cursor: "pointer",
-                          color: "var(--text-secondary)",
+                          color: "#6b6560",
                           textDecoration: "none",
                           display: "inline-flex",
                           alignItems: "center",
@@ -612,7 +612,7 @@ export default function AdminPage() {
                           background: "transparent",
                           border: "1px solid var(--border-light)",
                           cursor: "pointer",
-                          color: "var(--text-secondary)",
+                          color: "#6b6560",
                         }}
                       >
                         Edit
@@ -646,7 +646,7 @@ export default function AdminPage() {
               style={{
                 fontFamily: "var(--font-serif)",
                 fontSize: 28,
-                color: "var(--text-primary)",
+                color: "#1a1814",
                 fontWeight: 400,
                 marginBottom: 32,
               }}
@@ -782,7 +782,7 @@ export default function AdminPage() {
               <p
                 style={{
                   fontSize: 11,
-                  color: "#9a9690",
+                  color: "#6b6560",
                   marginBottom: 8,
                   fontFamily: "var(--font-sans)",
                 }}
@@ -806,7 +806,7 @@ export default function AdminPage() {
               <p
                 style={{
                   fontSize: 11,
-                  color: "#9a9690",
+                  color: "#6b6560",
                   marginBottom: 8,
                   fontFamily: "var(--font-sans)",
                 }}
@@ -829,7 +829,7 @@ export default function AdminPage() {
               <p
                 style={{
                   fontSize: 11,
-                  color: "#9a9690",
+                  color: "#6b6560",
                   marginBottom: 8,
                   fontFamily: "var(--font-sans)",
                 }}
@@ -872,7 +872,7 @@ export default function AdminPage() {
                   <p
                     style={{
                       fontSize: 11,
-                      color: "#9a9690",
+                      color: "#6b6560",
                       marginBottom: 8,
                       fontFamily: "var(--font-sans)",
                     }}
@@ -893,7 +893,7 @@ export default function AdminPage() {
                   <p
                     style={{
                       fontSize: 11,
-                      color: "#9a9690",
+                      color: "#6b6560",
                       marginBottom: 8,
                       fontFamily: "var(--font-sans)",
                     }}
@@ -916,7 +916,7 @@ export default function AdminPage() {
               <p
                 style={{
                   fontSize: 11,
-                  color: "#9a9690",
+                  color: "#6b6560",
                   marginBottom: 8,
                   fontFamily: "var(--font-sans)",
                 }}
@@ -973,7 +973,7 @@ export default function AdminPage() {
                     gap: 10,
                     cursor: "pointer",
                     fontSize: 14,
-                    color: "var(--text-secondary)",
+                    color: "#6b6560",
                     fontFamily: "var(--font-sans)",
                   }}
                 >
@@ -1046,7 +1046,7 @@ export default function AdminPage() {
                 style={{
                   fontFamily: "var(--font-serif)",
                   fontSize: 28,
-                  color: "var(--text-primary)",
+                  color: "#1a1814",
                   fontWeight: 400,
                 }}
               >
@@ -1254,7 +1254,7 @@ export default function AdminPage() {
               style={{
                 fontFamily: "var(--font-serif)",
                 fontSize: 28,
-                color: "var(--text-primary)",
+                color: "#1a1814",
                 fontWeight: 400,
                 marginBottom: 8,
               }}
@@ -1306,7 +1306,7 @@ export default function AdminPage() {
                     <p
                       style={{
                         fontSize: 15,
-                        color: "var(--text-primary)",
+                        color: "#1a1814",
                         fontFamily: "var(--font-sans)",
                         marginBottom: 2,
                       }}
@@ -1399,7 +1399,7 @@ export default function AdminPage() {
               style={{
                 fontFamily: "var(--font-serif)",
                 fontSize: 28,
-                color: "var(--text-primary)",
+                color: "#1a1814",
                 fontWeight: 400,
                 marginBottom: 8,
               }}
@@ -1428,7 +1428,7 @@ export default function AdminPage() {
               <p
                 style={{
                   fontSize: 14,
-                  color: "var(--text-secondary)",
+                  color: "#6b6560",
                   fontFamily: "var(--font-sans)",
                   lineHeight: 1.7,
                 }}
@@ -1458,7 +1458,7 @@ export default function AdminPage() {
               <p
                 style={{
                   fontSize: 14,
-                  color: "var(--text-secondary)",
+                  color: "#6b6560",
                   fontFamily: "var(--font-sans)",
                   lineHeight: 1.7,
                   marginTop: 16,

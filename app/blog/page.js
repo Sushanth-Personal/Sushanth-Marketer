@@ -22,7 +22,7 @@ export default async function BlogPage() {
     <div style={{ minHeight: "100vh", background: "#e8e4db" }}>
       <Navbar />
 
-      {/* ── Header — dark, absorbs the 68px navbar offset ── */}
+      {/* Header */}
       <section
         style={{
           background: "#0e0e0e",
@@ -77,7 +77,7 @@ export default async function BlogPage() {
         </div>
       </section>
 
-      {/* ── Posts — light ── */}
+      {/* Posts */}
       <section style={{ padding: "4rem 2.5rem 6rem", background: "#e8e4db" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           {!posts || posts.length === 0 ? (
@@ -117,7 +117,7 @@ export default async function BlogPage() {
                     alignItems: "center",
                   }}
                 >
-                  {/* Left — content */}
+                  {/* Left */}
                   <div>
                     {post.tag && (
                       <p
@@ -159,7 +159,7 @@ export default async function BlogPage() {
                     )}
                   </div>
 
-                  {/* Right — meta + arrow */}
+                  {/* Right */}
                   <div
                     style={{
                       display: "flex",

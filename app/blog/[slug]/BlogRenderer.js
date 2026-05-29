@@ -25,138 +25,111 @@ export function blocksToHtml(blocks) {
     .join("\n");
 }
 
+// Returns { type: "html", content: string, styles: string }
 export function renderContent(content) {
-  if (!content) return { type: "html", content: "" };
+  if (!content) return { type: "html", content: "", styles: "" };
 
   // Try EditorJS JSON blocks
   try {
     const parsed = JSON.parse(content);
     if (parsed.blocks)
-      return { type: "html", content: blocksToHtml(parsed.blocks) };
+      return { type: "html", content: blocksToHtml(parsed.blocks), styles: "" };
     if (Array.isArray(parsed))
-      return { type: "html", content: blocksToHtml(parsed) };
+      return { type: "html", content: blocksToHtml(parsed), styles: "" };
   } catch (e) {}
 
-  // Full HTML document — extract body content and render inline
+  // Full standalone HTML file
   if (
     content.trim().startsWith("<!DOCTYPE") ||
     content.trim().startsWith("<html")
   ) {
-    const cleaned = prepareFullPageHtml(content);
-    const bodyMatch = cleaned.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    const bodyContent = bodyMatch ? bodyMatch[1] : cleaned;
-    return { type: "html", content: bodyContent };
+    return extractFromFullPage(content);
   }
 
-  return { type: "html", content };
+  return { type: "html", content, styles: "" };
 }
 
-function prepareFullPageHtml(html) {
-  // 1. Remove editor artifacts
+function extractFromFullPage(html) {
+  // Extract the article's own <style> block
+  const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/i);
+  const articleStyles = styleMatch ? styleMatch[1] : "";
+
+  // Remove editor artifacts
   html = html
     .replace(/\s*contenteditable="[^"]*"/gi, "")
     .replace(/\s*spellcheck="[^"]*"/gi, "");
 
-  // 2. Remove site nav section wrapper + any nav with nav-inner pattern
-  html = html.replace(
-    /<section[^>]*data-section="navigation"[^>]*>[\s\S]*?<\/section>/gi,
-    "",
+  // Extract body content
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  let body = bodyMatch ? bodyMatch[1] : html;
+
+  // Strip only elements that duplicate the site chrome
+  body = body
+    .replace(/<nav>\s*<div class="nav-inner">[\s\S]*?<\/nav>/gi, "") // site nav only, not TOC
+    .replace(/<header[\s\S]*?<\/header>/gi, "")
+    .replace(/<footer[\s\S]*?<\/footer>/gi, "")
+    .replace(/<div[^>]*id="progress-bar"[^>]*>[\s\S]*?<\/div>/gi, "")
+    .replace(/<div[^>]*id="progress-bar"[^>]*\/>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<a[^>]*class="[^"]*back-link[^"]*"[^>]*>[\s\S]*?<\/a>/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  // Build scoped styles:
+  // 1. Redefine CSS variables for light theme inside .article-body
+  // 2. Prefix all article selectors with .article-body
+  //    but skip html/body/:root since we're not in a full document
+  const varOverrides = `
+.article-body {
+  --bg: #f9f7f4;
+  --surface: #ffffff;
+  --surface2: #f0ede6;
+  --border: #e8e4dc;
+  --text: #1a1814;
+  --text-secondary: #3a3530;
+  --text-muted: #6b6560;
+  --accent: #4a7c3f;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
+  background: #f9f7f4;
+  color: #1a1814;
+  font-family: 'DM Sans', sans-serif;
+}
+/* Offset anchors so fixed navbar doesn't cover headings */
+.article-body h1[id],
+.article-body h2[id],
+.article-body h3[id],
+.article-body h4[id],
+.article-body section[id],
+.article-body [id] {
+  scroll-margin-top: 88px;
+}`;
+
+  // Prefix article styles with .article-body, skip html/body/:root rules
+  const prefixed = articleStyles.replace(
+    /([^{},]+)(,?\s*\{)/g,
+    (match, selector, brace) => {
+      const s = selector.trim();
+      if (!s) return match;
+      if (s.startsWith("@") || s.startsWith("/*")) return match;
+      const parts = s
+        .split(",")
+        .map((part) => {
+          const p = part.trim();
+          if (!p) return "";
+          if (p === "html" || p === "body" || p === ":root" || p === "*")
+            return ".article-body";
+          if (p.startsWith("html ") || p.startsWith("body "))
+            return p.replace(/^(html|body)\s+/, ".article-body ");
+          return `.article-body ${p}`;
+        })
+        .filter(Boolean)
+        .join(", ");
+      return `${parts}${brace}`;
+    },
   );
-  html = html.replace(/<nav[^>]*>[\s\S]*?nav-inner[\s\S]*?<\/nav>/gi, "");
 
-  // 3. Remove progress bar div
-  html = html.replace(/<div[^>]*id="progress-bar"[^>]*>[\s\S]*?<\/div>/gi, "");
-  html = html.replace(/<div[^>]*id="progress-bar"[^>]*\/>/gi, "");
+  const styles = varOverrides + "\n" + prefixed;
 
-  // 4. Remove hero section wrapper + any remaining <header>
-  html = html.replace(
-    /<section[^>]*data-section="hero"[^>]*>[\s\S]*?<\/section>/gi,
-    "",
-  );
-  html = html.replace(/<header[\s\S]*?<\/header>/gi, "");
-
-  // 5. Remove back link
-  html = html.replace(
-    /<a[^>]*class="[^"]*back-link[^"]*"[^>]*>[\s\S]*?<\/a>/gi,
-    "",
-  );
-
-  // 6. Remove footer
-  html = html.replace(/<footer[\s\S]*?<\/footer>/gi, "");
-
-  // 7. Remove progress bar script
-  html = html.replace(/<script>[\s\S]*?progress-bar[\s\S]*?<\/script>/gi, "");
-
-  // 8. Inject overrides before </head>
-  //    Key rules:
-  //    - body margin/padding 0 so no dark gap appears at top of iframe
-  //    - nav position static so TOC nav doesn't stick (but ONLY nav, not breaking anything else)
-  //    - #progress-bar hidden
-  //    - html/body height auto so iframe can measure full content height
-  //    - Do NOT use a blanket "nav { position: static }" as it could affect
-  //      the parent page — instead scope it tightly to known nav classes
-  const injectedStyles = `
-<style id="iframe-isolation">
-  #progress-bar { display: none !important; }
-
-  nav.toc,
-  nav[aria-label="Table of contents"] {
-    position: static !important;
-    top: auto !important;
-  }
-
-  html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    height: auto !important;
-    min-height: unset !important;
-    overflow: visible !important;
-    background: #f9f7f4 !important;
-    scroll-behavior: auto !important;
-  }
-
-  .post-body {
-    padding-top: 3rem !important;
-    padding-bottom: 2rem !important;
-  }
-
-  [style*="position: fixed"],
-  [style*="position:fixed"] {
-    position: static !important;
-  }
-</style>
-
-<script id="anchor-intercept">
-(function () {
-  function patchAnchors() {
-    document.querySelectorAll('a[href^="#"]').forEach(function (a) {
-      a.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var id = a.getAttribute('href').slice(1);
-        var target = document.getElementById(id);
-        if (!target) return;
-        var iframeEl = window.frameElement;
-        if (!iframeEl) return;
-        var iframeRect = iframeEl.getBoundingClientRect();
-        var targetRect = target.getBoundingClientRect();
-        // targetRect.top is relative to iframe viewport top
-        // iframeRect.top is iframe's position in parent page viewport
-        var scrollY = window.parent.scrollY || window.parent.pageYOffset || 0;
-        var absoluteTop = scrollY + iframeRect.top + targetRect.top - 80;
-        window.parent.scrollTo({ top: absoluteTop, behavior: 'smooth' });
-      });
-    });
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', patchAnchors);
-  } else {
-    patchAnchors();
-  }
-})();
-</script>`;
-
-  html = html.replace(/<\/head>/i, injectedStyles + "\n</head>");
-
-  return html;
+  return { type: "html", content: body, styles };
 }

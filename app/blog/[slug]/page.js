@@ -83,10 +83,7 @@ export default async function BlogPost({ params }) {
       name: "Sushanth P",
       url: "https://sushanthp.com",
     },
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": canonical,
-    },
+    mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
     url: canonical,
     ...(post.cover_image && { image: post.cover_image }),
     ...(post.keywords && { keywords: post.keywords }),
@@ -124,6 +121,7 @@ export default async function BlogPost({ params }) {
 
       <Navbar />
       <div style={{ paddingTop: 68 }}>
+        {/* Post header */}
         <section style={{ background: "#1a1814", padding: "80px 32px 64px" }}>
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
             <Link
@@ -141,7 +139,6 @@ export default async function BlogPost({ params }) {
             >
               ← All posts
             </Link>
-
             {post.tag && (
               <p
                 style={{
@@ -156,7 +153,6 @@ export default async function BlogPost({ params }) {
                 {post.tag}
               </p>
             )}
-
             <h1
               style={{
                 fontFamily: "var(--font-serif)",
@@ -169,23 +165,6 @@ export default async function BlogPost({ params }) {
             >
               {post.title}
             </h1>
-
-            {post.excerpt && (
-              <p
-                style={{
-                  fontSize: 17,
-                  color: "rgba(232,228,220,0.65)",
-                  lineHeight: 1.7,
-                  fontWeight: 300,
-                  maxWidth: 580,
-                  marginBottom: 28,
-                  fontFamily: "var(--font-sans)",
-                }}
-              >
-                {post.excerpt}
-              </p>
-            )}
-
             <div
               style={{
                 display: "flex",
@@ -226,8 +205,14 @@ export default async function BlogPost({ params }) {
           </div>
         </section>
 
-        <section style={{ padding: "72px 32px 96px", background: "#f9f7f4" }}>
-          <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        {/* Post content */}
+        <section style={{ padding: "0 0 96px", background: "#f9f7f4" }}>
+          {rendered.styles && (
+            <style dangerouslySetInnerHTML={{ __html: rendered.styles }} />
+          )}
+          <div
+            style={{ maxWidth: 720, margin: "0 auto", padding: "72px 32px 0" }}
+          >
             {post.cover_image && (
               <img
                 src={post.cover_image}
@@ -242,23 +227,23 @@ export default async function BlogPost({ params }) {
               />
             )}
             <div
-              className="blog-content"
+              className="article-body"
               dangerouslySetInnerHTML={{ __html: rendered.content }}
             />
             <div
               style={{
                 marginTop: 72,
-                paddingTop: 40,
-                borderTop: "1px solid var(--border-light)",
+                paddingTop: 48,
+                borderTop: "1px solid #e8e4dc",
                 textAlign: "center",
               }}
             >
               <p
                 style={{
                   fontFamily: "var(--font-serif)",
-                  fontSize: 22,
-                  color: "var(--text-primary)",
-                  marginBottom: 16,
+                  fontSize: 24,
+                  color: "#1a1814",
+                  marginBottom: 12,
                 }}
               >
                 Found this useful?
@@ -266,8 +251,10 @@ export default async function BlogPost({ params }) {
               <p
                 style={{
                   fontSize: 15,
-                  color: "var(--text-muted)",
-                  marginBottom: 28,
+                  color: "#6b6560",
+                  marginBottom: 32,
+                  maxWidth: 420,
+                  margin: "0 auto 32px",
                 }}
               >
                 Let's talk about what this means for your marketing.
@@ -275,18 +262,19 @@ export default async function BlogPost({ params }) {
               <a
                 href="mailto:sushanthp.careers@gmail.com"
                 style={{
-                  background: "var(--dark)",
-                  color: "var(--text-light)",
-                  padding: "13px 28px",
-                  fontSize: 12,
-                  letterSpacing: 2,
+                  background: "#1a1814",
+                  color: "#f5f2ec",
+                  padding: "14px 32px",
+                  fontSize: 11,
+                  letterSpacing: 3,
                   textTransform: "uppercase",
                   fontFamily: "var(--font-sans)",
                   textDecoration: "none",
                   display: "inline-block",
+                  borderRadius: 2,
                 }}
               >
-              {"Work With Me →"}
+                Work With Me →
               </a>
             </div>
           </div>
