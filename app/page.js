@@ -120,13 +120,9 @@ export default function Home() {
         } catch {}
       }
 
-      const { data: postsData } = await supabase
-        .from("posts")
-        .select("id, title, slug, tag, excerpt")
-        .eq("published", true)
-        .order("created_at", { ascending: false })
-        .limit(5);
-      if (postsData) setPosts(postsData);
+      const res = await fetch("/api/posts");
+      const postsData = await res.json();
+      if (Array.isArray(postsData)) setPosts(postsData.slice(0, 5));
     }
     fetchData();
   }, []);
