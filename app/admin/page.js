@@ -1,3 +1,4 @@
+// app/admin/page.js
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -9,7 +10,14 @@ const RichEditor = dynamic(() => import("@/components/RichEditor"), {
   ssr: false,
 });
 
-const tabs = ["Posts", "New Post", "Homepage", "Navigation", "Settings"];
+const tabs = [
+  "Posts",
+  "New Post",
+  "Reels",
+  "Homepage",
+  "Navigation",
+  "Settings",
+];
 
 function slugify(str) {
   return str
@@ -54,7 +62,6 @@ const emptyPost = {
   content: "",
   published: false,
   cover_image: "",
-  // SEO fields
   meta_title: "",
   meta_description: "",
   keywords: "",
@@ -62,6 +69,14 @@ const emptyPost = {
   reading_time: "",
   date_modified: "",
   faq_schema: "",
+};
+
+const emptyReelForm = {
+  hook: "",
+  instagram_url: "",
+  views: "",
+  likes: "",
+  sort_order: 0,
 };
 
 export default function AdminPage() {
@@ -72,16 +87,24 @@ export default function AdminPage() {
   const [navSettings, setNavSettings] = useState({
     blog: true,
     pricing: false,
+    teardowns: true,
   });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [homepage, setHomepage] = useState(defaultHomepage);
   const [form, setForm] = useState(emptyPost);
 
+  const [reels, setReels] = useState([]);
+  const [reelForm, setReelForm] = useState(emptyReelForm);
+  const [videoFile, setVideoFile] = useState(null);
+  const [thumbFile, setThumbFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
   useEffect(() => {
     fetchPosts();
     fetchNavSettings();
     fetchHomepage();
+    fetchReels();
   }, []);
 
   async function fetchPosts() {
@@ -99,7 +122,7 @@ export default function AdminPage() {
       .eq("key", "nav");
     if (data && data[0]) {
       try {
-        setNavSettings(JSON.parse(data[0].value));
+        setNavSettings((n) => ({ ...n, ...JSON.parse(data[0].value) }));
       } catch {}
     }
   }
@@ -166,7 +189,6 @@ export default function AdminPage() {
     setActiveTab("New Post");
   }
 
-  // Validate FAQ JSON — returns null if empty, parsed array if valid, false if invalid
   function parseFaqSchema(str) {
     if (!str || !str.trim()) return null;
     try {
@@ -273,7 +295,92 @@ export default function AdminPage() {
     window.location.href = "/admin/login";
   }
 
-  // ── Styles ──────────────────────────────────────────────────
+  async function fetchReels() {
+    const { data } = await supabase
+      .from("reels")
+      .select("*")
+      .order("sort_order", { ascending: true });
+    setReels(data || []);
+  }
+
+  async function uploadReel() {
+    if (!videoFile) {
+      setMsg("Select a video file first.");
+      return;
+    }
+    setUploading(true);
+
+    const videoPath = `${Date.now()}-${videoFile.name}`;
+    const { error: videoError } = await supabase.storage
+      .from("reels")
+      .upload(videoPath, videoFile);
+
+    if (videoError) {
+      setMsg("Video upload failed: " + videoError.message);
+      setUploading(false);
+      return;
+    }
+
+    const { data: videoUrlData } = supabase.storage
+      .from("reels")
+      .getPublicUrl(videoPath);
+
+    let thumbUrl = null;
+    if (thumbFile) {
+      const thumbPath = `${Date.now()}-thumb-${thumbFile.name}`;
+      const { error: thumbError } = await supabase.storage
+        .from("reels")
+        .upload(thumbPath, thumbFile);
+      if (!thumbError) {
+        const { data: thumbUrlData } = supabase.storage
+          .from("reels")
+          .getPublicUrl(thumbPath);
+        thumbUrl = thumbUrlData.publicUrl;
+      }
+    }
+
+    const { error: insertError } = await supabase.from("reels").insert([
+      {
+        video_url: videoUrlData.publicUrl,
+        thumb_url: thumbUrl,
+        hook: reelForm.hook || null,
+        instagram_url: reelForm.instagram_url || null,
+        views: reelForm.views || null,
+        likes: reelForm.likes || null,
+        sort_order: parseInt(reelForm.sort_order, 10) || 0,
+        published: true,
+      },
+    ]);
+
+    setUploading(false);
+
+    if (insertError) {
+      setMsg("Save failed: " + insertError.message);
+      return;
+    }
+
+    setMsg("Reel uploaded!");
+    setReelForm(emptyReelForm);
+    setVideoFile(null);
+    setThumbFile(null);
+    fetchReels();
+    setTimeout(() => setMsg(""), 2000);
+  }
+
+  async function deleteReel(id) {
+    if (!confirm("Delete this reel?")) return;
+    await supabase.from("reels").delete().eq("id", id);
+    fetchReels();
+  }
+
+  async function toggleReelPublish(reel) {
+    await supabase
+      .from("reels")
+      .update({ published: !reel.published })
+      .eq("id", reel.id);
+    fetchReels();
+  }
+
   const sideStyle = {
     width: 220,
     background: "var(--dark-2)",
@@ -361,7 +468,6 @@ export default function AdminPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#F0EDE6", display: "flex" }}>
-      {/* ── Sidebar ─────────────────────────────────────────── */}
       <div style={sideStyle}>
         <div
           style={{
@@ -450,7 +556,6 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* ── Main ────────────────────────────────────────────── */}
       <div style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
         {msg && (
           <div
@@ -469,7 +574,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── POSTS LIST ─────────────────────────────────────── */}
         {activeTab === "Posts" && (
           <div>
             <div
@@ -639,7 +743,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── NEW / EDIT POST ────────────────────────────────── */}
         {activeTab === "New Post" && (
           <div>
             <h1
@@ -655,7 +758,6 @@ export default function AdminPage() {
             </h1>
 
             <div style={{ maxWidth: 860 }}>
-              {/* ── Core fields ── */}
               <label style={labelStyle}>Title *</label>
               <input
                 value={form.title}
@@ -773,7 +875,6 @@ export default function AdminPage() {
                 }}
               />
 
-              {/* ── SEO & Metadata ── */}
               <p style={sectionHeadStyle}>SEO & Metadata</p>
 
               <label style={labelStyle}>
@@ -911,7 +1012,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* ── FAQ Schema ── */}
               <label style={labelStyle}>FAQ Schema</label>
               <p
                 style={{
@@ -955,7 +1055,6 @@ export default function AdminPage() {
                 </p>
               )}
 
-              {/* ── Publish / Save ── */}
               <div
                 style={{
                   display: "flex",
@@ -1031,7 +1130,227 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── HOMEPAGE EDITOR ─────────────────────────────────── */}
+        {activeTab === "Reels" && (
+          <div>
+            <h1
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: 28,
+                color: "#1a1814",
+                fontWeight: 400,
+                marginBottom: 24,
+              }}
+            >
+              Reels
+            </h1>
+
+            <div
+              style={{
+                maxWidth: 560,
+                background: "#fff",
+                border: "1px solid var(--border-light)",
+                borderRadius: 4,
+                padding: 24,
+                marginBottom: 32,
+              }}
+            >
+              <label style={labelStyle}>Video file *</label>
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(e) => setVideoFile(e.target.files[0])}
+                style={{ marginBottom: 16, display: "block" }}
+              />
+
+              <label style={labelStyle}>
+                Thumbnail image (optional, shown before video loads)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setThumbFile(e.target.files[0])}
+                style={{ marginBottom: 16, display: "block" }}
+              />
+
+              <label style={labelStyle}>Hook / caption text</label>
+              <input
+                value={reelForm.hook}
+                onChange={(e) =>
+                  setReelForm((f) => ({ ...f, hook: e.target.value }))
+                }
+                placeholder="The mochi hook nobody expects"
+                style={inputStyle}
+              />
+
+              <label style={labelStyle}>
+                Instagram post URL (for click-through)
+              </label>
+              <input
+                value={reelForm.instagram_url}
+                onChange={(e) =>
+                  setReelForm((f) => ({
+                    ...f,
+                    instagram_url: e.target.value,
+                  }))
+                }
+                placeholder="https://www.instagram.com/reel/..."
+                style={inputStyle}
+              />
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: 16,
+                }}
+              >
+                <div>
+                  <label style={labelStyle}>Views</label>
+                  <input
+                    value={reelForm.views}
+                    onChange={(e) =>
+                      setReelForm((f) => ({ ...f, views: e.target.value }))
+                    }
+                    placeholder="12.4K"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Likes</label>
+                  <input
+                    value={reelForm.likes}
+                    onChange={(e) =>
+                      setReelForm((f) => ({ ...f, likes: e.target.value }))
+                    }
+                    placeholder="890"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Sort order</label>
+                  <input
+                    type="number"
+                    value={reelForm.sort_order}
+                    onChange={(e) =>
+                      setReelForm((f) => ({
+                        ...f,
+                        sort_order: e.target.value,
+                      }))
+                    }
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={uploadReel}
+                disabled={uploading}
+                style={{
+                  background: "var(--dark)",
+                  color: "var(--text-light)",
+                  padding: "10px 24px",
+                  fontSize: 12,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  fontFamily: "var(--font-sans)",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                {uploading ? "Uploading..." : "Upload Reel"}
+              </button>
+            </div>
+
+            {reels.length === 0 ? (
+              <p
+                style={{
+                  color: "var(--text-muted)",
+                  fontStyle: "italic",
+                  fontFamily: "var(--font-serif)",
+                  fontSize: 18,
+                }}
+              >
+                No reels yet. Upload your first one above.
+              </p>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                  background: "var(--border-light)",
+                }}
+              >
+                {reels.map((reel) => (
+                  <div
+                    key={reel.id}
+                    style={{
+                      background: "#fff",
+                      padding: "16px 24px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 16,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <p
+                        style={{
+                          fontSize: 14,
+                          color: "#1a1814",
+                          fontFamily: "var(--font-sans)",
+                        }}
+                      >
+                        {reel.hook || "(no hook text)"}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: "#6b6560",
+                          fontFamily: "var(--font-sans)",
+                        }}
+                      >
+                        {reel.views ? `${reel.views} views` : ""}
+                        {reel.likes ? ` · ${reel.likes} likes` : ""}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => toggleReelPublish(reel)}
+                      style={{
+                        padding: "5px 14px",
+                        fontSize: 11,
+                        letterSpacing: 1,
+                        fontFamily: "var(--font-sans)",
+                        background: reel.published ? "#E8F5E9" : "#FFF8E1",
+                        color: reel.published ? "#2E7D32" : "#F57F17",
+                        border: `1px solid ${reel.published ? "#A5D6A7" : "#FFE082"}`,
+                        cursor: "pointer",
+                        borderRadius: 20,
+                      }}
+                    >
+                      {reel.published ? "Published" : "Draft"}
+                    </button>
+                    <button
+                      onClick={() => deleteReel(reel.id)}
+                      style={{
+                        padding: "6px 16px",
+                        fontSize: 12,
+                        fontFamily: "var(--font-sans)",
+                        background: "transparent",
+                        border: "1px solid #FFCDD2",
+                        cursor: "pointer",
+                        color: "#E53935",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === "Homepage" && (
           <div>
             <div
@@ -1247,7 +1566,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── NAVIGATION ──────────────────────────────────────── */}
         {activeTab === "Navigation" && (
           <div>
             <h1
@@ -1290,6 +1608,11 @@ export default function AdminPage() {
                   key: "pricing",
                   label: "Pricing",
                   desc: "Show the Pricing link in navigation",
+                },
+                {
+                  key: "teardowns",
+                  label: "Teardowns",
+                  desc: "Show the Teardowns link in navigation",
                 },
               ].map((item) => (
                 <div
@@ -1392,7 +1715,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── SETTINGS ────────────────────────────────────────── */}
         {activeTab === "Settings" && (
           <div>
             <h1

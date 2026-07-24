@@ -8,6 +8,7 @@ export default function Navbar() {
   const [navSettings, setNavSettings] = useState({
     blog: true,
     pricing: false,
+    teardowns: true,
   });
   const [visible, setVisible] = useState(true);
   const lastScrollY = useRef(0);
@@ -63,10 +64,10 @@ export default function Navbar() {
 
   const navLinks = [
     { href: "/", label: "Home" },
+    { href: "/teardowns", label: "Teardowns" },
     ...(navSettings.blog ? [{ href: "/blog", label: "Blog" }] : []),
     ...(navSettings.pricing ? [{ href: "/pricing", label: "Pricing" }] : []),
   ];
-
   return (
     <>
       <nav
